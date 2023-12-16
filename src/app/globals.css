@@ -1,0 +1,11 @@
+.match-root:before {
+  content: '-';
+  position: absolute;
+  margin: -2px 0 0 -12px;
+}
+.match-uncommon {
+  opacity: 0.85;
+}
+.term-root {
+  color: #c0c0c0;
+}
