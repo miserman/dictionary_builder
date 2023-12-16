@@ -56,7 +56,7 @@ export default function Home() {
   const [synsets, setSynsets] = useState<{[index: string]: any} | null>(null)
 
   useEffect(() => {
-    fetch('/data/term_associations.json')
+    fetch('/dictionary_builder/data/term_associations.json')
       .then(res => res.json())
       .then(termInfo => {
         const all_terms = Object.keys(termInfo)
@@ -67,7 +67,7 @@ export default function Home() {
       .finally(() => setLoadingTerms(false))
   }, [])
   useEffect(() => {
-    fetch('/data/synsets.json')
+    fetch('/dictionary_builder/data/synsets.json')
       .then(res => res.json())
       .then(synsetInfo => {
         setSynsetIds(Object.keys(synsetInfo))
