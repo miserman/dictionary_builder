@@ -1,6 +1,6 @@
 import {ReactNode, createContext, useEffect, useState} from 'react'
 
-type AssociatedIndices = {[index: string]: number | number[]}
+type AssociatedIndices = {[index: string]: [number | number[], (number | number[])?]}
 type Synsets = {[index: string]: string | string[]}
 export const ResourceContext = createContext<{
   terms?: string[]
@@ -11,12 +11,16 @@ export const ResourceContext = createContext<{
 }>({})
 
 export function Resources({
-  setLoadingTerms,
-  setLoadingSynsets,
+  loadingTerms,
+  loadingTermAssociations,
+  loadingSynsets,
+  loadingSynsetInfo,
   children,
 }: {
-  setLoadingTerms: (loading: boolean) => void
-  setLoadingSynsets: (loading: boolean) => void
+  loadingTerms: (loading: boolean) => void
+  loadingTermAssociations: (loading: boolean) => void
+  loadingSynsets: (loading: boolean) => void
+  loadingSynsetInfo: (loading: boolean) => void
   children: ReactNode
 }) {
   const [terms, setTerms] = useState<string[]>()
@@ -26,25 +30,39 @@ export function Resources({
   const [synsetInfo, setSynsetInfo] = useState<Synsets>()
 
   useEffect(() => {
+    fetch('/dictionary_builder/data/terms.txt')
+      .then(res => res.text())
+      .then(data => {
+        const arr = data.split('\n')
+        setTerms(arr)
+        setCollapsedTerms(';;' + arr.join(';;') + ';;')
+      })
+      .finally(() => loadingTerms(false))
+  }, [loadingTerms])
+  useEffect(() => {
     fetch('/dictionary_builder/data/term_associations.json')
       .then(res => res.json())
       .then(data => {
-        const all_terms = Object.keys(data)
-        setTerms(all_terms)
-        setCollapsedTerms(';;' + all_terms.join(';;') + ';;')
         setTermAssociations(data)
       })
-      .finally(() => setLoadingTerms(false))
-  }, [setLoadingTerms])
+      .finally(() => loadingTermAssociations(false))
+  }, [loadingTermAssociations])
   useEffect(() => {
-    fetch('/dictionary_builder/data/synsets.json')
+    fetch('/dictionary_builder/data/synsets.txt')
+      .then(res => res.text())
+      .then(data => {
+        setSynsets(data.split('\n'))
+      })
+      .finally(() => loadingSynsets(false))
+  }, [loadingSynsets])
+  useEffect(() => {
+    fetch('/dictionary_builder/data/synset_info.json')
       .then(res => res.json())
       .then(data => {
-        setSynsets(Object.keys(data))
         setSynsetInfo(data)
       })
-      .finally(() => setLoadingSynsets(false))
-  }, [setLoadingSynsets])
+      .finally(() => loadingSynsetInfo(false))
+  }, [loadingSynsetInfo])
 
   return (
     <ResourceContext.Provider value={{terms, collapsedTerms, termAssociations, synsets, synsetInfo}}>

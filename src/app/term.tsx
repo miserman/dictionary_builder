@@ -15,6 +15,7 @@ import {
 import {CommonExpansions, sortByLength} from '../../utils'
 import {Close, Done} from '@mui/icons-material'
 import {SyntheticEvent, useState} from 'react'
+import {TermInfo} from './termInfo'
 
 export type FuzzyTerm = {
   type: 'fuzzy'
@@ -127,10 +128,7 @@ function TermFuzzy({term}: {term: FuzzyTerm}) {
 function TermFixed({term}: {term: FixedTerm}) {
   return (
     <Paper elevation={1}>
-      <Typography>
-        Recognized:
-        <span>{' ' + term.recognized}</span>
-      </Typography>
+      <TermInfo term={term.term}></TermInfo>
     </Paper>
   )
 }
