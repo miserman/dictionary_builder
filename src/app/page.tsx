@@ -9,11 +9,8 @@ import {InfoDrawer, InfoDrawerActions, InfoDrawerContext, InfoDrawerState} from 
 const theme = createTheme({palette: {mode: 'dark'}})
 
 const manageInfoDrawerState = (state: InfoDrawerState[], action: InfoDrawerActions) => {
-  return action.type === 'reset'
-    ? []
-    : state.length && state[0].value === action.state.value
-    ? [...state]
-    : [action.state, ...state]
+  if (action.type === 'reset') return []
+  return state.length && state[0].value === action.state.value ? [...state] : [action.state, ...state]
 }
 
 export default function Home() {

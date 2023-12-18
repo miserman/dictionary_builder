@@ -2,10 +2,25 @@ import {ReactNode, createContext, useEffect, useState} from 'react'
 
 type AssociatedIndices = {[index: string]: [number | number[], (number | number[])?]}
 export type Synset = {
-  [index: string]: string | string[]
+  index: number
   key: string
   definition: string
   ili: string
+  source: string
+  wikidata: string
+  members: string | string[]
+  attribute: string | string[]
+  domain_topic: string | string[]
+  similar: string | string[]
+  also: string | string[]
+  domain_region: string | string[]
+  exemplifies: string | string[]
+  mero_part: string | string[]
+  instance_hypernym: string | string[]
+  mero_member: string | string[]
+  mero_substance: string | string[]
+  entails: string | string[]
+  causes: string | string[]
 }
 type Synsets = Synset[]
 export type TermResources = {

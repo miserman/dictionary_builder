@@ -15,7 +15,7 @@ import {
 import {CommonExpansions, sortByLength} from './utils'
 import {Close, Done} from '@mui/icons-material'
 import {SyntheticEvent, useState} from 'react'
-import {TermInfo} from './termInfo'
+import {TermInfo} from './termLink'
 import {Synset} from './resources'
 
 export type FixedTerm = {

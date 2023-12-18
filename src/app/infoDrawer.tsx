@@ -1,10 +1,11 @@
 import {
   Box,
   Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardHeader,
   Chip,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Drawer,
   IconButton,
   List,
@@ -16,9 +17,9 @@ import {createContext, useContext, useState} from 'react'
 import {BuildContext, BuildEditContext, Processed, processTerm} from './building'
 import type {FixedTerm} from './term'
 import {Close} from '@mui/icons-material'
-import {TermInfo} from './termInfo'
+import {TermInfo} from './termLink'
 import {ResourceContext, Synset} from './resources'
-import {SynsetInfo} from './synsetInfo'
+import {SynsetInfo} from './synsetLink'
 
 export type InfoDrawerState = {type: 'term'; value: string} | {type: 'synset'; value: string; info: Synset}
 export type InfoDrawerActions = {type: 'add'; state: InfoDrawerState} | {type: 'reset'}
@@ -34,13 +35,13 @@ function DisplayTerm({term}: {term: string}) {
   }
   const processed = processedTerms[term] as FixedTerm
   return (
-    <Box>
-      <DialogContent>
+    <>
+      <CardContent sx={{overflowY: 'auto'}}>
         <Stack direction="row" spacing={4}>
           {processed.similar.length ? (
             <Stack>
               <Typography variant="h5">Similar Terms</Typography>
-              <Box sx={{maxHeight: '20vh', overflowY: 'auto'}}>
+              <Box sx={{maxHeight: '29vh', overflowY: 'auto'}}>
                 <List sx={{p: 0}}>
                   {processed.similar.map(term => (
                     <ListItem key={term} sx={{p: 0}}>
@@ -56,7 +57,7 @@ function DisplayTerm({term}: {term: string}) {
           {processed.synsets.length ? (
             <Stack>
               <Typography variant="h5">Senses</Typography>
-              <Box sx={{maxHeight: '20vh', overflowY: 'auto'}}>
+              <Box sx={{maxHeight: '29vh', overflowY: 'auto'}}>
                 <List sx={{p: 0}}>
                   {processed.synsets.map(info => (
                     <ListItem key={info.key} sx={{p: 0}}>
@@ -70,8 +71,8 @@ function DisplayTerm({term}: {term: string}) {
             <></>
           )}
         </Stack>
-      </DialogContent>
-      <DialogActions>
+      </CardContent>
+      <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
         <Button
           onClick={() => {
             editDictionary({type: processed.term in Dict ? 'remove' : 'add', term: processed.term})
@@ -79,18 +80,28 @@ function DisplayTerm({term}: {term: string}) {
         >
           {processed.term in Dict ? 'Remove' : 'Add'}
         </Button>
-      </DialogActions>
-    </Box>
+      </CardActions>
+    </>
   )
 }
 
 const id_pattern = /^\d+-\w$/
-function DisplayEntry({name, info, ids, allInfo}: {name: string; info: Synset; ids: string[]; allInfo: Synset[]}) {
-  const content = info[name]
+function DisplayEntry({
+  name,
+  info,
+  ids,
+  allInfo,
+}: {
+  name: keyof Synset
+  info: Synset
+  ids: string[]
+  allInfo: Synset[]
+}) {
+  const content = info[name] as string | string[]
   return (
-    <Box key={name}>
+    <Box key={name} sx={{m: 1}}>
       <Typography variant="h5">{name}</Typography>
-      <Typography sx={{paddingLeft: 2}}>
+      <Typography>
         {name === 'members' ? (
           Array.isArray(content) ? (
             content.map(entry => <TermInfo key={entry} term={entry} />)
@@ -100,7 +111,7 @@ function DisplayEntry({name, info, ids, allInfo}: {name: string; info: Synset; i
         ) : Array.isArray(content) ? (
           content.map(
             id_pattern.test(content[0])
-              ? id => <SynsetInfo info={allInfo[ids.indexOf(id)]} />
+              ? id => <SynsetInfo key={id} info={allInfo[ids.indexOf(id)]} />
               : entry => <Chip label={entry} />
           )
         ) : id_pattern.test(content) ? (
@@ -113,18 +124,31 @@ function DisplayEntry({name, info, ids, allInfo}: {name: string; info: Synset; i
   )
 }
 
+const basicInfo = ['key', 'index', 'ili', 'definition']
 function DisplaySynset({info}: {info: Synset}) {
   const {synsets, synsetInfo} = useContext(ResourceContext)
   return (
-    <Box>
-      <DialogContent>
+    <CardContent sx={{overflowY: 'auto', mb: 'auto'}}>
+      <Typography variant="h6">{info.definition}</Typography>
+      <Typography component="p" variant="caption" sx={{ml: 1}}>
+        Sense Key: <span className="number">{info.key}</span>
+      </Typography>
+      <Typography component="p" variant="caption" sx={{ml: 1}}>
+        Open English WordNet ID: <span className="number">{synsets && synsets[info.index - 1]}</span>
+      </Typography>
+      <Typography component="p" variant="caption" sx={{ml: 1}}>
+        Interlingual ID: <span className="number">{info.ili}</span>
+      </Typography>
+      <Stack direction="row" sx={{mt: 2}}>
         {synsets && synsetInfo ? (
-          Object.keys(info).map(k => <DisplayEntry key={k} name={k} info={info} ids={synsets} allInfo={synsetInfo} />)
+          Object.keys(info)
+            .filter(k => !basicInfo.includes(k))
+            .map(k => <DisplayEntry key={k} name={k as keyof Synset} info={info} ids={synsets} allInfo={synsetInfo} />)
         ) : (
           <></>
         )}
-      </DialogContent>
-    </Box>
+      </Stack>
+    </CardContent>
   )
 }
 
@@ -139,46 +163,52 @@ export function InfoDrawer({state, update}: {state: InfoDrawerState[]; update: (
     update({type: 'reset'})
   }
   return (
-    <Drawer open={currentState.value !== ''} onClose={close} variant="persistent" hideBackdrop={true} anchor="bottom">
-      <DialogTitle>
-        <Stack direction="row">
-          <Button
-            onClick={() =>
-              setHistoryIndex([historyIndex < state.length ? historyIndex + 1 : state.length - 1, state.length])
-            }
-            disabled={historyIndex >= state.length - 1}
-            sx={{opacity: 0.7}}
-          >
-            {state.length > historyIndex + 1 ? state[historyIndex + 1].value : ''}
-          </Button>
-          <Typography variant="h4">{currentState.value}</Typography>
-          <Button
-            onClick={() => setHistoryIndex([historyIndex > 0 ? historyIndex - 1 : 0, state.length])}
-            disabled={historyIndex < 1}
-            sx={{opacity: 0.7}}
-          >
-            {historyIndex > 0 ? state[historyIndex - 1].value : ''}
-          </Button>
-        </Stack>
-      </DialogTitle>
+    <Drawer
+      open={currentState.value !== ''}
+      onClose={close}
+      variant="permanent"
+      hideBackdrop={true}
+      anchor="bottom"
+      sx={{
+        '& .MuiPaper-root': {height: '50vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'},
+      }}
+    >
+      <Card>
+        <CardHeader
+          action={
+            <IconButton aria-label="Close" onClick={close}>
+              <Close />
+            </IconButton>
+          }
+          title={
+            <Stack direction="row">
+              <Button
+                onClick={() =>
+                  setHistoryIndex([historyIndex < state.length ? historyIndex + 1 : state.length - 1, state.length])
+                }
+                disabled={historyIndex >= state.length - 1}
+                sx={{opacity: 0.7}}
+              >
+                {state.length > historyIndex + 1 ? state[historyIndex + 1].value : ''}
+              </Button>
+              <Typography variant="h4">{currentState.value}</Typography>
+              <Button
+                onClick={() => setHistoryIndex([historyIndex > 0 ? historyIndex - 1 : 0, state.length])}
+                disabled={historyIndex < 1}
+                sx={{opacity: 0.7}}
+              >
+                {historyIndex > 0 ? state[historyIndex - 1].value : ''}
+              </Button>
+            </Stack>
+          }
+        />
 
-      <IconButton
-        aria-label="Close"
-        sx={{
-          position: 'absolute',
-          right: 8,
-          top: 8,
-        }}
-        onClick={close}
-      >
-        <Close />
-      </IconButton>
-
-      {currentState.type === 'term' ? (
-        <DisplayTerm term={currentState.value} />
-      ) : (
-        <DisplaySynset info={currentState.info} />
-      )}
+        {currentState.type === 'term' ? (
+          <DisplayTerm term={currentState.value} />
+        ) : (
+          <DisplaySynset info={currentState.info} />
+        )}
+      </Card>
     </Drawer>
   )
 }
