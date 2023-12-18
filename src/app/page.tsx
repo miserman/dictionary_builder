@@ -1,11 +1,20 @@
 'use client'
 import {CssBaseline, ThemeProvider, createTheme} from '@mui/material'
-import {StrictMode, useState} from 'react'
+import {StrictMode, useReducer, useState} from 'react'
 import {Resources} from './resources'
-import Processor from './processor'
 import {Building} from './building'
+import Display from './display'
+import {InfoDrawer, InfoDrawerActions, InfoDrawerContext, InfoDrawerState} from './infoDrawer'
 
 const theme = createTheme({palette: {mode: 'dark'}})
+
+const manageInfoDrawerState = (state: InfoDrawerState[], action: InfoDrawerActions) => {
+  return action.type === 'reset'
+    ? []
+    : state.length && state[0].value === action.state.value
+    ? [...state]
+    : [action.state, ...state]
+}
 
 export default function Home() {
   const [loadingTerms, setLoadingTerms] = useState(true)
@@ -13,6 +22,7 @@ export default function Home() {
   const [loadingSynsets, setLoadingSynsets] = useState(true)
   const [loadingSynsetInfo, setLoadingSynsetInfo] = useState(true)
 
+  const [infoDrawerState, updateInfoDrawerState] = useReducer(manageInfoDrawerState, [])
   return (
     <StrictMode>
       <ThemeProvider theme={theme}>
@@ -24,14 +34,17 @@ export default function Home() {
           loadingSynsetInfo={setLoadingSynsetInfo}
         >
           <Building>
-            <Processor
-              loading={{
-                terms: loadingTerms,
-                termAssociations: loadingTermAssociations,
-                synsets: loadingSynsets,
-                synsetInfo: loadingSynsetInfo,
-              }}
-            />
+            <InfoDrawerContext.Provider value={updateInfoDrawerState}>
+              <Display
+                loading={{
+                  terms: loadingTerms,
+                  termAssociations: loadingTermAssociations,
+                  synsets: loadingSynsets,
+                  synsetInfo: loadingSynsetInfo,
+                }}
+              />
+              <InfoDrawer state={infoDrawerState} update={updateInfoDrawerState}></InfoDrawer>
+            </InfoDrawerContext.Provider>
           </Building>
         </Resources>
       </ThemeProvider>

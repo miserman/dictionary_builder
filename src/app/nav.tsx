@@ -28,6 +28,14 @@ export function Nav({
       setInputTerm('')
     }
   }
+  const updateTerm = (e: SyntheticEvent) => {
+    const input = e.target
+    if (input && 'value' in input) {
+      const term = (input.value as string).toLowerCase()
+      setAlreadyAdded(exists(term))
+      setInputTerm(term)
+    }
+  }
 
   return (
     <AppBar component="nav">
@@ -42,13 +50,7 @@ export function Nav({
               setTermSuggestions(inputTerm.length > 2 ? all_terms.filter(term => term.startsWith(inputTerm)) : [])
             }
           }}
-          onChange={(e: SyntheticEvent) => {
-            const input = e.target
-            if (input && 'value' in input) {
-              setAlreadyAdded(exists(input.value as string))
-              setInputTerm(input.value as string)
-            }
-          }}
+          onChange={updateTerm}
           renderOption={(props, option) => (
             <li {...props} key={option} onClick={addTerm}>
               {option}
@@ -63,13 +65,7 @@ export function Nav({
               onKeyDown={(e: SyntheticEvent) => {
                 if ('code' in e && e.code === 'Enter') addTerm()
               }}
-              onChange={(e: SyntheticEvent) => {
-                const input = e.target
-                if (input && 'value' in input) {
-                  setAlreadyAdded(exists(input.value as string))
-                  setInputTerm(input.value as string)
-                }
-              }}
+              onChange={updateTerm}
               error={alreadyAdded}
             ></TextField>
           )}

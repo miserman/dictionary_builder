@@ -1,14 +1,21 @@
 import {ReactNode, createContext, useEffect, useState} from 'react'
 
 type AssociatedIndices = {[index: string]: [number | number[], (number | number[])?]}
-type Synsets = {[index: string]: string | string[]}
-export const ResourceContext = createContext<{
+export type Synset = {
+  [index: string]: string | string[]
+  key: string
+  definition: string
+  ili: string
+}
+type Synsets = Synset[]
+export type TermResources = {
   terms?: string[]
   collapsedTerms?: string
   termAssociations?: AssociatedIndices
   synsets?: string[]
   synsetInfo?: Synsets
-}>({})
+}
+export const ResourceContext = createContext<TermResources>({})
 
 export function Resources({
   loadingTerms,
