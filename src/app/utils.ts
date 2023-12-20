@@ -16,7 +16,7 @@ export function filterUncommonExpansions(matches: string[]) {
         common[term] = {root: root, part: ''}
       } else {
         const terminal = term.replace(rootPattern, '')
-        if (-1 !== commonSuffixes.indexOf(terminal)) common[term] = {root: root, part: term.replace(root, '')}
+        if (terminal in commonSuffixes) common[term] = {root: root, part: term.replace(root, '')}
       }
     })
   }
@@ -29,4 +29,8 @@ export function globToRegex(term: string) {
 
 export function sortByLength(a: string, b: string) {
   return a.length - b.length
+}
+
+export function relativeFrequency(index: number, n?: number) {
+  return n ? (100 - (index / n) * 100).toFixed(2) : '0'
 }

@@ -1,31 +1,16 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardHeader,
-  Chip,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  Stack,
-  Typography,
-} from '@mui/material'
+import {Button, Card, CardActions, CardContent, CardHeader, Drawer, IconButton, Stack, Typography} from '@mui/material'
 import {createContext, useContext, useState} from 'react'
 import {BuildContext, BuildEditContext, Processed, processTerm} from './building'
-import type {FixedTerm} from './term'
+import {type FixedTerm, TermDisplay} from './term'
 import {Close} from '@mui/icons-material'
-import {TermInfo} from './termLink'
 import {ResourceContext, Synset} from './resources'
-import {SynsetInfo} from './synsetLink'
+import {SynsetDisplay} from './synset'
 
 export type InfoDrawerState = {type: 'term'; value: string} | {type: 'synset'; value: string; info: Synset}
 export type InfoDrawerActions = {type: 'add'; state: InfoDrawerState} | {type: 'reset'}
 export const InfoDrawerContext = createContext((action: InfoDrawerActions) => {})
 
-function DisplayTerm({term}: {term: string}) {
+function TermContent({term}: {term: string}) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
@@ -37,40 +22,7 @@ function DisplayTerm({term}: {term: string}) {
   return (
     <>
       <CardContent sx={{overflowY: 'auto'}}>
-        <Stack direction="row" spacing={4}>
-          {processed.similar.length ? (
-            <Stack>
-              <Typography variant="h5">Similar Terms</Typography>
-              <Box sx={{maxHeight: '29vh', overflowY: 'auto'}}>
-                <List sx={{p: 0}}>
-                  {processed.similar.map(term => (
-                    <ListItem key={term} sx={{p: 0}}>
-                      {<TermInfo term={term}></TermInfo>}
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            </Stack>
-          ) : (
-            <></>
-          )}
-          {processed.synsets.length ? (
-            <Stack>
-              <Typography variant="h5">Senses</Typography>
-              <Box sx={{maxHeight: '29vh', overflowY: 'auto'}}>
-                <List sx={{p: 0}}>
-                  {processed.synsets.map(info => (
-                    <ListItem key={info.key} sx={{p: 0}}>
-                      <SynsetInfo info={info} />
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            </Stack>
-          ) : (
-            <></>
-          )}
-        </Stack>
+        <TermDisplay term={term} maxHeight="31vh" />
       </CardContent>
       <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
         <Button
@@ -85,69 +37,10 @@ function DisplayTerm({term}: {term: string}) {
   )
 }
 
-const id_pattern = /^\d+-\w$/
-function DisplayEntry({
-  name,
-  info,
-  ids,
-  allInfo,
-}: {
-  name: keyof Synset
-  info: Synset
-  ids: string[]
-  allInfo: Synset[]
-}) {
-  const content = info[name] as string | string[]
-  return (
-    <Box key={name} sx={{m: 1}}>
-      <Typography variant="h5">{name}</Typography>
-      <Typography>
-        {name === 'members' ? (
-          Array.isArray(content) ? (
-            content.map(entry => <TermInfo key={entry} term={entry} />)
-          ) : (
-            <TermInfo key={content} term={content} />
-          )
-        ) : Array.isArray(content) ? (
-          content.map(
-            id_pattern.test(content[0])
-              ? id => <SynsetInfo key={id} info={allInfo[ids.indexOf(id)]} />
-              : entry => <Chip label={entry} />
-          )
-        ) : id_pattern.test(content) ? (
-          <SynsetInfo info={allInfo[ids.indexOf(content)]} />
-        ) : (
-          content
-        )}
-      </Typography>
-    </Box>
-  )
-}
-
-const basicInfo = ['key', 'index', 'ili', 'definition']
-function DisplaySynset({info}: {info: Synset}) {
-  const {synsets, synsetInfo} = useContext(ResourceContext)
+function SynsetContent({info}: {info: Synset}) {
   return (
     <CardContent sx={{overflowY: 'auto', mb: 'auto'}}>
-      <Typography variant="h6">{info.definition}</Typography>
-      <Typography component="p" variant="caption" sx={{ml: 1}}>
-        Sense Key: <span className="number">{info.key}</span>
-      </Typography>
-      <Typography component="p" variant="caption" sx={{ml: 1}}>
-        Open English WordNet ID: <span className="number">{synsets && synsets[info.index - 1]}</span>
-      </Typography>
-      <Typography component="p" variant="caption" sx={{ml: 1}}>
-        Interlingual ID: <span className="number">{info.ili}</span>
-      </Typography>
-      <Stack direction="row" sx={{mt: 2}}>
-        {synsets && synsetInfo ? (
-          Object.keys(info)
-            .filter(k => !basicInfo.includes(k))
-            .map(k => <DisplayEntry key={k} name={k as keyof Synset} info={info} ids={synsets} allInfo={synsetInfo} />)
-        ) : (
-          <></>
-        )}
-      </Stack>
+      <SynsetDisplay info={info} />
     </CardContent>
   )
 }
@@ -170,7 +63,7 @@ export function InfoDrawer({state, update}: {state: InfoDrawerState[]; update: (
       hideBackdrop={true}
       anchor="bottom"
       sx={{
-        '& .MuiPaper-root': {height: '50vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'},
+        '& .MuiPaper-root': {height: '51vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'},
       }}
     >
       <Card>
@@ -204,9 +97,9 @@ export function InfoDrawer({state, update}: {state: InfoDrawerState[]; update: (
         />
 
         {currentState.type === 'term' ? (
-          <DisplayTerm term={currentState.value} />
+          <TermContent term={currentState.value} />
         ) : (
-          <DisplaySynset info={currentState.info} />
+          <SynsetContent info={currentState.info} />
         )}
       </Card>
     </Drawer>

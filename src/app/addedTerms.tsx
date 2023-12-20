@@ -13,10 +13,12 @@ const resources = [
   {key: 'synsetInfo', label: 'Synset Info'},
 ] as const
 
-export default function Display({
+export default function AddedTerms({
   loading,
+  drawerOpen,
 }: {
   loading: {terms: boolean; termAssociations: boolean; synsets: boolean; synsetInfo: boolean}
+  drawerOpen: boolean
 }) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
@@ -56,16 +58,15 @@ export default function Display({
               editDictionary({type: 'add', term: term})
             }}
           />
-          <Box component="main">
+          <Box component="main" sx={{mb: drawerOpen ? '52vh' : 0}}>
             <Toolbar />
             {Object.keys(Dict)
               .sort()
               .map(term => {
-                const processed = termSet[term]
                 return (
                   <Term
                     key={term}
-                    processed={processed}
+                    processed={termSet[term]}
                     onRemove={() => {
                       editDictionary({type: 'remove', term: term})
                     }}

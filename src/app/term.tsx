@@ -5,18 +5,28 @@ import {
   CardContent,
   CardHeader,
   IconButton,
+  Link,
   List,
   ListItem,
-  Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
-import {CommonExpansions, sortByLength} from './utils'
+import {CommonExpansions, relativeFrequency} from './utils'
 import {Close, Done} from '@mui/icons-material'
-import {SyntheticEvent, useState} from 'react'
-import {TermInfo} from './termLink'
-import {Synset} from './resources'
+import {ChangeEvent, SyntheticEvent, useContext, useState} from 'react'
+import {ResourceContext, Synset} from './resources'
+import {Processed, processTerm} from './building'
+import {InfoDrawerContext} from './infoDrawer'
+import {SynsetLink} from './synset'
 
 export type FixedTerm = {
   type: 'fixed'
@@ -85,60 +95,165 @@ export function Term({
         }
       ></CardHeader>
       <CardContent>
-        <Stack direction="row">
-          {processed.type === 'fixed' ? (
-            <TermFixed processed={processed}></TermFixed>
-          ) : (
-            <TermFuzzy processed={processed}></TermFuzzy>
-          )}
-        </Stack>
+        {processed.type === 'fixed' ? (
+          <TermFixed processed={processed}></TermFixed>
+        ) : (
+          <TermFuzzy processed={processed}></TermFuzzy>
+        )}
       </CardContent>
     </Card>
   )
 }
 
 function TermFuzzy({processed}: {processed: FuzzyTerm}) {
+  const processedTerms = useContext(Processed)
+  const data = useContext(ResourceContext)
+
+  const [page, setPage] = useState(0)
+  const [perPage, setPerPage] = useState(5)
+  const nMatches = processed.matches.length
+  const pageMatches = []
+  if (nMatches) {
+    for (let i = page * perPage, n = i + perPage; i < n; i++) {
+      pageMatches.push(processed.matches[i])
+    }
+  }
   return (
-    <Paper>
-      <Typography>Matches{' (' + processed.matches.length + ')'}</Typography>
-      {processed.matches.length ? (
-        <Box sx={{maxHeight: 200, overflowY: 'auto'}}>
-          <List sx={{marginLeft: '12px'}}>
-            {processed.matches.length > 1e4 ? (
-              <ListItem>Too many matches.</ListItem>
-            ) : (
-              [
-                ...processed.matches.filter(term => term in processed.common_matches).sort(sortByLength),
-                ...processed.matches.filter(term => !(term in processed.common_matches)).sort(sortByLength),
-              ].map((match, index) => {
+    <Box sx={{width: '100%'}}>
+      {nMatches ? (
+        <TableContainer sx={{width: '100%'}}>
+          <Table
+            size="small"
+            sx={{
+              width: '100%',
+              '& .MuiTableCell-root:first-of-type': {pl: 0},
+              '& .MuiTableCell-root:last-of-type': {pr: 0},
+            }}
+          >
+            <TableHead>
+              <TableRow>
+                <TableCell component="th" width="999">
+                  Match
+                </TableCell>
+                <TableCell component="th" align="right">
+                  Suffix
+                </TableCell>
+                <TableCell component="th" align="right">
+                  Frequency
+                </TableCell>
+                <TableCell component="th" align="right">
+                  Similar
+                </TableCell>
+                <TableCell component="th" align="right">
+                  Senses
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {pageMatches.map((match, index) => {
+                if (!(match in processedTerms)) processedTerms[match] = processTerm(match, data)
+                const processedMatch = processedTerms[match] as FixedTerm
                 const common = processed.common_matches[match]
                 return (
-                  <ListItem key={index} sx={{p: 0}}>
-                    {common ? (
-                      <Typography className={common.part === '' ? 'match-root' : ''}>
-                        <span className="term-root">{common.root}</span>
-                        <span>{common.part}</span>
-                      </Typography>
-                    ) : (
-                      <Typography className="match-uncommon">{match}</Typography>
-                    )}
-                  </ListItem>
+                  <TableRow key={match + index} sx={{height: 33}} hover>
+                    <TableCell>{<TermLink term={match}></TermLink>}</TableCell>
+                    <TableCell align="right">{common ? common.part : ''}</TableCell>
+                    <TableCell align="right">
+                      {relativeFrequency(processedMatch.index, data.terms && data.terms.length)}
+                    </TableCell>
+                    <TableCell align="right">{processedMatch.similar.length}</TableCell>
+                    <TableCell align="right">{processedMatch.synsets.length}</TableCell>
+                  </TableRow>
                 )
-              })
-            )}
-          </List>
-        </Box>
+              })}
+            </TableBody>
+          </Table>
+          <TablePagination
+            component="div"
+            rowsPerPageOptions={[5, 10, 20, 50, 100, 1000]}
+            count={nMatches}
+            rowsPerPage={perPage}
+            page={page}
+            onPageChange={(e: unknown, page: number) => {
+              setPage(page)
+            }}
+            onRowsPerPageChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setPerPage(parseInt(e.target.value))
+              setPage(0)
+            }}
+          />
+        </TableContainer>
       ) : (
         <Typography>No matches</Typography>
       )}
-    </Paper>
+    </Box>
   )
 }
 
 function TermFixed({processed}: {processed: FixedTerm}) {
+  return <TermDisplay term={processed.term} />
+}
+
+export function TermLink({term}: {term: string}) {
+  const updateInfoDrawerState = useContext(InfoDrawerContext)
   return (
-    <Paper elevation={1}>
-      <TermInfo term={processed.term}></TermInfo>
-    </Paper>
+    <Link
+      underline="none"
+      sx={{p: 0, justifyContent: 'flex-start', cursor: 'pointer', display: 'block'}}
+      onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'term', value: term}})}
+    >
+      {term}
+    </Link>
+  )
+}
+
+export function TermDisplay({term, maxHeight}: {term: string; maxHeight?: string | number}) {
+  const processedTerms = useContext(Processed)
+  const data = useContext(ResourceContext)
+  if (!(term in processedTerms)) processedTerms[term] = processTerm(term, data)
+  const processed = processedTerms[term] as FixedTerm
+  return (
+    <Stack direction="row" spacing={4}>
+      <Stack>
+        <Tooltip title="100 - index / n terms * 100; terms are losely sorted by frequency and space coverage">
+          <Typography>Relative Frequency</Typography>
+        </Tooltip>
+        <Box sx={{p: 1}}>
+          <span className="number">{relativeFrequency(processed.index, data.terms && data.terms.length)}</span>
+        </Box>
+      </Stack>
+      {processed.similar.length ? (
+        <Stack>
+          <Typography>Similar Terms</Typography>
+          <Box sx={{p: 1, maxHeight: maxHeight || '20vh', overflowY: 'auto', overflowX: 'hidden'}}>
+            <List sx={{p: 0}}>
+              {processed.similar.map(term => (
+                <ListItem key={term} sx={{p: 0}}>
+                  {<TermLink term={term}></TermLink>}
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Stack>
+      ) : (
+        <></>
+      )}
+      {processed.synsets.length ? (
+        <Stack>
+          <Typography>Senses</Typography>
+          <Box sx={{p: 1, maxHeight: maxHeight || '20vh', overflowY: 'auto', overflowX: 'hidden'}}>
+            <List sx={{p: 0}}>
+              {processed.synsets.map(info => (
+                <ListItem key={info.key} sx={{p: 0}}>
+                  <SynsetLink info={info} />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Stack>
+      ) : (
+        <></>
+      )}
+    </Stack>
   )
 }

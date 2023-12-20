@@ -3,8 +3,8 @@ import {CssBaseline, ThemeProvider, createTheme} from '@mui/material'
 import {StrictMode, useReducer, useState} from 'react'
 import {Resources} from './resources'
 import {Building} from './building'
-import Display from './display'
 import {InfoDrawer, InfoDrawerActions, InfoDrawerContext, InfoDrawerState} from './infoDrawer'
+import AddedTerms from './addedTerms'
 
 const theme = createTheme({palette: {mode: 'dark'}})
 
@@ -32,13 +32,14 @@ export default function Home() {
         >
           <Building>
             <InfoDrawerContext.Provider value={updateInfoDrawerState}>
-              <Display
+              <AddedTerms
                 loading={{
                   terms: loadingTerms,
                   termAssociations: loadingTermAssociations,
                   synsets: loadingSynsets,
                   synsetInfo: loadingSynsetInfo,
                 }}
+                drawerOpen={!!infoDrawerState.length}
               />
               <InfoDrawer state={infoDrawerState} update={updateInfoDrawerState}></InfoDrawer>
             </InfoDrawerContext.Provider>
