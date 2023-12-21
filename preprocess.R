@@ -129,7 +129,7 @@ if (file.exists(paste0(baseDir, "term_synsets.rds"))) {
         lower_term <- gsub(" ", "-", lower_term)
         if (!lower_term %in% names(terms_indices)) {
           lower_term <- tolower(term)
-          terms_indices[[lower_term]] <- length(terms_indices)
+          terms_indices[[lower_term]] <- length(terms_indices) + 1
         }
       }
     }

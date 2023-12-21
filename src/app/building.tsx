@@ -1,69 +1,42 @@
 import {ReactNode, createContext, useContext, useMemo, useReducer} from 'react'
 import {FixedTerm, FuzzyTerm} from './term'
 import {ResourceContext, TermResources} from './resources'
-import {globToRegex, sortByLength, termBounds} from './utils'
-import {collapsedPrefixes, collapsedSuffixes} from './wordParts'
+import {globToRegex, termBounds} from './utils'
 
-type Dict = {[index: string]: {categories: {[index: string]: number}; sense: string}}
+type NumberObject = {[index: string]: number}
+type Dict = {[index: string]: {categories: NumberObject; sense: string}}
 type DictionaryActions =
   | {type: 'remove'; term: string}
-  | {type: 'add'; term: string; categories?: {[index: string]: number}; sense?: string}
-  | {type: 'update'; term: string; originalTerm: string; categories?: {[index: string]: number}; sense?: string}
+  | {type: 'add' | 'update'; term: string; categories?: NumberObject; sense?: string}
+  | {type: 'replace'; term: string; originalTerm: string; categories?: NumberObject; sense?: string}
+type CategoryActions = {type: 'collect'; dictionary: Dict; reset?: boolean} | {type: 'add' | 'remove'; cat: string}
+export type DictionaryEditor = (action: DictionaryActions) => void
 export const BuildContext = createContext<Dict>({})
 export const BuildEditContext = createContext((action: DictionaryActions) => {})
+export const AllCategoies = createContext<string[]>([])
+export const CategoryEditContext = createContext((action: CategoryActions) => {})
 
 type ProcessedTerms = {[index: string]: FuzzyTerm | FixedTerm}
 export const Processed = createContext<ProcessedTerms>({})
 
-const terminalVowels = /[aeiouy]$/
-const extractExpanded = (term: string, collapsedTerms: string) => {
-  const forms = new Set()
-  const termPattern = new RegExp(
-    collapsedPrefixes +
-      '(?:' +
-      term +
-      '|' +
-      term.replace(terminalVowels, '[aeiouy]') +
-      '|' +
-      term +
-      term.substring(term.length - 1) +
-      ')' +
-      collapsedSuffixes,
-    'g'
-  )
-  const tooNear = new RegExp('^;' + term + '?[aeiou]?;$')
-  for (let match: RegExpExecArray | null; (match = termPattern.exec(collapsedTerms)); ) {
-    if (!tooNear.test(match[0])) forms.add(match[0].replace(termBounds, ''))
-  }
-  return Array.from(forms) as string[]
-}
-
-const makeFixedTerm = (
-  term: string,
-  {terms, termLookup, collapsedTerms, termAssociations, synsetInfo}: TermResources
-) => {
+const makeFixedTerm = (term: string, {terms, termLookup, termAssociations, synsetInfo}: TermResources) => {
   const processed = {
     type: 'fixed',
     term: term,
     categories: {},
     recognized: false,
     index: terms && termLookup ? termLookup[term] || -1 : -1,
-    forms: [],
-    similar: [],
+    related: [],
     synsets: [],
   } as FixedTerm
-  if (collapsedTerms) processed.forms = extractExpanded(term, collapsedTerms)
-  processed.forms.sort(sortByLength)
   if (termAssociations && synsetInfo && terms && -1 !== processed.index) {
     processed.recognized = true
     const associated = termAssociations[processed.index]
-    processed.similar = associated[0]
+    processed.related = associated[0]
       ? (Array.isArray(associated[0]) ? associated[0] : [associated[0]]).map(index => terms[index - 1])
       : []
     processed.synsets = associated[1]
-      ? (Array.isArray(associated[1]) ? associated[1] : [associated[1]]).map(index => {
-          return synsetInfo[index - 1]
-        })
+      ? (Array.isArray(associated[1]) ? associated[1] : [associated[1]]).map(index => synsetInfo[index - 1])
       : []
   }
   return processed
@@ -80,21 +53,13 @@ export const processTerm = (term: string, data: TermResources) => {
       recognized: false,
       regex: new RegExp(processed, 'g'),
       matches: [],
-      common_matches: [],
     } as FuzzyTerm
     if (data.collapsedTerms) {
       for (let match: RegExpExecArray | null; (match = container.regex.exec(data.collapsedTerms)); ) {
         container.matches.push(match[0].replace(termBounds, ''))
       }
     }
-    if (container.matches.length) {
-      container.recognized = true
-      let root = ''
-      container.matches.forEach(match => {
-        if (!root || match.length < root.length) root = match
-      })
-      container.common_matches = extractExpanded(root, ';;' + container.matches.join(';;') + ';;')
-    }
+    container.recognized = !!container.matches.length
     return container
   }
 }
@@ -104,23 +69,50 @@ export function Building({children}: {children: ReactNode}) {
   const processedTerms = useMemo(() => {
     return {} as ProcessedTerms
   }, [])
-  function editDictionary(state: Dict, action: DictionaryActions) {
+  const editCategories = (state: string[], action: CategoryActions) => {
+    switch (action.type) {
+      case 'collect':
+        const cats: Set<string> = new Set(action.reset ? [] : state)
+        Object.keys(action.dictionary).forEach(term => {
+          const {categories} = action.dictionary[term]
+          Object.keys(categories).forEach(cat => cats.add(cat))
+        })
+        return Array.from(cats).sort()
+      case 'add':
+        return state.includes(action.cat) ? [...state] : [...state, action.cat].sort()
+      default:
+        return state.filter(cat => cat !== action.cat)
+    }
+  }
+  const editDictionary = (state: Dict, action: DictionaryActions) => {
     const newState = {...state} as Dict
     if (action.type === 'remove') {
       delete newState[action.term]
     } else {
-      if (action.type === 'update') delete newState[action.originalTerm]
+      if (action.type === 'replace') delete newState[action.originalTerm]
       if (!(action.term in processedTerms)) processedTerms[action.term] = processTerm(action.term, data)
+      if (!action.sense) {
+        const processed = processedTerms[action.term]
+        if (processed.type === 'fixed' && processed.synsets.length === 1) {
+          action.sense = processed.synsets[0].key
+        }
+      }
       newState[action.term] = {categories: action.categories || {}, sense: action.sense || ''}
     }
+    categoryAction({type: 'collect', dictionary: newState})
     return newState
   }
+  const [categories, categoryAction] = useReducer(editCategories, [])
   const [dictionary, dictionaryAction] = useReducer(editDictionary, {})
   return (
     <BuildContext.Provider value={dictionary}>
-      <BuildEditContext.Provider value={dictionaryAction}>
-        <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
-      </BuildEditContext.Provider>
+      <AllCategoies.Provider value={categories}>
+        <BuildEditContext.Provider value={dictionaryAction}>
+          <CategoryEditContext.Provider value={categoryAction}>
+            <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
+          </CategoryEditContext.Provider>
+        </BuildEditContext.Provider>
+      </AllCategoies.Provider>
     </BuildContext.Provider>
   )
 }

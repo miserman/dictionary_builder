@@ -1,3 +1,5 @@
+import {termBounds} from './utils'
+
 const commonPrefixes = [
   'anti',
   'de',
@@ -128,5 +130,26 @@ const addableSuffixes = [
   'y',
   'z',
 ]
-export const collapsedPrefixes = ';(?:' + commonPrefixes.join('|') + ')?-?'
-export const collapsedSuffixes = '-?(?:' + commonSuffixes.join('|') + ')?(?:' + addableSuffixes.join('|') + ')?\\;'
+const collapsedPrefixes = ';(?:' + commonPrefixes.join('|') + ')?-?'
+const collapsedSuffixes = '-?(?:' + commonSuffixes.join('|') + ')?(?:' + addableSuffixes.join('|') + ')?\\;'
+
+const terminalVowels = /[aeiouy]$/
+export function extractExpanded(term: string, collapsedTerms: string) {
+  const forms = new Set()
+  const termPattern = new RegExp(
+    collapsedPrefixes +
+      '(?:' +
+      term +
+      (term.length > (terminalVowels.test(term) ? 3 : 2) ? '|' + term.replace(terminalVowels, '[aeiouy]') : '') +
+      '|' +
+      term +
+      term.substring(term.length - 1) +
+      ')' +
+      collapsedSuffixes,
+    'g'
+  )
+  for (let match: RegExpExecArray | null; (match = termPattern.exec(collapsedTerms)); ) {
+    if (match[0] && ';' + term + ';' !== match[0]) forms.add(match[0].replace(termBounds, ''))
+  }
+  return Array.from(forms) as string[]
+}

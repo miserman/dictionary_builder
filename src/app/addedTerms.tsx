@@ -1,10 +1,23 @@
-import {Box, CircularProgress, Container, List, ListItem, Stack, Toolbar, Typography} from '@mui/material'
-import {useContext} from 'react'
+import {
+  Box,
+  CircularProgress,
+  Container,
+  List,
+  ListItem,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material'
+import {SyntheticEvent, useContext, useState} from 'react'
 import {Done, Error} from '@mui/icons-material'
-import {Term} from './term'
+import {TermCard, TermRow} from './term'
 import {ResourceContext} from './resources'
 import {Nav} from './nav'
-import {BuildContext, BuildEditContext, Processed} from './building'
+import {AllCategoies, BuildContext, BuildEditContext, Processed} from './building'
 
 const resources = [
   {key: 'terms', label: 'Terms'},
@@ -22,10 +35,12 @@ export default function AddedTerms({
 }) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
+  const Cats = useContext(AllCategoies)
   const termSet = useContext(Processed)
   const editDictionary = useContext(BuildEditContext)
+  const [asTable, setAsTable] = useState(true)
   const isInDict = (term: string) => term in Dict
-
+  const addedTerms = Object.keys(Dict).sort()
   return (
     <Box>
       {!Data.termAssociations || !Data.synsetInfo ? (
@@ -57,14 +72,61 @@ export default function AddedTerms({
             add={(term: string) => {
               editDictionary({type: 'add', term: term})
             }}
+            asTable={asTable}
+            displayToggle={(e: SyntheticEvent, checked: boolean) => setAsTable(checked)}
           />
-          <Box component="main" sx={{mb: drawerOpen ? '46vh' : 0}}>
-            <Toolbar />
-            {Object.keys(Dict)
-              .sort()
-              .map(term => {
+          <Box
+            component="main"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              overflowY: 'auto',
+              mt: '3.5em',
+              mb: drawerOpen ? '45vh' : 0,
+              pr: 1,
+              pb: 1,
+              pl: 1,
+            }}
+          >
+            {!addedTerms.length ? (
+              <Typography align="center">Add terms, or import an existing dictionary.</Typography>
+            ) : asTable ? (
+              <Table
+                stickyHeader
+                sx={{
+                  '& .MuiTableCell-root': {p: 0.5, textAlign: 'right'},
+                  '& th.MuiTableCell-root:first-of-type': {textAlign: 'left'},
+                }}
+              >
+                <TableHead>
+                  <TableRow>
+                    <TableCell component="th">Term</TableCell>
+                    <TableCell component="th">Sense</TableCell>
+                    <TableCell component="th">Frequency</TableCell>
+                    <TableCell component="th">Matches</TableCell>
+                    <TableCell component="th">Senses</TableCell>
+                    <TableCell component="th">related</TableCell>
+                    {Cats.map(cat => (
+                      <TableCell key={'category_' + cat} component="th">
+                        {cat}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {addedTerms.map(term => {
+                    const processed = termSet[term]
+                    return <TermRow key={term} processed={processed} edit={editDictionary} />
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              addedTerms.map(term => {
                 return (
-                  <Term
+                  <TermCard
                     key={term}
                     processed={termSet[term]}
                     onRemove={() => {
@@ -72,12 +134,14 @@ export default function AddedTerms({
                     }}
                     onUpdate={(value: string) => {
                       if (value && !isInDict(value)) {
-                        editDictionary({type: 'update', term: value, originalTerm: term})
+                        editDictionary({type: 'replace', term: value, originalTerm: term})
                       }
                     }}
+                    edit={editDictionary}
                   />
                 )
-              })}
+              })
+            )}
           </Box>
         </Container>
       )}

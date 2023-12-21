@@ -1,9 +1,9 @@
 import {Button, Card, CardActions, CardContent, CardHeader, Drawer, IconButton, Stack, Typography} from '@mui/material'
 import {createContext, useContext} from 'react'
-import {BuildContext, BuildEditContext, Processed, processTerm} from './building'
-import {type FixedTerm, TermDisplay} from './term'
+import {BuildContext, BuildEditContext} from './building'
+import {TermDisplay} from './term'
 import {Close} from '@mui/icons-material'
-import {ResourceContext, type Synset} from './resources'
+import type {Synset} from './resources'
 import {SynsetDisplay} from './synset'
 import {InfoDrawerRequest} from './page'
 
@@ -15,26 +15,20 @@ export type InfoDrawerActions =
 export const InfoDrawerContext = createContext((action: InfoDrawerActions) => {})
 
 function TermContent({term}: {term: string}) {
-  const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
-  const processedTerms = useContext(Processed)
-  if (!(term in processedTerms)) {
-    processedTerms[term] = processTerm(term, Data)
-  }
-  const processed = processedTerms[term] as FixedTerm
   return (
     <>
       <CardContent sx={{overflowY: 'auto'}}>
-        <TermDisplay term={term} maxHeight="25vh" />
+        <TermDisplay term={term} />
       </CardContent>
       <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
         <Button
           onClick={() => {
-            editDictionary({type: processed.term in Dict ? 'remove' : 'add', term: processed.term})
+            editDictionary({type: term in Dict ? 'remove' : 'add', term: term})
           }}
         >
-          {processed.term in Dict ? 'Remove' : 'Add'}
+          {term in Dict ? 'Remove' : 'Add'}
         </Button>
       </CardActions>
     </>
