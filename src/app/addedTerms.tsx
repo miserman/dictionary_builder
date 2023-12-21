@@ -52,13 +52,13 @@ export default function AddedTerms({
       ) : (
         <Container>
           <Nav
-            all_terms={Data.terms}
+            terms={Data.terms}
             exists={isInDict}
             add={(term: string) => {
               editDictionary({type: 'add', term: term})
             }}
           />
-          <Box component="main" sx={{mb: drawerOpen ? '52vh' : 0}}>
+          <Box component="main" sx={{mb: drawerOpen ? '46vh' : 0}}>
             <Toolbar />
             {Object.keys(Dict)
               .sort()

@@ -22,12 +22,13 @@ export type Synset = {
   entails: string | string[]
   causes: string | string[]
 }
-type Synsets = Synset[]
+type Synsets = readonly Synset[]
 export type TermResources = {
-  terms?: string[]
+  terms?: readonly string[]
+  termLookup?: {[index: string]: number}
   collapsedTerms?: string
   termAssociations?: AssociatedIndices
-  synsets?: string[]
+  synsets?: readonly string[]
   synsetInfo?: Synsets
 }
 export const ResourceContext = createContext<TermResources>({})
@@ -45,18 +46,22 @@ export function Resources({
   loadingSynsetInfo: (loading: boolean) => void
   children: ReactNode
 }) {
-  const [terms, setTerms] = useState<string[]>()
+  const [terms, setTerms] = useState<readonly string[]>()
+  const [termLookup, setTermLookup] = useState<{[index: string]: number}>()
   const [collapsedTerms, setCollapsedTerms] = useState<string>()
   const [termAssociations, setTermAssociations] = useState<AssociatedIndices>()
-  const [synsets, setSynsets] = useState<string[]>()
+  const [synsets, setSynsets] = useState<readonly string[]>()
   const [synsetInfo, setSynsetInfo] = useState<Synsets>()
 
   useEffect(() => {
     fetch('/dictionary_builder/data/terms.txt')
       .then(res => res.text())
       .then(data => {
-        const arr = data.split('\n')
+        const arr = Object.freeze(data.split('\n'))
         setTerms(arr)
+        const obj: {[index: string]: number} = {}
+        arr.forEach((term, index) => (obj[term] = index))
+        setTermLookup(Object.freeze(obj))
         setCollapsedTerms(';;' + arr.join(';;') + ';;')
       })
       .finally(() => loadingTerms(false))
@@ -73,7 +78,7 @@ export function Resources({
     fetch('/dictionary_builder/data/synsets.txt')
       .then(res => res.text())
       .then(data => {
-        setSynsets(data.split('\n'))
+        setSynsets(Object.freeze(data.split('\n')))
       })
       .finally(() => loadingSynsets(false))
   }, [loadingSynsets])
@@ -87,7 +92,7 @@ export function Resources({
   }, [loadingSynsetInfo])
 
   return (
-    <ResourceContext.Provider value={{terms, collapsedTerms, termAssociations, synsets, synsetInfo}}>
+    <ResourceContext.Provider value={{terms, termLookup, collapsedTerms, termAssociations, synsets, synsetInfo}}>
       {children}
     </ResourceContext.Provider>
   )

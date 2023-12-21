@@ -1,15 +1,18 @@
 import {AppBar, Autocomplete, Button, TextField, Toolbar} from '@mui/material'
-import {SyntheticEvent, useState} from 'react'
+import {SyntheticEvent, useMemo, useState} from 'react'
 
 export function Nav({
-  all_terms,
+  terms,
   exists,
   add,
 }: {
-  all_terms?: string[]
+  terms?: readonly string[]
   exists: (term: string) => boolean
   add: (term: string) => void
 }) {
+  const termMap = useMemo(() => {
+    return terms ? new Map(terms.map(term => [term, true])) : new Map()
+  }, [terms])
   const [inputTerm, setInputTerm] = useState('')
   const [alreadyAdded, setAlreadyAdded] = useState(false)
   const [termSuggestions, setTermSuggestions] = useState<string[]>([])
@@ -46,8 +49,14 @@ export function Nav({
           onKeyUp={(e: SyntheticEvent) => {
             if ('code' in e && e.code === 'Enter') {
               addTerm()
-            } else if (all_terms) {
-              setTermSuggestions(inputTerm.length > 2 ? all_terms.filter(term => term.startsWith(inputTerm)) : [])
+            } else if (terms) {
+              const suggestions: string[] = []
+              if (inputTerm.length > 2) {
+                termMap.forEach((_, term) => {
+                  if (term.startsWith(inputTerm)) suggestions.push(term)
+                })
+              }
+              setTermSuggestions(suggestions)
             }
           }}
           onChange={updateTerm}

@@ -20,7 +20,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {CommonExpansions, relativeFrequency} from './utils'
+import {relativeFrequency} from './utils'
 import {Close, Done} from '@mui/icons-material'
 import {ChangeEvent, SyntheticEvent, useContext, useState} from 'react'
 import {ResourceContext, Synset} from './resources'
@@ -34,6 +34,7 @@ export type FixedTerm = {
   categories: {[index: string]: number}
   recognized: boolean
   index: number
+  forms: string[]
   similar: string[]
   synsets: Synset[]
 }
@@ -44,7 +45,7 @@ export type FuzzyTerm = {
   recognized: boolean
   regex: RegExp
   matches: string[]
-  common_matches: CommonExpansions
+  common_matches: string[]
 }
 
 export function Term({
@@ -136,9 +137,6 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
                   Match
                 </TableCell>
                 <TableCell component="th" align="right">
-                  Suffix
-                </TableCell>
-                <TableCell component="th" align="right">
                   Frequency
                 </TableCell>
                 <TableCell component="th" align="right">
@@ -153,11 +151,9 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
               {pageMatches.map((match, index) => {
                 if (!(match in processedTerms)) processedTerms[match] = processTerm(match, data)
                 const processedMatch = processedTerms[match] as FixedTerm
-                const common = processed.common_matches[match]
                 return (
                   <TableRow key={match + index} sx={{height: 33}} hover>
                     <TableCell>{<TermLink term={match}></TermLink>}</TableCell>
-                    <TableCell align="right">{common ? common.part : ''}</TableCell>
                     <TableCell align="right">
                       {relativeFrequency(processedMatch.index, data.terms && data.terms.length)}
                     </TableCell>
@@ -208,6 +204,7 @@ export function TermLink({term}: {term: string}) {
 }
 
 export function TermDisplay({term, maxHeight}: {term: string; maxHeight?: string | number}) {
+  const containerStyle = {p: 1, maxHeight: maxHeight || '20vh', overflowY: 'auto', overflowX: 'hidden'}
   const processedTerms = useContext(Processed)
   const data = useContext(ResourceContext)
   if (!(term in processedTerms)) processedTerms[term] = processTerm(term, data)
@@ -222,10 +219,26 @@ export function TermDisplay({term, maxHeight}: {term: string; maxHeight?: string
           <span className="number">{relativeFrequency(processed.index, data.terms && data.terms.length)}</span>
         </Box>
       </Stack>
+      {processed.forms.length ? (
+        <Stack>
+          <Typography>Expanded Forms</Typography>
+          <Box sx={containerStyle}>
+            <List sx={{p: 0}}>
+              {processed.forms.map(term => (
+                <ListItem key={term} sx={{p: 0}}>
+                  {<TermLink term={term}></TermLink>}
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Stack>
+      ) : (
+        <></>
+      )}
       {processed.similar.length ? (
         <Stack>
           <Typography>Similar Terms</Typography>
-          <Box sx={{p: 1, maxHeight: maxHeight || '20vh', overflowY: 'auto', overflowX: 'hidden'}}>
+          <Box sx={containerStyle}>
             <List sx={{p: 0}}>
               {processed.similar.map(term => (
                 <ListItem key={term} sx={{p: 0}}>
@@ -241,7 +254,7 @@ export function TermDisplay({term, maxHeight}: {term: string; maxHeight?: string
       {processed.synsets.length ? (
         <Stack>
           <Typography>Senses</Typography>
-          <Box sx={{p: 1, maxHeight: maxHeight || '20vh', overflowY: 'auto', overflowX: 'hidden'}}>
+          <Box sx={containerStyle}>
             <List sx={{p: 0}}>
               {processed.synsets.map(info => (
                 <ListItem key={info.key} sx={{p: 0}}>

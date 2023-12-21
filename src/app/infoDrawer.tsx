@@ -1,13 +1,17 @@
 import {Button, Card, CardActions, CardContent, CardHeader, Drawer, IconButton, Stack, Typography} from '@mui/material'
-import {createContext, useContext, useState} from 'react'
+import {createContext, useContext} from 'react'
 import {BuildContext, BuildEditContext, Processed, processTerm} from './building'
 import {type FixedTerm, TermDisplay} from './term'
 import {Close} from '@mui/icons-material'
-import {ResourceContext, Synset} from './resources'
+import {ResourceContext, type Synset} from './resources'
 import {SynsetDisplay} from './synset'
+import {InfoDrawerRequest} from './page'
 
 export type InfoDrawerState = {type: 'term'; value: string} | {type: 'synset'; value: string; info: Synset}
-export type InfoDrawerActions = {type: 'add'; state: InfoDrawerState} | {type: 'reset'}
+export type InfoDrawerActions =
+  | {type: 'add'; state: InfoDrawerState}
+  | {type: 'trim'; state: InfoDrawerState[]}
+  | {type: 'reset'}
 export const InfoDrawerContext = createContext((action: InfoDrawerActions) => {})
 
 function TermContent({term}: {term: string}) {
@@ -22,7 +26,7 @@ function TermContent({term}: {term: string}) {
   return (
     <>
       <CardContent sx={{overflowY: 'auto'}}>
-        <TermDisplay term={term} maxHeight="31vh" />
+        <TermDisplay term={term} maxHeight="25vh" />
       </CardContent>
       <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
         <Button
@@ -45,16 +49,18 @@ function SynsetContent({info}: {info: Synset}) {
   )
 }
 
-export function InfoDrawer({state, update}: {state: InfoDrawerState[]; update: (action: InfoDrawerActions) => void}) {
-  const [historyPosition, setHistoryIndex] = useState([0, state.length])
+export function InfoDrawer({
+  state,
+  index,
+  request,
+}: {
+  state: InfoDrawerState[]
+  index: number
+  request: (body: InfoDrawerRequest) => void
+}) {
   if (!state.length) return
-  const historyIndex = historyPosition[0]
-  if (state.length != historyPosition[1]) setHistoryIndex([0, state.length])
-  const currentState = state[historyIndex]
-  const close = () => {
-    setHistoryIndex([0, 0])
-    update({type: 'reset'})
-  }
+  const close = () => request({type: 'reset'})
+  const currentState = state[index]
   return (
     <Drawer
       open={currentState.value !== ''}
@@ -63,7 +69,7 @@ export function InfoDrawer({state, update}: {state: InfoDrawerState[]; update: (
       hideBackdrop={true}
       anchor="bottom"
       sx={{
-        '& .MuiPaper-root': {height: '51vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'},
+        '& .MuiPaper-root': {height: '45vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'},
       }}
     >
       <Card>
@@ -76,21 +82,15 @@ export function InfoDrawer({state, update}: {state: InfoDrawerState[]; update: (
           title={
             <Stack direction="row">
               <Button
-                onClick={() =>
-                  setHistoryIndex([historyIndex < state.length ? historyIndex + 1 : state.length - 1, state.length])
-                }
-                disabled={historyIndex >= state.length - 1}
+                onClick={() => request({type: 'move', direction: 1})}
+                disabled={index >= state.length - 1}
                 sx={{opacity: 0.7}}
               >
-                {state.length > historyIndex + 1 ? state[historyIndex + 1].value : ''}
+                {state.length > index + 1 ? state[index + 1].value : ''}
               </Button>
               <Typography variant="h4">{currentState.value}</Typography>
-              <Button
-                onClick={() => setHistoryIndex([historyIndex > 0 ? historyIndex - 1 : 0, state.length])}
-                disabled={historyIndex < 1}
-                sx={{opacity: 0.7}}
-              >
-                {historyIndex > 0 ? state[historyIndex - 1].value : ''}
+              <Button onClick={() => request({type: 'move', direction: -1})} disabled={index < 1} sx={{opacity: 0.7}}>
+                {index > 0 ? state[index - 1].value : ''}
               </Button>
             </Stack>
           }

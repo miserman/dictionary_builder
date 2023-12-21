@@ -18,6 +18,17 @@ export function SynsetLink({info}: {info: Synset}) {
 }
 
 const id_pattern = /^\d+-\w$/
+const hyphen = /-/g
+function conformTerm(term: string, lookup?: {[index: string]: number}) {
+  term = term.toLowerCase()
+  if (lookup && !(term in lookup)) {
+    term = term.replace("'", '')
+    if (!(term in lookup)) {
+      term = term.replace(hyphen, ' ')
+    }
+  }
+  return term
+}
 function DisplayEntry({
   name,
   info,
@@ -26,20 +37,24 @@ function DisplayEntry({
 }: {
   name: keyof Synset
   info: Synset
-  ids: string[]
-  allInfo: Synset[]
+  ids: readonly string[]
+  allInfo: readonly Synset[]
 }) {
   const content = info[name] as string | string[]
+  const {termLookup} = useContext(ResourceContext)
+  const linkTerms = (content: string | string[], termLookup?: {[index: string]: number}) => {
+    return Array.isArray(content) ? (
+      content.map(entry => <TermLink key={entry} term={conformTerm(entry, termLookup)} />)
+    ) : (
+      <TermLink key={content} term={conformTerm(content, termLookup)} />
+    )
+  }
   return (
     <Box key={name} sx={{m: 1}}>
       <Typography variant="h5">{name}</Typography>
       <Typography>
         {name === 'members' ? (
-          Array.isArray(content) ? (
-            content.map(entry => <TermLink key={entry} term={entry} />)
-          ) : (
-            <TermLink key={content} term={content} />
-          )
+          linkTerms(content, termLookup)
         ) : Array.isArray(content) ? (
           content.map(
             id_pattern.test(content[0])
