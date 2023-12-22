@@ -1,99 +1,95 @@
-import {Box, Chip, Link, Stack, Typography} from '@mui/material'
+import {Box, Link, Stack, Typography} from '@mui/material'
 import {useContext} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {InfoDrawerContext} from './infoDrawer'
 import {TermLink} from './term'
 
-export function SynsetLink({info}: {info: Synset}) {
+export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
   const updateInfoDrawerState = useContext(InfoDrawerContext)
   return (
     <Link
       underline="none"
       sx={{p: 0, justifyContent: 'flex-start', cursor: 'pointer', display: 'block'}}
-      onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'synset', value: info.key, info: info}})}
+      onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'synset', value: senseKey, info: info}})}
     >
-      {info.key}
+      {senseKey}
     </Link>
   )
 }
 
-const id_pattern = /^\d+-\w$/
-const hyphen = /-/g
-function conformTerm(term: string, lookup?: {[index: string]: number}) {
-  term = term.toLowerCase()
-  if (lookup && !(term in lookup)) {
-    term = term.replace("'", '')
-    if (!(term in lookup)) {
-      term = term.replace(hyphen, ' ')
-    }
-  }
-  return term
-}
-function DisplayEntry({
-  name,
-  info,
-  ids,
-  allInfo,
-}: {
-  name: keyof Synset
-  info: Synset
-  ids: readonly string[]
-  allInfo: readonly Synset[]
-}) {
-  const content = info[name] as string | string[]
-  const {termLookup} = useContext(ResourceContext)
-  const linkTerms = (content: string | string[], termLookup?: {[index: string]: number}) => {
-    return Array.isArray(content) ? (
-      content.map(entry => <TermLink key={entry} term={conformTerm(entry, termLookup)} />)
+function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
+  const content = info[name] as string | number | number[]
+  const {terms, sense_keys, synsetInfo} = useContext(ResourceContext)
+  if (!terms || !sense_keys || !synsetInfo) return <></>
+  const linkTerms = (index: number | number[]) => {
+    return terms ? (
+      Array.isArray(index) ? (
+        index.map(i => <TermLink key={i} term={terms[i - 1]} />)
+      ) : (
+        <TermLink key={index} term={terms[index - 1]} />
+      )
     ) : (
-      <TermLink key={content} term={conformTerm(content, termLookup)} />
+      <></>
     )
   }
   return (
     <Box key={name} sx={{m: 1}}>
       <Typography variant="h5">{name}</Typography>
       <Typography>
-        {name === 'members' ? (
-          linkTerms(content, termLookup)
-        ) : Array.isArray(content) ? (
-          content.map(
-            id_pattern.test(content[0])
-              ? id => <SynsetLink key={id} info={allInfo[ids.indexOf(id)]} />
-              : entry => <Chip label={entry} />
-          )
-        ) : id_pattern.test(content) ? (
-          <SynsetLink info={allInfo[ids.indexOf(content)]} />
-        ) : (
+        {'string' === typeof content ? (
           content
+        ) : name === 'members' ? (
+          linkTerms(content)
+        ) : Array.isArray(content) ? (
+          content.map(index => {
+            const info = synsetInfo[index - 1]
+            return <SynsetLink key={index} senseKey={sense_keys[index - 1]} info={info} />
+          })
+        ) : (
+          <SynsetLink senseKey={sense_keys[content - 1]} info={synsetInfo[content - 1]} />
         )}
       </Typography>
     </Box>
   )
 }
 
-const basicInfo = {key: 0, index: 0, ili: 0, definition: 0}
+const basicInfo = {id: 0, index: 0, ili: 0, definition: 0, topic: 0}
+const partsOfSpeech = {a: 'adj', r: 'adv', s: 'adj', n: 'noun', v: 'verb'}
 export function SynsetDisplay({info}: {info: Synset}) {
-  const {synsets, synsetInfo} = useContext(ResourceContext)
+  const {sense_keys} = useContext(ResourceContext)
   return (
     <>
       <Typography variant="h6">{info.definition}</Typography>
-      <Typography component="p" variant="caption" sx={{ml: 1}}>
-        Sense Key: <span className="number">{info.key}</span>
-      </Typography>
-      <Typography component="p" variant="caption" sx={{ml: 1}}>
-        Open English WordNet ID: <span className="number">{synsets && synsets[info.index - 1]}</span>
-      </Typography>
-      <Typography component="p" variant="caption" sx={{ml: 1}}>
-        Interlingual ID: <span className="number">{info.ili}</span>
-      </Typography>
+      <Stack direction="row" spacing={2}>
+        <Box>
+          <Typography component="p" variant="caption" sx={{ml: 1}}>
+            Open English WordNet ID: <span className="number">{info.id}</span>
+          </Typography>
+          <Typography component="p" variant="caption" sx={{ml: 1}}>
+            Sense Key: <span className="number">{sense_keys && sense_keys[info.index]}</span>
+          </Typography>
+          <Typography component="p" variant="caption" sx={{ml: 1}}>
+            Interlingual ID: <span className="number">{info.ili}</span>
+          </Typography>
+        </Box>
+        <Box>
+          <Typography component="p" variant="caption" sx={{ml: 1}}>
+            Part of Speech:{' '}
+            <span className="number">
+              {partsOfSpeech[info.id.substring(info.id.length - 1) as keyof typeof partsOfSpeech]}
+            </span>
+          </Typography>
+          <Typography component="p" variant="caption" sx={{ml: 1}}>
+            Topic: <span className="number">{info.topic}</span>
+          </Typography>
+        </Box>
+      </Stack>
       <Stack direction="row" sx={{mt: 2}}>
-        {synsets && synsetInfo ? (
-          Object.keys(info)
-            .filter(k => !(k in basicInfo))
-            .map(k => <DisplayEntry key={k} name={k as keyof Synset} info={info} ids={synsets} allInfo={synsetInfo} />)
-        ) : (
-          <></>
-        )}
+        {Object.keys(info)
+          .filter(k => !(k in basicInfo))
+          .map(k => (
+            <DisplayEntry key={k} name={k as keyof Synset} info={info} />
+          ))}
       </Stack>
     </>
   )

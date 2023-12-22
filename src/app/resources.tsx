@@ -2,25 +2,26 @@ import {ReactNode, createContext, useEffect, useState} from 'react'
 
 type AssociatedIndices = {[index: string]: [number | number[], (number | number[])?]}
 export type Synset = {
+  id: string
   index: number
-  key: string
   definition: string
+  topic: string
   ili: string
   source: string
   wikidata: string
-  members: string | string[]
-  attribute: string | string[]
-  domain_topic: string | string[]
-  similar: string | string[]
-  also: string | string[]
-  domain_region: string | string[]
-  exemplifies: string | string[]
-  mero_part: string | string[]
-  instance_hypernym: string | string[]
-  mero_member: string | string[]
-  mero_substance: string | string[]
-  entails: string | string[]
-  causes: string | string[]
+  members: number | number[]
+  attribute: number | number[]
+  domain_topic: number | number[]
+  similar: number | number[]
+  also: number | number[]
+  domain_region: number | number[]
+  exemplifies: number | number[]
+  mero_part: number | number[]
+  instance_hypernym: number | number[]
+  mero_member: number | number[]
+  mero_substance: number | number[]
+  entails: number | number[]
+  causes: number | number[]
 }
 type Synsets = readonly Synset[]
 export type TermResources = {
@@ -28,7 +29,7 @@ export type TermResources = {
   termLookup?: {[index: string]: number}
   collapsedTerms?: string
   termAssociations?: AssociatedIndices
-  synsets?: readonly string[]
+  sense_keys?: readonly string[]
   synsetInfo?: Synsets
 }
 export const ResourceContext = createContext<TermResources>({})
@@ -36,13 +37,13 @@ export const ResourceContext = createContext<TermResources>({})
 export function Resources({
   loadingTerms,
   loadingTermAssociations,
-  loadingSynsets,
+  loadingSenseKeys,
   loadingSynsetInfo,
   children,
 }: {
   loadingTerms: (loading: boolean) => void
   loadingTermAssociations: (loading: boolean) => void
-  loadingSynsets: (loading: boolean) => void
+  loadingSenseKeys: (loading: boolean) => void
   loadingSynsetInfo: (loading: boolean) => void
   children: ReactNode
 }) {
@@ -50,7 +51,7 @@ export function Resources({
   const [termLookup, setTermLookup] = useState<{[index: string]: number}>()
   const [collapsedTerms, setCollapsedTerms] = useState<string>()
   const [termAssociations, setTermAssociations] = useState<AssociatedIndices>()
-  const [synsets, setSynsets] = useState<readonly string[]>()
+  const [sense_keys, setSenseKeys] = useState<readonly string[]>()
   const [synsetInfo, setSynsetInfo] = useState<Synsets>()
 
   useEffect(() => {
@@ -75,24 +76,29 @@ export function Resources({
       .finally(() => loadingTermAssociations(false))
   }, [loadingTermAssociations])
   useEffect(() => {
-    fetch('/dictionary_builder/data/synsets.txt')
+    fetch('/dictionary_builder/data/sense_keys.txt')
       .then(res => res.text())
       .then(data => {
-        setSynsets(Object.freeze(data.split('\n')))
+        setSenseKeys(Object.freeze(data.split('\n')))
       })
-      .finally(() => loadingSynsets(false))
-  }, [loadingSynsets])
+      .finally(() => loadingSenseKeys(false))
+  }, [loadingSenseKeys])
   useEffect(() => {
     fetch('/dictionary_builder/data/synset_info.json')
       .then(res => res.json())
       .then(data => {
-        setSynsetInfo(data)
+        setSynsetInfo(
+          data.map((d: Synset, i: number) => {
+            d.index = i
+            return d
+          })
+        )
       })
       .finally(() => loadingSynsetInfo(false))
   }, [loadingSynsetInfo])
 
   return (
-    <ResourceContext.Provider value={{terms, termLookup, collapsedTerms, termAssociations, synsets, synsetInfo}}>
+    <ResourceContext.Provider value={{terms, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}}>
       {children}
     </ResourceContext.Provider>
   )

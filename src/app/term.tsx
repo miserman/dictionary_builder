@@ -59,6 +59,7 @@ function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: Di
   const inputStyle = label ? {} : {pt: 0, pb: 0}
   const Dict = useContext(BuildContext)
   const dictEntry = Dict[processed.term]
+  const {sense_keys} = useContext(ResourceContext)
   return processed.synsets.length ? (
     <Select
       aria-label="assign synset"
@@ -70,16 +71,17 @@ function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: Di
       label={label}
       sx={{'& .MuiInputBase-input': inputStyle}}
     >
-      {processed.synsets.map(synset => {
-        const {key} = synset
-        return (
-          <MenuItem key={key} value={key}>
-            <Tooltip title={synset.definition} placement="right">
-              <Typography component="span">{key}</Typography>
-            </Tooltip>
-          </MenuItem>
-        )
-      })}
+      {sense_keys &&
+        processed.synsets.map(synset => {
+          const {index} = synset
+          return (
+            <MenuItem key={index} value={sense_keys[index]}>
+              <Tooltip title={synset.definition} placement="right">
+                <Typography component="span">{sense_keys[index]}</Typography>
+              </Tooltip>
+            </MenuItem>
+          )
+        })}
     </Select>
   ) : (
     <TextField
@@ -290,9 +292,9 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
 
 function TermFixed({processed}: {processed: FixedTerm}) {
   const containerStyle = {p: 1, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}
-  const data = useContext(ResourceContext)
+  const {terms, collapsedTerms, sense_keys} = useContext(ResourceContext)
   if (!processed.forms) {
-    processed.forms = extractExpanded(processed.term, data.collapsedTerms ? data.collapsedTerms : '')
+    processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms : '')
     processed.forms.sort(sortByLength)
   }
   return (
@@ -302,7 +304,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <Typography>Relative Frequency</Typography>
         </Tooltip>
         <Box sx={{p: 1}}>
-          <span className="number">{relativeFrequency(processed.index, data.terms && data.terms.length)}</span>
+          <span className="number">{relativeFrequency(processed.index, terms && terms.length)}</span>
         </Box>
       </Stack>
       {processed.forms.length ? (
@@ -337,14 +339,14 @@ function TermFixed({processed}: {processed: FixedTerm}) {
       ) : (
         <></>
       )}
-      {processed.synsets.length ? (
+      {sense_keys && processed.synsets.length ? (
         <Stack>
           <Typography>Senses</Typography>
           <Box sx={containerStyle}>
             <List sx={{p: 0}}>
               {processed.synsets.map(info => (
-                <ListItem key={info.key} sx={{p: 0}}>
-                  <SynsetLink info={info} />
+                <ListItem key={info.index} sx={{p: 0}}>
+                  <SynsetLink senseKey={sense_keys[info.index]} info={info} />
                 </ListItem>
               ))}
             </List>

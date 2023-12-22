@@ -22,7 +22,7 @@ import {AllCategoies, BuildContext, BuildEditContext, Processed} from './buildin
 const resources = [
   {key: 'terms', label: 'Terms'},
   {key: 'termAssociations', label: 'Term Associations'},
-  {key: 'synsets', label: 'Synsets'},
+  {key: 'sense_keys', label: 'Sense Keys'},
   {key: 'synsetInfo', label: 'Synset Info'},
 ] as const
 
@@ -30,7 +30,7 @@ export default function AddedTerms({
   loading,
   drawerOpen,
 }: {
-  loading: {terms: boolean; termAssociations: boolean; synsets: boolean; synsetInfo: boolean}
+  loading: {terms: boolean; termAssociations: boolean; sense_keys: boolean; synsetInfo: boolean}
   drawerOpen: boolean
 }) {
   const Data = useContext(ResourceContext)

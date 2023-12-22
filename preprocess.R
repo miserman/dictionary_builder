@@ -1,6 +1,7 @@
 library(lingmatch)
 library(jsonlite)
 library(yaml)
+library(parallel)
 
 term_map <- select.lspace()$term_map
 terms_indices <- structure(seq_len(nrow(term_map)), names = rownames(term_map))
@@ -33,9 +34,7 @@ for (space in colnames(term_map)) {
 }
 
 # tabulate the top terms across the pre-processed spaces
-if (file.exists(paste0(baseDir, "term_hits.rds"))) {
-  term_hits <- readRDS(paste0(baseDir, "term_hits.rds"))
-} else {
+if (!file.exists(paste0(baseDir, "term_hits.rds"))) {
   files <- paste0(preDir, colnames(term_map), ".json")
   files <- files[file.exists(files)]
   top_sims <- lapply(
@@ -56,6 +55,7 @@ if (file.exists(paste0(baseDir, "term_hits.rds"))) {
 if (file.exists(paste0(baseDir, "term_hits_trimmed.json"))) {
   term_hits_trimmed <- read_json(paste0(baseDir, "term_hits_trimmed.json"))
 } else {
+  term_hits <- readRDS(paste0(baseDir, "term_hits.rds"))
   term_spaces <- as.list(rowSums(term_map != 0)[names(term_hits)])
   term_hits_trimmed <- lapply(
     structure(seq_along(term_hits), names = names(term_hits)),
@@ -69,10 +69,7 @@ if (file.exists(paste0(baseDir, "term_hits_trimmed.json"))) {
 }
 
 # process wordnet data
-if (file.exists(paste0(baseDir, "wn_by_term.json"))) {
-  terms <- read_json(paste0(baseDir, "wn_by_term.json"))
-  synset_keys <- read_json(paste0(baseDir, "id_to_key.json"))
-} else {
+if (!file.exists(paste0(baseDir, "wn_by_term.json"))) {
   if (!dir.exists(paste0(baseDir, "english-wordnet"))) {
     cd <- getwd()
     setwd(baseDir)
@@ -110,7 +107,7 @@ if (file.exists(paste0(baseDir, "wn_by_term.json"))) {
       }
     }
   }
-  write_json(synset_keys, paste0(baseDir, "id_to_key.json"), auto_unbox = TRUE)
+  writeLines(unlist(synset_keys[names(by_synset)]), "public/data/sense_keys.txt")
   write_json(terms, paste0(baseDir, "wn_by_term.json"), auto_unbox = TRUE)
 }
 
@@ -119,15 +116,17 @@ if (file.exists(paste0(baseDir, "term_synsets.rds"))) {
   terms_indices <- readRDS(paste0(baseDir, "terms_indices.rds"))
   term_synsets <- readRDS(paste0(baseDir, "term_synsets.rds"))
 } else {
+  terms <- read_json(paste0(baseDir, "wn_by_term.json"))
   synset_ids <- structure(seq_along(by_synset), names = names(by_synset))
   term_synsets <- list()
+  all_terms <- names(terms_indices)
   for (term in names(terms$id)[-grep("^[0-9]+$", names(terms$id))]) {
     lower_term <- tolower(term)
-    if (!lower_term %in% names(terms_indices)) {
+    if (!lower_term %in% all_terms) {
       lower_term <- sub("'", "", lower_term)
-      if (!lower_term %in% names(terms_indices)) {
+      if (!lower_term %in% all_terms) {
         lower_term <- gsub(" ", "-", lower_term)
-        if (!lower_term %in% names(terms_indices)) {
+        if (!lower_term %in% all_terms) {
           lower_term <- tolower(term)
           terms_indices[[lower_term]] <- length(terms_indices) + 1
         }
@@ -147,39 +146,54 @@ if (file.exists(paste0(baseDir, "by_synset.json"))) {
     "entries|frames", list.files(paste0(baseDir, "english-wordnet/src/yaml")),
     value = TRUE, invert = TRUE
   )
-  by_synset <- unlist(lapply(files, function(file) {
-    d <- read_yaml(paste0(baseDir, "english-wordnet/src/yaml/", file))
-    if (!is.null(d$members)) {
-      members <- tolower(d$members)
-      su <- !members %in% names(terms_combined)
-      if (any(su)) {
-        members[su] <- sub("'", "", members[su])
-        su <- !members %in% names(terms_combined)
-        if (any(su)) {
-          members[su] <- gsub(" ", "-", members[su])
-          su <- !members %in% names(terms_combined)
+  cl <- makeCluster(detectCores() - 2)
+  clusterExport(cl, c("baseDir", "terms_indices"))
+  by_synset <- unlist(parLapplyLB(cl, files, function(file) {
+    topic <- yaml::read_yaml(paste0(baseDir, "english-wordnet/src/yaml/", file))
+    topic_name <- gsub("^[^.]+\\.|\\.yaml$", "", file)
+    lapply(
+      topic,
+      function(d){
+        if (!is.null(d$members)) {
+          members <- tolower(d$members)
+          members <- members[!grepl("^\\d+$", members)]
+          su <- !members %in% names(terms_indices)
           if (any(su)) {
-            stop("failed to conform members in ", file)
+            members[su] <- sub("'", "", members[su])
+            su <- !members %in% names(terms_indices)
+            if (any(su)) {
+              members[su] <- gsub(" ", "-", members[su])
+              su <- !members %in% names(terms_indices)
+              if (any(su)) {
+                stop("failed to conform members in ", file)
+              }
+            }
           }
+          d$members <- unname(terms_indices[members])
         }
+        d$topic <- topic_name
+        d
       }
-      d$members <- terms_indices[members]
-    }
-    d
+    )
   }), recursive = FALSE)
+  stopCluster(cl)
   write_json(by_synset, paste0(baseDir, "by_synset.json"), auto_unbox = TRUE)
 }
 
 # write synset resources
-for (id in names(by_synset)) by_synset[[id]]$key <- synset_keys[[id]]
+synset_ids <- structure(seq_along(by_synset), names = names(by_synset))
 write_json(lapply(seq_along(by_synset), function(i) {
   d <- by_synset[[i]]
-  d$index <- i
   d$partOfSpeech <- NULL
   d$example <- NULL
+  d <- lapply(d, function(e) if (any(grepl("^\\d+-\\w$", e))) {
+    unname(synset_ids[unlist(e)])
+  } else {
+    e
+  })
+  d$id <- names(by_synset)[[i]]
   d
 }), "public/data/synset_info.json", auto_unbox = TRUE)
-writeLines(names(by_synset), "public/data/synsets.txt")
 
 # write term resources
 terms_sim_exp <- term_hits_trimmed[names(terms_indices)]

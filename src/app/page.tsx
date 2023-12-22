@@ -18,7 +18,7 @@ const manageInfoDrawerState = (state: InfoDrawerState[], action: InfoDrawerActio
 export default function Home() {
   const [loadingTerms, setLoadingTerms] = useState(true)
   const [loadingTermAssociations, setLoadingTermAssociations] = useState(true)
-  const [loadingSynsets, setLoadingSynsets] = useState(true)
+  const [loadingSenseKeys, setLoadingSenseKeys] = useState(true)
   const [loadingSynsetInfo, setLoadingSynsetInfo] = useState(true)
 
   const [infoDrawerState, updateInfoDrawerState] = useReducer(manageInfoDrawerState, [])
@@ -44,7 +44,7 @@ export default function Home() {
         <Resources
           loadingTerms={setLoadingTerms}
           loadingTermAssociations={setLoadingTermAssociations}
-          loadingSynsets={setLoadingSynsets}
+          loadingSenseKeys={setLoadingSenseKeys}
           loadingSynsetInfo={setLoadingSynsetInfo}
         >
           <Building>
@@ -53,7 +53,7 @@ export default function Home() {
                 loading={{
                   terms: loadingTerms,
                   termAssociations: loadingTermAssociations,
-                  synsets: loadingSynsets,
+                  sense_keys: loadingSenseKeys,
                   synsetInfo: loadingSynsetInfo,
                 }}
                 drawerOpen={!!infoDrawerState.length}

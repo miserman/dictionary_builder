@@ -93,8 +93,8 @@ export function Building({children}: {children: ReactNode}) {
       if (!(action.term in processedTerms)) processedTerms[action.term] = processTerm(action.term, data)
       if (!action.sense) {
         const processed = processedTerms[action.term]
-        if (processed.type === 'fixed' && processed.synsets.length === 1) {
-          action.sense = processed.synsets[0].key
+        if (processed.type === 'fixed' && processed.synsets.length === 1 && data.sense_keys) {
+          action.sense = data.sense_keys[processed.synsets[0].index]
         }
       }
       newState[action.term] = {categories: action.categories || {}, sense: action.sense || ''}

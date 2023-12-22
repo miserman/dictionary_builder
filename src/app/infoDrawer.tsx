@@ -19,7 +19,7 @@ function TermContent({term}: {term: string}) {
   const editDictionary = useContext(BuildEditContext)
   return (
     <>
-      <CardContent sx={{overflowY: 'auto'}}>
+      <CardContent sx={{overflowY: 'auto', pt: 0}}>
         <TermDisplay term={term} />
       </CardContent>
       <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
@@ -37,7 +37,7 @@ function TermContent({term}: {term: string}) {
 
 function SynsetContent({info}: {info: Synset}) {
   return (
-    <CardContent sx={{overflowY: 'auto', mb: 'auto'}}>
+    <CardContent sx={{overflowY: 'auto', mb: 'auto', pt: 0}}>
       <SynsetDisplay info={info} />
     </CardContent>
   )
