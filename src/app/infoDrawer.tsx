@@ -5,13 +5,9 @@ import {TermDisplay} from './term'
 import {Close} from '@mui/icons-material'
 import type {Synset} from './resources'
 import {SynsetDisplay} from './synset'
-import {InfoDrawerRequest} from './page'
 
 export type InfoDrawerState = {type: 'term'; value: string} | {type: 'synset'; value: string; info: Synset}
-export type InfoDrawerActions =
-  | {type: 'add'; state: InfoDrawerState}
-  | {type: 'trim'; state: InfoDrawerState[]}
-  | {type: 'reset'}
+export type InfoDrawerActions = {type: 'add'; state: InfoDrawerState} | {type: 'back' | 'reset'}
 export const InfoDrawerContext = createContext((action: InfoDrawerActions) => {})
 
 function TermContent({term}: {term: string}) {
@@ -43,18 +39,10 @@ function SynsetContent({info}: {info: Synset}) {
   )
 }
 
-export function InfoDrawer({
-  state,
-  index,
-  request,
-}: {
-  state: InfoDrawerState[]
-  index: number
-  request: (body: InfoDrawerRequest) => void
-}) {
+export function InfoDrawer({state, edit}: {state: InfoDrawerState[]; edit: (action: InfoDrawerActions) => void}) {
   if (!state.length) return
-  const close = () => request({type: 'reset'})
-  const currentState = state[index]
+  const close = () => edit({type: 'reset'})
+  const currentState = state[0]
   return (
     <Drawer
       open={currentState.value !== ''}
@@ -75,17 +63,14 @@ export function InfoDrawer({
           }
           title={
             <Stack direction="row">
-              <Button
-                onClick={() => request({type: 'move', direction: 1})}
-                disabled={index >= state.length - 1}
-                sx={{opacity: 0.7}}
-              >
-                {state.length > index + 1 ? state[index + 1].value : ''}
-              </Button>
+              {state.length > 1 ? (
+                <Button onClick={() => edit({type: 'back'})} sx={{opacity: 0.7}}>
+                  {state[1].value}
+                </Button>
+              ) : (
+                <></>
+              )}
               <Typography variant="h4">{currentState.value}</Typography>
-              <Button onClick={() => request({type: 'move', direction: -1})} disabled={index < 1} sx={{opacity: 0.7}}>
-                {index > 0 ? state[index - 1].value : ''}
-              </Button>
             </Stack>
           }
         />

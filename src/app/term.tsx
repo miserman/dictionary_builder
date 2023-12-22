@@ -77,7 +77,7 @@ function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: Di
           return (
             <MenuItem key={index} value={sense_keys[index]}>
               <Tooltip title={synset.definition} placement="right">
-                <Typography component="span">{sense_keys[index]}</Typography>
+                <Typography sx={{width: '100%'}}>{sense_keys[index]}</Typography>
               </Tooltip>
             </MenuItem>
           )

@@ -4,7 +4,7 @@ import {ResourceContext, TermResources} from './resources'
 import {globToRegex, termBounds} from './utils'
 
 type NumberObject = {[index: string]: number}
-type Dict = {[index: string]: {categories: NumberObject; sense: string}}
+type Dict = {[index: string]: {updated: number; categories: NumberObject; sense: string}}
 type DictionaryActions =
   | {type: 'remove'; term: string}
   | {type: 'add' | 'update'; term: string; categories?: NumberObject; sense?: string}
@@ -97,7 +97,7 @@ export function Building({children}: {children: ReactNode}) {
           action.sense = data.sense_keys[processed.synsets[0].index]
         }
       }
-      newState[action.term] = {categories: action.categories || {}, sense: action.sense || ''}
+      newState[action.term] = {updated: Date.now(), categories: action.categories || {}, sense: action.sense || ''}
     }
     categoryAction({type: 'collect', dictionary: newState})
     return newState

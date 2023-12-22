@@ -8,11 +8,15 @@ import AddedTerms from './addedTerms'
 
 const theme = createTheme({palette: {mode: 'dark'}})
 
-export type InfoDrawerRequest = {type: 'reset'; direction?: 0} | {type: 'move'; direction: number}
 const manageInfoDrawerState = (state: InfoDrawerState[], action: InfoDrawerActions) => {
-  if (action.type === 'reset') return []
-  if (action.type === 'trim') return [...action.state]
-  return state.length && state[0].value === action.state.value ? [...state] : [action.state, ...state]
+  switch (action.type) {
+    case 'add':
+      return state.length && state[0].value === action.state.value ? [...state] : [action.state, ...state]
+    case 'back':
+      return [...state].splice(1, state.length)
+    default:
+      return []
+  }
 }
 
 export default function Home() {
@@ -22,21 +26,6 @@ export default function Home() {
   const [loadingSynsetInfo, setLoadingSynsetInfo] = useState(true)
 
   const [infoDrawerState, updateInfoDrawerState] = useReducer(manageInfoDrawerState, [])
-  const [lastStateLength, setLastStateLength] = useState(0)
-  const [infoDrawerHistoryIndex, setInfoDrawerHistoryIndex] = useState(0)
-  const navigateInfoDrawerHistory = ({type, direction}: InfoDrawerRequest) => {
-    if (type === 'reset') {
-      updateInfoDrawerState({type: 'reset'})
-      setInfoDrawerHistoryIndex(0)
-    } else {
-      setInfoDrawerHistoryIndex(Math.max(0, Math.min(infoDrawerState.length - 1, infoDrawerHistoryIndex + direction)))
-    }
-    setLastStateLength(infoDrawerState.length)
-  }
-  if (infoDrawerHistoryIndex && lastStateLength !== infoDrawerState.length) {
-    setLastStateLength(infoDrawerState.length)
-    setInfoDrawerHistoryIndex(0)
-  }
   return (
     <StrictMode>
       <ThemeProvider theme={theme}>
@@ -58,11 +47,7 @@ export default function Home() {
                 }}
                 drawerOpen={!!infoDrawerState.length}
               />
-              <InfoDrawer
-                state={infoDrawerState}
-                index={infoDrawerHistoryIndex}
-                request={navigateInfoDrawerHistory}
-              ></InfoDrawer>
+              <InfoDrawer state={infoDrawerState} edit={updateInfoDrawerState}></InfoDrawer>
             </InfoDrawerContext.Provider>
           </Building>
         </Resources>

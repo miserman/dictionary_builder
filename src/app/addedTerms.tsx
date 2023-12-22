@@ -25,6 +25,7 @@ const resources = [
   {key: 'sense_keys', label: 'Sense Keys'},
   {key: 'synsetInfo', label: 'Synset Info'},
 ] as const
+export type SortOptions = 'term' | 'time'
 
 export default function AddedTerms({
   loading,
@@ -39,8 +40,9 @@ export default function AddedTerms({
   const termSet = useContext(Processed)
   const editDictionary = useContext(BuildEditContext)
   const [asTable, setAsTable] = useState(true)
+  const [sortBy, setSortBy] = useState<SortOptions>('time')
   const isInDict = (term: string) => term in Dict
-  const addedTerms = Object.keys(Dict).sort()
+  const addedTerms = Object.keys(Dict).sort(sortBy === 'time' ? (a, b) => Dict[a].updated - Dict[b].updated : undefined)
   return (
     <Box>
       {!Data.termAssociations || !Data.synsetInfo ? (
@@ -74,6 +76,8 @@ export default function AddedTerms({
             }}
             asTable={asTable}
             displayToggle={(e: SyntheticEvent, checked: boolean) => setAsTable(checked)}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
           />
           <Box
             component="main"

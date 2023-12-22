@@ -7,9 +7,14 @@ import {
   CardContent,
   CardHeader,
   Drawer,
+  FormControl,
   FormControlLabel,
   IconButton,
+  InputLabel,
   ListItem,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
   Stack,
   Switch,
   TextField,
@@ -17,6 +22,7 @@ import {
   Typography,
 } from '@mui/material'
 import {SyntheticEvent, useMemo, useState} from 'react'
+import {SortOptions} from './addedTerms'
 
 export function Nav({
   terms,
@@ -24,12 +30,16 @@ export function Nav({
   add,
   asTable,
   displayToggle,
+  sortBy,
+  setSortBy,
 }: {
   terms?: readonly string[]
   exists: (term: string) => boolean
   add: (term: string) => void
   asTable: boolean
   displayToggle: (e: SyntheticEvent, checked: boolean) => void
+  sortBy: SortOptions
+  setSortBy: (by: SortOptions) => void
 }) {
   const termMap = useMemo(() => {
     return terms ? new Map(terms.map(term => [term, true])) : new Map()
@@ -73,7 +83,7 @@ export function Nav({
               value={inputTerm}
               onKeyUp={(e: SyntheticEvent) => {
                 if ('code' in e && e.code === 'Enter') {
-                  addTerm()
+                  addTerm('value' in e.target ? (e.target.value as string) : '')
                 } else if (terms) {
                   const suggestions: string[] = []
                   if (inputTerm.length > 2) {
@@ -97,9 +107,6 @@ export function Nav({
                   size="small"
                   placeholder="term to add"
                   value={inputTerm}
-                  onKeyDown={(e: SyntheticEvent) => {
-                    if ('code' in e && e.code === 'Enter') addTerm()
-                  }}
                   onChange={updateTerm}
                   error={alreadyAdded}
                 ></TextField>
@@ -127,11 +134,26 @@ export function Nav({
             }
           />
           <CardContent sx={{alignContent: 'left'}}>
-            <FormControlLabel
-              sx={{width: '100%'}}
-              label="As Table"
-              control={<Switch checked={asTable} onChange={displayToggle} />}
-            />
+            <Stack spacing={3}>
+              <FormControlLabel
+                sx={{width: '100%'}}
+                label="As Table"
+                control={<Switch checked={asTable} onChange={displayToggle} />}
+              />
+              <FormControl>
+                <InputLabel>Sort By</InputLabel>
+                <Select
+                  label="Sort By"
+                  value={sortBy as ''}
+                  onChange={(e: SelectChangeEvent<HTMLSelectElement>) => {
+                    setSortBy(e.target.value as SortOptions)
+                  }}
+                >
+                  <MenuItem value="time">Order Added</MenuItem>
+                  <MenuItem value="term">Term</MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
           </CardContent>
         </Card>
       </Drawer>
