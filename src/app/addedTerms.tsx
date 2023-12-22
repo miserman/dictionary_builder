@@ -42,7 +42,7 @@ export default function AddedTerms({
   const [asTable, setAsTable] = useState(true)
   const [sortBy, setSortBy] = useState<SortOptions>('time')
   const isInDict = (term: string) => term in Dict
-  const addedTerms = Object.keys(Dict).sort(sortBy === 'time' ? (a, b) => Dict[a].updated - Dict[b].updated : undefined)
+  const addedTerms = Object.keys(Dict).sort(sortBy === 'time' ? (a, b) => Dict[a].added - Dict[b].added : undefined)
   return (
     <Box>
       {!Data.termAssociations || !Data.synsetInfo ? (
@@ -71,7 +71,7 @@ export default function AddedTerms({
           <Nav
             terms={Data.terms}
             exists={isInDict}
-            add={(term: string) => {
+            add={(term: string | RegExp) => {
               editDictionary({type: 'add', term: term})
             }}
             asTable={asTable}

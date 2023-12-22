@@ -1,9 +1,11 @@
-const wildcard = /\*/g
+export const wildcards = /\*/g
+export const special = /([\[\]\(\)*?^$.+])/g
+const special_limited = /([\[\]\(\)?^$.+])/g
 export const termBounds = /^;|;$/g
 export type CommonExpansions = {[index: string]: {root: string; part: string}}
 
 export function globToRegex(term: string) {
-  return wildcard.test(term) ? ';' + term.replace(wildcard, '[^;]*') + ';' : term
+  return wildcards.test(term) ? ';' + term.replace(special_limited, '\\$&').replace(wildcards, '[^;]*') + ';' : term
 }
 
 export function sortByLength(a: string, b: string) {

@@ -37,6 +37,7 @@ import {extractExpanded} from './wordParts'
 
 export type FixedTerm = {
   type: 'fixed'
+  term_type: 'fixed'
   term: string
   categories: {[index: string]: number}
   recognized: boolean
@@ -47,6 +48,7 @@ export type FixedTerm = {
 }
 export type FuzzyTerm = {
   type: 'fuzzy'
+  term_type: 'glob' | 'regex'
   term: string
   categories: {[index: string]: number}
   recognized: boolean

@@ -1,4 +1,4 @@
-import {Close, Menu} from '@mui/icons-material'
+import {Close, Menu, SavedSearch, SearchOff} from '@mui/icons-material'
 import {
   AppBar,
   Autocomplete,
@@ -19,6 +19,7 @@ import {
   Switch,
   TextField,
   Toolbar,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import {SyntheticEvent, useMemo, useState} from 'react'
@@ -35,7 +36,7 @@ export function Nav({
 }: {
   terms?: readonly string[]
   exists: (term: string) => boolean
-  add: (term: string) => void
+  add: (term: string | RegExp) => void
   asTable: boolean
   displayToggle: (e: SyntheticEvent, checked: boolean) => void
   sortBy: SortOptions
@@ -48,6 +49,7 @@ export function Nav({
   const [alreadyAdded, setAlreadyAdded] = useState(false)
   const [termSuggestions, setTermSuggestions] = useState<string[]>([])
   const [menuOpen, setMenuOpen] = useState(false)
+  const [asRegEx, setAsRegEx] = useState(false)
 
   const addTerm = (newTerm?: SyntheticEvent | string) => {
     const toAdd = newTerm
@@ -58,7 +60,15 @@ export function Nav({
         : inputTerm
       : inputTerm
     if (toAdd && !exists(toAdd)) {
-      add(toAdd)
+      if (asRegEx) {
+        let termPattern: string | RegExp = toAdd
+        try {
+          termPattern = new RegExp(termPattern)
+        } catch {}
+        add(termPattern)
+      } else {
+        add(toAdd)
+      }
       setTermSuggestions([])
       setInputTerm('')
     }
@@ -83,7 +93,8 @@ export function Nav({
               value={inputTerm}
               onKeyUp={(e: SyntheticEvent) => {
                 if ('code' in e && e.code === 'Enter') {
-                  addTerm('value' in e.target ? (e.target.value as string) : '')
+                  const newValue = 'value' in e.target ? (e.target.value as string) : ''
+                  if (newValue === inputTerm) addTerm(newValue)
                 } else if (terms) {
                   const suggestions: string[] = []
                   if (inputTerm.length > 2) {
@@ -103,7 +114,6 @@ export function Nav({
               renderInput={params => (
                 <TextField
                   {...params}
-                  variant="outlined"
                   size="small"
                   placeholder="term to add"
                   value={inputTerm}
@@ -114,6 +124,11 @@ export function Nav({
               fullWidth
               freeSolo
             ></Autocomplete>
+            <Tooltip title={'regular expression characters are ' + (asRegEx ? 'active' : 'escaped')}>
+              <IconButton aria-label="toggle regular expression" onClick={() => setAsRegEx(!asRegEx)}>
+                {asRegEx ? <SavedSearch /> : <SearchOff />}
+              </IconButton>
+            </Tooltip>
             <Button variant="contained" onClick={() => addTerm()} disabled={alreadyAdded}>
               Add
             </Button>

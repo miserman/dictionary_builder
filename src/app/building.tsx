@@ -4,11 +4,11 @@ import {ResourceContext, TermResources} from './resources'
 import {globToRegex, termBounds} from './utils'
 
 type NumberObject = {[index: string]: number}
-type Dict = {[index: string]: {updated: number; categories: NumberObject; sense: string}}
+type Dict = {[index: string]: {added: number; categories: NumberObject; sense: string}}
 type DictionaryActions =
-  | {type: 'remove'; term: string}
-  | {type: 'add' | 'update'; term: string; categories?: NumberObject; sense?: string}
-  | {type: 'replace'; term: string; originalTerm: string; categories?: NumberObject; sense?: string}
+  | {type: 'remove'; term: string | RegExp}
+  | {type: 'add' | 'update'; term: string | RegExp; categories?: NumberObject; sense?: string}
+  | {type: 'replace'; term: string | RegExp; originalTerm: string | RegExp; categories?: NumberObject; sense?: string}
 type CategoryActions = {type: 'collect'; dictionary: Dict; reset?: boolean} | {type: 'add' | 'remove'; cat: string}
 export type DictionaryEditor = (action: DictionaryActions) => void
 export const BuildContext = createContext<Dict>({})
@@ -23,6 +23,7 @@ const makeFixedTerm = (term: string, {terms, termLookup, termAssociations, synse
   const processed = {
     type: 'fixed',
     term: term,
+    term_type: 'fixed',
     categories: {},
     recognized: false,
     index: terms && termLookup ? termLookup[term] || -1 : -1,
@@ -41,17 +42,21 @@ const makeFixedTerm = (term: string, {terms, termLookup, termAssociations, synse
   }
   return processed
 }
-export const processTerm = (term: string, data: TermResources) => {
-  const processed = globToRegex(term)
-  if (processed === term) {
+
+const regexDots = /\./g
+export const processTerm = (term: string | RegExp, data: TermResources) => {
+  const isString = 'string' === typeof term
+  const processed = isString ? globToRegex(term) : term.source
+  if (isString && processed === term) {
     return makeFixedTerm(term, data)
   } else {
     const container = {
       type: 'fuzzy',
-      term: term,
+      term_type: isString ? 'glob' : 'regex',
+      term: isString ? term : term.source,
       categories: {},
       recognized: false,
-      regex: new RegExp(processed, 'g'),
+      regex: new RegExp(isString ? processed : ';' + processed.replace(regexDots, '[^;]') + ';', 'g'),
       matches: [],
     } as FuzzyTerm
     if (data.collapsedTerms) {
@@ -86,18 +91,30 @@ export function Building({children}: {children: ReactNode}) {
   }
   const editDictionary = (state: Dict, action: DictionaryActions) => {
     const newState = {...state} as Dict
+    const term = 'string' === typeof action.term ? action.term : action.term.source
     if (action.type === 'remove') {
-      delete newState[action.term]
+      delete newState[term]
     } else {
-      if (action.type === 'replace') delete newState[action.originalTerm]
-      if (!(action.term in processedTerms)) processedTerms[action.term] = processTerm(action.term, data)
+      if (action.type === 'replace')
+        delete newState['string' === typeof action.originalTerm ? action.originalTerm : action.originalTerm.source]
+      const existing = processedTerms[term]
+      if (
+        !existing ||
+        ('string' == typeof action.term ? existing.term_type === 'regex' : existing.term_type !== 'regex')
+      ) {
+        processedTerms[term] = processTerm(action.term, data)
+      }
       if (!action.sense) {
-        const processed = processedTerms[action.term]
+        const processed = processedTerms[term]
         if (processed.type === 'fixed' && processed.synsets.length === 1 && data.sense_keys) {
           action.sense = data.sense_keys[processed.synsets[0].index]
         }
       }
-      newState[action.term] = {updated: Date.now(), categories: action.categories || {}, sense: action.sense || ''}
+      newState[term] = {
+        added: term in newState ? newState[term].added : Date.now(),
+        categories: action.categories || {},
+        sense: action.sense || '',
+      }
     }
     categoryAction({type: 'collect', dictionary: newState})
     return newState
