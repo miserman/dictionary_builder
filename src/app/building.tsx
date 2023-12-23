@@ -1,4 +1,4 @@
-import {ReactNode, createContext, useContext, useMemo, useReducer} from 'react'
+import {ReactNode, createContext, useContext, useMemo, useReducer, useState} from 'react'
 import {FixedTerm, FuzzyTerm} from './term'
 import {ResourceContext, TermResources} from './resources'
 import {globToRegex, termBounds} from './utils'
@@ -15,6 +15,8 @@ export const BuildContext = createContext<Dict>({})
 export const BuildEditContext = createContext((action: DictionaryActions) => {})
 export const AllCategoies = createContext<string[]>([])
 export const CategoryEditContext = createContext((action: CategoryActions) => {})
+export const CategoryMenuOpen = createContext(false)
+export const CategoryMenuToggler = createContext((open: boolean) => {})
 
 type ProcessedTerms = {[index: string]: FuzzyTerm | FixedTerm}
 export const Processed = createContext<ProcessedTerms>({})
@@ -97,10 +99,10 @@ export function Building({children}: {children: ReactNode}) {
     } else {
       if (action.type === 'replace')
         delete newState['string' === typeof action.originalTerm ? action.originalTerm : action.originalTerm.source]
-      const existing = processedTerms[term]
+      const processed = processedTerms[term]
       if (
-        !existing ||
-        ('string' == typeof action.term ? existing.term_type === 'regex' : existing.term_type !== 'regex')
+        !processed ||
+        ('string' == typeof action.term ? processed.term_type === 'regex' : processed.term_type !== 'regex')
       ) {
         processedTerms[term] = processTerm(action.term, data)
       }
@@ -110,10 +112,11 @@ export function Building({children}: {children: ReactNode}) {
           action.sense = data.sense_keys[processed.synsets[0].index]
         }
       }
+      const existing = newState[term] || {}
       newState[term] = {
-        added: term in newState ? newState[term].added : Date.now(),
-        categories: action.categories || {},
-        sense: action.sense || '',
+        added: existing.added || Date.now(),
+        categories: action.categories || existing.categories || {},
+        sense: action.sense || existing.sense || '',
       }
     }
     categoryAction({type: 'collect', dictionary: newState})
@@ -121,14 +124,23 @@ export function Building({children}: {children: ReactNode}) {
   }
   const [categories, categoryAction] = useReducer(editCategories, [])
   const [dictionary, dictionaryAction] = useReducer(editDictionary, {})
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
   return (
     <BuildContext.Provider value={dictionary}>
       <AllCategoies.Provider value={categories}>
-        <BuildEditContext.Provider value={dictionaryAction}>
-          <CategoryEditContext.Provider value={categoryAction}>
-            <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
-          </CategoryEditContext.Provider>
-        </BuildEditContext.Provider>
+        <CategoryMenuOpen.Provider value={categoryMenuOpen}>
+          <BuildEditContext.Provider value={dictionaryAction}>
+            <CategoryEditContext.Provider value={categoryAction}>
+              <CategoryMenuToggler.Provider
+                value={(open: boolean) => {
+                  setCategoryMenuOpen(open)
+                }}
+              >
+                <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
+              </CategoryMenuToggler.Provider>
+            </CategoryEditContext.Provider>
+          </BuildEditContext.Provider>
+        </CategoryMenuOpen.Provider>
       </AllCategoies.Provider>
     </BuildContext.Provider>
   )

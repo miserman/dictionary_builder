@@ -22,8 +22,9 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {SyntheticEvent, useMemo, useState} from 'react'
+import {SyntheticEvent, useContext, useMemo, useState} from 'react'
 import {SortOptions} from './addedTerms'
+import {CategoryMenuToggler} from './building'
 
 export function Nav({
   terms,
@@ -82,11 +83,15 @@ export function Nav({
     }
   }
   const toggleMenu = () => setMenuOpen(!menuOpen)
+  const setCategoryMenuOpen = useContext(CategoryMenuToggler)
 
   return (
     <>
       <AppBar component="nav">
         <Toolbar variant="dense" sx={{justifyContent: 'space-between'}} disableGutters>
+          <Button variant="contained" onClick={() => setCategoryMenuOpen(true)}>
+            Categories
+          </Button>
           <Stack direction="row" sx={{width: '40%'}} spacing={1}>
             <Autocomplete
               options={termSuggestions}

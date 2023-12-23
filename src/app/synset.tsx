@@ -1,4 +1,4 @@
-import {Box, Link, Stack, Typography} from '@mui/material'
+import {Box, Link, Stack, Tooltip, Typography} from '@mui/material'
 import {useContext} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {InfoDrawerContext} from './infoDrawer'
@@ -7,13 +7,15 @@ import {TermLink} from './term'
 export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
   const updateInfoDrawerState = useContext(InfoDrawerContext)
   return (
-    <Link
-      underline="none"
-      sx={{p: 0, justifyContent: 'flex-start', cursor: 'pointer', display: 'block'}}
-      onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'synset', value: senseKey, info: info}})}
-    >
-      {senseKey}
-    </Link>
+    <Tooltip title={info.definition} placement="right">
+      <Link
+        underline="none"
+        sx={{p: 0, justifyContent: 'flex-start', cursor: 'pointer', display: 'block'}}
+        onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'synset', value: senseKey, info: info}})}
+      >
+        {senseKey}
+      </Link>
+    </Tooltip>
   )
 }
 

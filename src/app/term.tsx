@@ -11,6 +11,7 @@ import {
   Link,
   List,
   ListItem,
+  Menu,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -58,20 +59,18 @@ export type FuzzyTerm = {
 }
 
 function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: DictionaryEditor; label?: string}) {
-  const inputStyle = label ? {} : {pt: 0, pb: 0}
   const Dict = useContext(BuildContext)
-  const dictEntry = Dict[processed.term]
+  const currentSense = Dict[processed.term].sense
   const {sense_keys} = useContext(ResourceContext)
   return processed.synsets.length ? (
     <Select
+      fullWidth
       aria-label="assign synset"
-      value={dictEntry.sense}
+      value={currentSense}
       onChange={(e: SelectChangeEvent) => {
-        dictEntry.sense = e.target.value
-        edit({type: 'update', term: processed.term, categories: dictEntry.categories, sense: dictEntry.sense})
+        edit({type: 'update', term: processed.term, sense: e.target.value})
       }}
       label={label}
-      sx={{'& .MuiInputBase-input': inputStyle}}
     >
       {sense_keys &&
         processed.synsets.map(synset => {
@@ -87,14 +86,49 @@ function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: Di
     </Select>
   ) : (
     <TextField
-      value={dictEntry.sense}
+      value={currentSense}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
-        dictEntry.sense = e.target.value
-        edit({type: 'update', term: processed.term, categories: dictEntry.categories, sense: dictEntry.sense})
+        edit({type: 'update', term: processed.term, sense: e.target.value})
       }}
       label={label}
-      sx={{'& .MuiInputBase-input': inputStyle}}
     ></TextField>
+  )
+}
+
+function TermCategoryEdit({processed, edit}: {processed: FixedTerm | FuzzyTerm; edit: DictionaryEditor}) {
+  const Dict = useContext(BuildContext)
+  const currentCategories = Dict[processed.term].categories
+  const categories = useContext(AllCategoies)
+
+  const [openAt, setOpenAt] = useState<HTMLElement | null>(null)
+  return (
+    <Box>
+      <Button
+        variant="contained"
+        sx={{p: 2}}
+        onClick={(e: SyntheticEvent<HTMLButtonElement>) => setOpenAt(e.currentTarget)}
+      >
+        Categories
+      </Button>
+      <Menu anchorEl={openAt} open={!!openAt} onClose={() => setOpenAt(null)}>
+        {categories.map(cat => {
+          return (
+            <MenuItem key={cat}>
+              <TextField
+                label={cat}
+                size="small"
+                variant="filled"
+                value={currentCategories[cat] || ''}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  currentCategories[cat] = +e.target.value
+                  edit({type: 'update', term: processed.term, categories: currentCategories})
+                }}
+              ></TextField>
+            </MenuItem>
+          )
+        })}
+      </Menu>
+    </Box>
   )
 }
 
@@ -151,14 +185,17 @@ export function TermCard({
         <TermDisplay term={processed.term} />
       </CardContent>
       <CardActions>
-        {processed.type === 'fixed' ? (
-          <FormControl>
-            {processed.synsets.length ? <InputLabel>Assigned Sense</InputLabel> : <></>}
-            <TermSenseEdit processed={processed} edit={edit} label="Assigned Sense" />
-          </FormControl>
-        ) : (
-          <></>
-        )}
+        <Stack direction="row" spacing={1}>
+          {processed.type === 'fixed' ? (
+            <FormControl>
+              {processed.synsets.length ? <InputLabel>Assigned Sense</InputLabel> : <></>}
+              <TermSenseEdit processed={processed} edit={edit} label="Assigned Sense" />
+            </FormControl>
+          ) : (
+            <></>
+          )}
+          <TermCategoryEdit processed={processed} edit={edit} />
+        </Stack>
       </CardActions>
     </Card>
   )
@@ -167,42 +204,47 @@ export function TermCard({
 export function TermRow({processed, edit}: {processed: FuzzyTerm | FixedTerm; edit: DictionaryEditor}) {
   const {terms} = useContext(ResourceContext)
   const cats = useContext(AllCategoies)
+  const Dict = useContext(BuildContext)
+  const dictEntry = Dict[processed.term]
   return (
-    <TableRow>
-      <TableCell component="th">
+    <TableRow className="dense-table-row">
+      <TableCell component="th" width={1}>
         <TermLink term={processed.term} />
       </TableCell>
       {processed.type === 'fixed' ? (
         <>
-          <TableCell>
+          <TableCell width={1}>
             <TermSenseEdit processed={processed} edit={edit} />
           </TableCell>
-          <TableCell>{relativeFrequency(processed.index, terms && terms.length)}</TableCell>
-          <TableCell>{processed.recognized ? 1 : 0}</TableCell>
-          <TableCell>{processed.synsets.length}</TableCell>
-          <TableCell>{processed.related.length}</TableCell>
+          <TableCell width={1}>{relativeFrequency(processed.index, terms && terms.length)}</TableCell>
+          <TableCell width={1}>{processed.recognized ? 1 : 0}</TableCell>
+          <TableCell width={1}>{processed.synsets.length}</TableCell>
+          <TableCell width={1}>{processed.related.length}</TableCell>
         </>
       ) : (
         <>
-          <TableCell></TableCell>
-          <TableCell></TableCell>
-          <TableCell>{processed.matches.length}</TableCell>
-          <TableCell></TableCell>
-          <TableCell></TableCell>
+          <TableCell width={1}></TableCell>
+          <TableCell width={1}></TableCell>
+          <TableCell width={1}>{processed.matches.length}</TableCell>
+          <TableCell width={1}></TableCell>
+          <TableCell width={1}></TableCell>
         </>
       )}
       {cats.map(cat => (
-        <TableCell key={cat}>
+        <TableCell key={cat} className="table-cell-input">
           <TextField
+            sx={{textAlign: 'right'}}
+            fullWidth
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               const value = +e.target.value
               if (value) {
-                processed.categories[cat] = value
+                dictEntry.categories[cat] = value
               } else {
-                delete processed.categories[cat]
+                delete dictEntry.categories[cat]
               }
+              edit({type: 'update', term: processed.term, categories: dictEntry.categories})
             }}
-            value={processed.categories[cat] ? processed.categories[cat] : ''}
+            value={dictEntry.categories[cat] ? dictEntry.categories[cat] : ''}
           ></TextField>
         </TableCell>
       ))}

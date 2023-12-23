@@ -5,8 +5,9 @@ import {Resources} from './resources'
 import {Building} from './building'
 import {InfoDrawer, InfoDrawerActions, InfoDrawerContext, InfoDrawerState} from './infoDrawer'
 import AddedTerms from './addedTerms'
+import {CategoriesMenu} from './categories'
 
-const theme = createTheme({palette: {mode: 'dark'}})
+const theme = createTheme({palette: {mode: 'dark', primary: {main: '#bb92e3'}}})
 
 const manageInfoDrawerState = (state: InfoDrawerState[], action: InfoDrawerActions) => {
   switch (action.type) {
@@ -49,6 +50,7 @@ export default function Home() {
               />
               <InfoDrawer state={infoDrawerState} edit={updateInfoDrawerState}></InfoDrawer>
             </InfoDrawerContext.Provider>
+            <CategoriesMenu />
           </Building>
         </Resources>
       </ThemeProvider>

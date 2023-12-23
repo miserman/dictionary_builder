@@ -1,14 +1,17 @@
-.match-root:before {
-  content: '-';
-  position: absolute;
-  margin: -2px 0 0 -12px;
-}
-.match-uncommon {
-  opacity: 0.85;
-}
-.term-root {
-  color: #c0c0c0;
-}
 .number {
-  color: #c9ffcf;
+  color: #a1d9ee;
+}
+.dense-table-row td,
+.dense-table-row th {
+  max-width: 10em;
+}
+.dense-table-row input,
+.dense-table-row .MuiSelect-select {
+  padding: 0 0.5em;
+  text-align: right;
+}
+.dense-table-row .MuiSelect-select p {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

@@ -112,7 +112,7 @@ export default function AddedTerms({
                     <TableCell component="th">Frequency</TableCell>
                     <TableCell component="th">Matches</TableCell>
                     <TableCell component="th">Senses</TableCell>
-                    <TableCell component="th">related</TableCell>
+                    <TableCell component="th">Related</TableCell>
                     {Cats.map(cat => (
                       <TableCell key={'category_' + cat} component="th">
                         {cat}
