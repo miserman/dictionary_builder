@@ -71,8 +71,8 @@ export default function AddedTerms({
           <Nav
             terms={Data.terms}
             exists={isInDict}
-            add={(term: string | RegExp) => {
-              editDictionary({type: 'add', term: term})
+            add={(term: string | RegExp, type: string) => {
+              editDictionary({type: 'add', term: term, term_type: type})
             }}
             asTable={asTable}
             displayToggle={(e: SyntheticEvent, checked: boolean) => setAsTable(checked)}
@@ -129,16 +129,22 @@ export default function AddedTerms({
               </Table>
             ) : (
               addedTerms.map(term => {
+                const processed = termSet[term]
                 return (
                   <TermCard
                     key={term}
-                    processed={termSet[term]}
+                    processed={processed}
                     onRemove={() => {
                       editDictionary({type: 'remove', term: term})
                     }}
                     onUpdate={(value: string) => {
                       if (value && !isInDict(value)) {
-                        editDictionary({type: 'replace', term: value, originalTerm: term})
+                        editDictionary({
+                          type: 'replace',
+                          term: value,
+                          term_type: processed.term_type,
+                          originalTerm: term,
+                        })
                       }
                     }}
                     edit={editDictionary}

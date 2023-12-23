@@ -13,6 +13,7 @@ export const InfoDrawerContext = createContext((action: InfoDrawerActions) => {}
 function TermContent({term}: {term: string}) {
   const Dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
+  const isInDict = term in Dict
   return (
     <>
       <CardContent sx={{overflowY: 'auto', pt: 0}}>
@@ -21,10 +22,10 @@ function TermContent({term}: {term: string}) {
       <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
         <Button
           onClick={() => {
-            editDictionary({type: term in Dict ? 'remove' : 'add', term: term})
+            editDictionary(isInDict ? {type: 'remove', term: term} : {type: 'add', term: term, term_type: 'fixed'})
           }}
         >
-          {term in Dict ? 'Remove' : 'Add'}
+          {isInDict ? 'Remove' : 'Add'}
         </Button>
       </CardActions>
     </>

@@ -1,4 +1,4 @@
-import {Add, Close, Delete} from '@mui/icons-material'
+import {Close, Delete} from '@mui/icons-material'
 import {
   Button,
   Dialog,
@@ -23,8 +23,10 @@ export function CategoriesMenu() {
   const [newCategory, setNewCategory] = useState('')
   const close = () => setCategoryMenuOpen(false)
   const add = () => {
-    editCategories({type: 'add', cat: newCategory})
-    setNewCategory('')
+    if (newCategory && -1 === categories.indexOf(newCategory)) {
+      editCategories({type: 'add', cat: newCategory})
+      setNewCategory('')
+    }
   }
   return (
     <Dialog open={categoryMenuOpen} onClose={close}>

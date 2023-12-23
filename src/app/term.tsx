@@ -68,7 +68,7 @@ function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: Di
       aria-label="assign synset"
       value={currentSense}
       onChange={(e: SelectChangeEvent) => {
-        edit({type: 'update', term: processed.term, sense: e.target.value})
+        edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
       }}
       label={label}
     >
@@ -88,7 +88,7 @@ function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: Di
     <TextField
       value={currentSense}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
-        edit({type: 'update', term: processed.term, sense: e.target.value})
+        edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
       }}
       label={label}
     ></TextField>
@@ -121,7 +121,12 @@ function TermCategoryEdit({processed, edit}: {processed: FixedTerm | FuzzyTerm; 
                 value={currentCategories[cat] || ''}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                   currentCategories[cat] = +e.target.value
-                  edit({type: 'update', term: processed.term, categories: currentCategories})
+                  edit({
+                    type: 'update',
+                    term: processed.term,
+                    term_type: processed.term_type,
+                    categories: currentCategories,
+                  })
                 }}
               ></TextField>
             </MenuItem>
@@ -242,7 +247,12 @@ export function TermRow({processed, edit}: {processed: FuzzyTerm | FixedTerm; ed
               } else {
                 delete dictEntry.categories[cat]
               }
-              edit({type: 'update', term: processed.term, categories: dictEntry.categories})
+              edit({
+                type: 'update',
+                term: processed.term,
+                term_type: processed.term_type,
+                categories: dictEntry.categories,
+              })
             }}
             value={dictEntry.categories[cat] ? dictEntry.categories[cat] : ''}
           ></TextField>

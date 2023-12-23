@@ -22,9 +22,12 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {SyntheticEvent, useContext, useMemo, useState} from 'react'
+import {SyntheticEvent, useContext, useState} from 'react'
 import {SortOptions} from './addedTerms'
-import {CategoryMenuToggler} from './building'
+import {CategoryMenuToggler, DictionaryName} from './building'
+import {InfoDrawerContext} from './infoDrawer'
+import {extractMatches, globToRegex, prepareRegex, special, wildcards} from './utils'
+import {ResourceContext} from './resources'
 
 export function Nav({
   terms,
@@ -37,20 +40,20 @@ export function Nav({
 }: {
   terms?: readonly string[]
   exists: (term: string) => boolean
-  add: (term: string | RegExp) => void
+  add: (term: string | RegExp, type: string) => void
   asTable: boolean
   displayToggle: (e: SyntheticEvent, checked: boolean) => void
   sortBy: SortOptions
   setSortBy: (by: SortOptions) => void
 }) {
-  const termMap = useMemo(() => {
-    return terms ? new Map(terms.map(term => [term, true])) : new Map()
-  }, [terms])
   const [inputTerm, setInputTerm] = useState('')
   const [alreadyAdded, setAlreadyAdded] = useState(false)
   const [termSuggestions, setTermSuggestions] = useState<string[]>([])
   const [menuOpen, setMenuOpen] = useState(false)
   const [asRegEx, setAsRegEx] = useState(false)
+  const currentDictionary = useContext(DictionaryName)
+  const updateInfoDrawerState = useContext(InfoDrawerContext)
+  const {collapsedTerms} = useContext(ResourceContext)
 
   const addTerm = (newTerm?: SyntheticEvent | string) => {
     const toAdd = newTerm
@@ -66,9 +69,9 @@ export function Nav({
         try {
           termPattern = new RegExp(termPattern)
         } catch {}
-        add(termPattern)
+        add(termPattern, 'regex')
       } else {
-        add(toAdd)
+        add(toAdd, 'fixed')
       }
       setTermSuggestions([])
       setInputTerm('')
@@ -89,10 +92,12 @@ export function Nav({
     <>
       <AppBar component="nav">
         <Toolbar variant="dense" sx={{justifyContent: 'space-between'}} disableGutters>
-          <Button variant="contained" onClick={() => setCategoryMenuOpen(true)}>
-            Categories
-          </Button>
-          <Stack direction="row" sx={{width: '40%'}} spacing={1}>
+          <Stack direction="row" spacing={2}>
+            <Button variant="contained" onClick={() => setCategoryMenuOpen(true)}>
+              Categories
+            </Button>
+          </Stack>
+          <Stack direction="row" sx={{width: 'calc(min(500px, 50%))'}} spacing={1}>
             <Autocomplete
               options={termSuggestions}
               value={inputTerm}
@@ -102,10 +107,21 @@ export function Nav({
                   if (newValue === inputTerm) addTerm(newValue)
                 } else if (terms) {
                   const suggestions: string[] = []
-                  if (inputTerm.length > 2) {
-                    termMap.forEach((_, term) => {
-                      if (term.startsWith(inputTerm)) suggestions.push(term)
-                    })
+                  if (inputTerm && collapsedTerms) {
+                    let ex: RegExp | undefined
+                    try {
+                      ex = new RegExp(
+                        asRegEx
+                          ? prepareRegex(inputTerm)
+                          : wildcards.test(inputTerm)
+                          ? globToRegex(inputTerm)
+                          : ';' + inputTerm + '[^;]*;',
+                        'g'
+                      )
+                    } catch {
+                      ex = new RegExp(';' + inputTerm.replace(special, '\\%&') + ';', 'g')
+                    }
+                    extractMatches(ex, collapsedTerms, suggestions, 100)
                   }
                   setTermSuggestions(suggestions)
                 }
@@ -126,6 +142,11 @@ export function Nav({
                   error={alreadyAdded}
                 ></TextField>
               )}
+              filterOptions={x => x}
+              selectOnFocus
+              clearOnBlur
+              clearOnEscape
+              handleHomeEndKeys
               fullWidth
               freeSolo
             ></Autocomplete>
@@ -134,6 +155,14 @@ export function Nav({
                 {asRegEx ? <SavedSearch /> : <SearchOff />}
               </IconButton>
             </Tooltip>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                if (inputTerm) updateInfoDrawerState({type: 'add', state: {type: 'term', value: inputTerm}})
+              }}
+            >
+              View
+            </Button>
             <Button variant="contained" onClick={() => addTerm()} disabled={alreadyAdded}>
               Add
             </Button>

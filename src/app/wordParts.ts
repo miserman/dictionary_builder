@@ -1,4 +1,4 @@
-import {termBounds} from './utils'
+import {special, termBounds} from './utils'
 
 const commonPrefixes = [
   'anti',
@@ -136,20 +136,26 @@ const collapsedSuffixes = '-?(?:' + commonSuffixes.join('|') + ')?(?:' + addable
 const terminalVowels = /[aeiouy]$/
 export function extractExpanded(term: string, collapsedTerms: string) {
   const forms = new Set()
-  const termPattern = new RegExp(
-    collapsedPrefixes +
-      '(?:' +
-      term +
-      (term.length > (terminalVowels.test(term) ? 3 : 2) ? '|' + term.replace(terminalVowels, '[aeiouy]') : '') +
-      '|' +
-      term +
-      term.substring(term.length - 1) +
-      ')' +
-      collapsedSuffixes,
-    'g'
-  )
-  for (let match: RegExpExecArray | null; (match = termPattern.exec(collapsedTerms)); ) {
-    if (match[0] && ';' + term + ';' !== match[0]) forms.add(match[0].replace(termBounds, ''))
+  term = term.replace(special, '\\$&')
+  let termPattern: RegExp | undefined
+  try {
+    termPattern = new RegExp(
+      collapsedPrefixes +
+        '(?:' +
+        term +
+        (term.length > (terminalVowels.test(term) ? 3 : 2) ? '|' + term.replace(terminalVowels, '[aeiouy]') : '') +
+        '|' +
+        term +
+        term.substring(term.length - 1) +
+        ')' +
+        collapsedSuffixes,
+      'g'
+    )
+  } catch {}
+  if (termPattern) {
+    for (let match: RegExpExecArray | null; (match = termPattern.exec(collapsedTerms)); ) {
+      if (match[0] && ';' + term + ';' !== match[0]) forms.add(match[0].replace(termBounds, ''))
+    }
   }
   return Array.from(forms) as string[]
 }

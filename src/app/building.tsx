@@ -1,16 +1,25 @@
 import {ReactNode, createContext, useContext, useMemo, useReducer, useState} from 'react'
 import {FixedTerm, FuzzyTerm} from './term'
 import {ResourceContext, TermResources} from './resources'
-import {globToRegex, termBounds} from './utils'
+import {extractMatches, globToRegex, prepareRegex, wildcards} from './utils'
 
 type NumberObject = {[index: string]: number}
 type Dict = {[index: string]: {added: number; categories: NumberObject; sense: string}}
 type DictionaryActions =
   | {type: 'remove'; term: string | RegExp}
-  | {type: 'add' | 'update'; term: string | RegExp; categories?: NumberObject; sense?: string}
-  | {type: 'replace'; term: string | RegExp; originalTerm: string | RegExp; categories?: NumberObject; sense?: string}
+  | {type: 'add' | 'update'; term: string | RegExp; term_type: string; categories?: NumberObject; sense?: string}
+  | {
+      type: 'replace'
+      term: string | RegExp
+      term_type: string
+      originalTerm: string | RegExp
+      categories?: NumberObject
+      sense?: string
+    }
 type CategoryActions = {type: 'collect'; dictionary: Dict; reset?: boolean} | {type: 'add' | 'remove'; cat: string}
 export type DictionaryEditor = (action: DictionaryActions) => void
+export const DictionaryName = createContext('')
+export const DictionaryNameSetter = createContext((name: string) => {})
 export const BuildContext = createContext<Dict>({})
 export const BuildEditContext = createContext((action: DictionaryActions) => {})
 export const AllCategoies = createContext<string[]>([])
@@ -45,26 +54,23 @@ const makeFixedTerm = (term: string, {terms, termLookup, termAssociations, synse
   return processed
 }
 
-const regexDots = /\./g
 export const processTerm = (term: string | RegExp, data: TermResources) => {
   const isString = 'string' === typeof term
-  const processed = isString ? globToRegex(term) : term.source
-  if (isString && processed === term) {
+  if (isString && !wildcards.test(term)) {
     return makeFixedTerm(term, data)
   } else {
+    const processed = isString ? globToRegex(term) : term.source
     const container = {
       type: 'fuzzy',
       term_type: isString ? 'glob' : 'regex',
       term: isString ? term : term.source,
       categories: {},
       recognized: false,
-      regex: new RegExp(isString ? processed : ';' + processed.replace(regexDots, '[^;]') + ';', 'g'),
+      regex: new RegExp(isString ? processed : prepareRegex(processed), 'g'),
       matches: [],
     } as FuzzyTerm
     if (data.collapsedTerms) {
-      for (let match: RegExpExecArray | null; (match = container.regex.exec(data.collapsedTerms)); ) {
-        container.matches.push(match[0].replace(termBounds, ''))
-      }
+      extractMatches(container.regex, data.collapsedTerms, container.matches)
     }
     container.recognized = !!container.matches.length
     return container
@@ -100,10 +106,7 @@ export function Building({children}: {children: ReactNode}) {
       if (action.type === 'replace')
         delete newState['string' === typeof action.originalTerm ? action.originalTerm : action.originalTerm.source]
       const processed = processedTerms[term]
-      if (
-        !processed ||
-        ('string' == typeof action.term ? processed.term_type === 'regex' : processed.term_type !== 'regex')
-      ) {
+      if (!processed || action.term_type !== processed.term_type) {
         processedTerms[term] = processTerm(action.term, data)
       }
       if (!action.sense) {
@@ -122,26 +125,35 @@ export function Building({children}: {children: ReactNode}) {
     categoryAction({type: 'collect', dictionary: newState})
     return newState
   }
+  const [name, setName] = useState('')
   const [categories, categoryAction] = useReducer(editCategories, [])
   const [dictionary, dictionaryAction] = useReducer(editDictionary, {})
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
   return (
-    <BuildContext.Provider value={dictionary}>
-      <AllCategoies.Provider value={categories}>
-        <CategoryMenuOpen.Provider value={categoryMenuOpen}>
-          <BuildEditContext.Provider value={dictionaryAction}>
-            <CategoryEditContext.Provider value={categoryAction}>
-              <CategoryMenuToggler.Provider
-                value={(open: boolean) => {
-                  setCategoryMenuOpen(open)
-                }}
-              >
-                <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
-              </CategoryMenuToggler.Provider>
-            </CategoryEditContext.Provider>
-          </BuildEditContext.Provider>
-        </CategoryMenuOpen.Provider>
-      </AllCategoies.Provider>
-    </BuildContext.Provider>
+    <DictionaryName.Provider value={name}>
+      <BuildContext.Provider value={dictionary}>
+        <AllCategoies.Provider value={categories}>
+          <CategoryMenuOpen.Provider value={categoryMenuOpen}>
+            <DictionaryNameSetter.Provider
+              value={(name: string) => {
+                setName(name)
+              }}
+            >
+              <BuildEditContext.Provider value={dictionaryAction}>
+                <CategoryEditContext.Provider value={categoryAction}>
+                  <CategoryMenuToggler.Provider
+                    value={(open: boolean) => {
+                      setCategoryMenuOpen(open)
+                    }}
+                  >
+                    <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
+                  </CategoryMenuToggler.Provider>
+                </CategoryEditContext.Provider>
+              </BuildEditContext.Provider>
+            </DictionaryNameSetter.Provider>
+          </CategoryMenuOpen.Provider>
+        </AllCategoies.Provider>
+      </BuildContext.Provider>
+    </DictionaryName.Provider>
   )
 }
