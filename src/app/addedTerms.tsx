@@ -17,7 +17,7 @@ import {Done, Error} from '@mui/icons-material'
 import {TermCard, TermRow} from './term'
 import {ResourceContext} from './resources'
 import {Nav} from './nav'
-import {AllCategoies, BuildContext, BuildEditContext, Processed} from './building'
+import {AllCategoies, BuildContext, BuildEditContext, Processed, processTerm} from './building'
 
 const resources = [
   {key: 'terms', label: 'Terms'},
@@ -43,6 +43,14 @@ export default function AddedTerms({
   const [sortBy, setSortBy] = useState<SortOptions>('time')
   const isInDict = (term: string) => term in Dict
   const addedTerms = Object.keys(Dict).sort(sortBy === 'time' ? (a, b) => Dict[a].added - Dict[b].added : undefined)
+  const getProcessed = (term: string) => {
+    if (Data.termAssociations) {
+      if (!(term in termSet)) {
+        termSet[term] = processTerm(Dict[term].type === 'regex' ? new RegExp(term) : term, Data)
+      }
+      return termSet[term]
+    }
+  }
   return (
     <Box>
       {!Data.termAssociations || !Data.synsetInfo ? (
@@ -122,15 +130,15 @@ export default function AddedTerms({
                 </TableHead>
                 <TableBody>
                   {addedTerms.map(term => {
-                    const processed = termSet[term]
-                    return <TermRow key={term} processed={processed} edit={editDictionary} />
+                    const processed = getProcessed(term)
+                    return processed ? <TermRow key={term} processed={processed} edit={editDictionary} /> : <></>
                   })}
                 </TableBody>
               </Table>
             ) : (
               addedTerms.map(term => {
-                const processed = termSet[term]
-                return (
+                const processed = getProcessed(term)
+                return processed ? (
                   <TermCard
                     key={term}
                     processed={processed}
@@ -149,6 +157,8 @@ export default function AddedTerms({
                     }}
                     edit={editDictionary}
                   />
+                ) : (
+                  <></>
                 )
               })
             )}
