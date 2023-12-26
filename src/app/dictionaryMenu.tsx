@@ -22,6 +22,7 @@ import {
 import {ChangeEvent, KeyboardEvent, useContext, useState} from 'react'
 import {AllCategoies, CategoryEditContext, Dictionaries, DictionaryName, ManageDictionaries} from './building'
 import {ImportMenu} from './importMenu'
+import {ExportMenu} from './exportMenu'
 
 export function DictionaryMenu() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -126,15 +127,18 @@ export function DictionaryMenu() {
             </Card>
           </CardContent>
           <CardActions>
-            <Button
-              fullWidth
-              color="error"
-              onClick={() => {
-                manageDictionaries({type: 'delete', name: currentDictionary})
-              }}
-            >
-              Delete
-            </Button>
+            <Stack direction="column" sx={{width: '100%'}} spacing={2}>
+              <ExportMenu />
+              <Button
+                fullWidth
+                color="error"
+                onClick={() => {
+                  manageDictionaries({type: 'delete', name: currentDictionary})
+                }}
+              >
+                Delete
+              </Button>
+            </Stack>
           </CardActions>
         </Card>
       </Drawer>

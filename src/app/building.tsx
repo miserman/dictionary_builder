@@ -1,10 +1,10 @@
 import {ReactNode, createContext, useContext, useEffect, useMemo, useReducer, useState} from 'react'
 import {FixedTerm, FuzzyTerm} from './term'
 import {ResourceContext, TermResources} from './resources'
-import {extractMatches, globToRegex, prepareRegex, wildcards} from './utils'
+import {extractMatches, globToRegex, prepareRegex, wildcard, wildcards} from './utils'
 import {loadSettings} from './settingsMenu'
 
-type NumberObject = {[index: string]: number}
+export type NumberObject = {[index: string]: number}
 export type Dict = {
   [index: string]: {added: number; type: 'fixed' | 'glob' | 'regex'; categories: NumberObject; sense: string}
 }
@@ -63,7 +63,7 @@ const makeFixedTerm = (term: string, {terms, termLookup, termAssociations, synse
 
 export const processTerm = (term: string | RegExp, data: TermResources) => {
   const isString = 'string' === typeof term
-  if (isString && !wildcards.test(term)) {
+  if (isString && !wildcard.test(term)) {
     return makeFixedTerm(term, data)
   } else {
     const processed = isString ? globToRegex(term) : term.source
