@@ -30,7 +30,7 @@ const HiddenInput = styled('input')({
 const tab = /\\t/
 const padding = /^\s+|\s+$/g
 const quote_padding = /^"|"$/g
-const dic_seps = /\s+/g
+const dic_seps = /\t+/g
 function makeDictEntry(cats: NumberObject, sense?: string) {
   return {
     added: Date.now(),
@@ -58,10 +58,10 @@ function parseDict(raw: string) {
               categories[parts[0]] = parts[1]
             }
           }
-          for (; i < n; i++) {
+          for (i++; i < n; i++) {
             const line = lines[i].replace(padding, '')
-            if (line.length > 1) {
-              const parts = line.split(dic_seps)
+            const parts = line.split(dic_seps)
+            if (parts.length > 1) {
               const term = parts.splice(0, 1)[0]
               const cats: NumberObject = {}
               parts.forEach(index => {
@@ -114,7 +114,6 @@ function parseDict(raw: string) {
         })
       }
     } catch {}
-    console.log(parsed)
   }
   return parsed
 }
@@ -198,7 +197,7 @@ export function ImportMenu() {
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
                 setRawContent(e.target.value)
               }}
-              placeholder="drag and drop a file, enter content directly"
+              placeholder="drag and drop a file, or enter content directly"
             ></textarea>
           </Stack>
         </DialogContent>

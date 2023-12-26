@@ -1,30 +1,10 @@
 import {Close, Menu} from '@mui/icons-material'
-import {
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardHeader,
-  Drawer,
-  FormControl,
-  FormControlLabel,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Switch,
-  Typography,
-} from '@mui/material'
-import {SortOptions} from './addedTerms'
-import {SyntheticEvent, useState} from 'react'
+import {Button, Card, CardActions, CardContent, CardHeader, Drawer, IconButton, Stack, Typography} from '@mui/material'
+import {useState} from 'react'
 
 export type Settings = {
   selected?: string
   dictionary_names?: string[]
-  asTable?: boolean
-  sortBy?: 'time' | 'term'
 }
 
 export function loadSettings() {
@@ -33,17 +13,7 @@ export function loadSettings() {
   ) as Settings
 }
 
-export function SettingsMenu({
-  asTable,
-  displayToggle,
-  sortBy,
-  setSortBy,
-}: {
-  asTable: boolean
-  displayToggle: (e: SyntheticEvent, checked: boolean) => void
-  sortBy: SortOptions
-  setSortBy: (e: SelectChangeEvent<HTMLSelectElement>) => void
-}) {
+export function SettingsMenu() {
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   return (
@@ -70,20 +40,7 @@ export function SettingsMenu({
             }
           />
           <CardContent sx={{alignContent: 'left', mb: 'auto'}}>
-            <Stack spacing={3}>
-              <FormControlLabel
-                sx={{width: '100%'}}
-                label="As Table"
-                control={<Switch checked={asTable} onChange={displayToggle} />}
-              />
-              <FormControl>
-                <InputLabel>Sort By</InputLabel>
-                <Select size="small" label="Sort By" value={sortBy as ''} onChange={setSortBy}>
-                  <MenuItem value="time">Order Added</MenuItem>
-                  <MenuItem value="term">Term</MenuItem>
-                </Select>
-              </FormControl>
-            </Stack>
+            <Stack spacing={3}></Stack>
           </CardContent>
           <CardActions>
             <Button

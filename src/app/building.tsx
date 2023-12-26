@@ -1,13 +1,12 @@
 import {ReactNode, createContext, useContext, useEffect, useMemo, useReducer, useState} from 'react'
 import {FixedTerm, FuzzyTerm} from './term'
 import {ResourceContext, TermResources} from './resources'
-import {extractMatches, globToRegex, prepareRegex, wildcard, wildcards} from './utils'
+import {extractMatches, globToRegex, prepareRegex, wildcard} from './utils'
 import {loadSettings} from './settingsMenu'
 
 export type NumberObject = {[index: string]: number}
-export type Dict = {
-  [index: string]: {added: number; type: 'fixed' | 'glob' | 'regex'; categories: NumberObject; sense: string}
-}
+export type DictEntry = {added: number; type: 'fixed' | 'glob' | 'regex'; categories: NumberObject; sense: string}
+export type Dict = {[index: string]: DictEntry}
 export type DictionaryStorageAction =
   | {type: 'set' | 'add' | 'save'; name: string; dict: Dict}
   | {type: 'delete'; name: string}

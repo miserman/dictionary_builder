@@ -1,25 +1,12 @@
-import {
-  Box,
-  CircularProgress,
-  Container,
-  List,
-  ListItem,
-  SelectChangeEvent,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material'
-import {SyntheticEvent, useContext, useMemo, useState} from 'react'
+import {Box, CircularProgress, Container, List, ListItem, Stack, Typography} from '@mui/material'
+import {useContext, useMemo} from 'react'
 import {Done, Error} from '@mui/icons-material'
-import {TermCard, TermRow} from './term'
+import {TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
 import {Nav} from './nav'
 import {AllCategoies, BuildContext, BuildEditContext, Processed, processTerm} from './building'
-import {loadSettings} from './settingsMenu'
+import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams} from '@mui/x-data-grid'
+import {relativeFrequency} from './utils'
 
 const resources = [
   {key: 'terms', label: 'Terms'},
@@ -29,6 +16,7 @@ const resources = [
 ] as const
 export type SortOptions = 'term' | 'time'
 
+const categoryPrefix = /^category_/
 export default function AddedTerms({
   loading,
   drawerOpen,
@@ -41,19 +29,97 @@ export default function AddedTerms({
   const Cats = useContext(AllCategoies)
   const termSet = useContext(Processed)
   const editDictionary = useContext(BuildEditContext)
-  const settings = useMemo(loadSettings, [])
-  const [asTable, setAsTable] = useState('asTable' in settings ? (settings.asTable as boolean) : true)
-  const [sortBy, setSortBy] = useState<SortOptions>(settings.sortBy || 'time')
   const isInDict = (term: string) => term in Dict
-  const addedTerms = Object.keys(Dict).sort(sortBy === 'time' ? (a, b) => Dict[a].added - Dict[b].added : undefined)
-  const getProcessed = (term: string) => {
-    if (Data.termAssociations) {
+  const addedTerms = Object.keys(Dict)
+  const cols: GridColDef[] = useMemo(() => {
+    const cols: GridColDef[] = [
+      {
+        field: 'id',
+        headerName: 'Term',
+        renderCell: (params: GridRenderEditCellParams) => {
+          return <TermLink term={params.value} />
+        },
+      },
+      {
+        field: 'sense',
+        headerName: 'Sense',
+        editable: true,
+        renderEditCell: (params: GridRenderEditCellParams) => {
+          return <TermSenseEdit id={params.id as string} field={params.field} processed={params.row.processed} />
+        },
+      },
+      {field: 'frequency', headerName: 'Frequency'},
+      {field: 'matches', headerName: 'Matches'},
+      {field: 'senses', headerName: 'Senses'},
+      {field: 'related', headerName: 'Related'},
+    ]
+    Cats.forEach(cat =>
+      cols.push({
+        field: 'category_' + cat,
+        headerName: cat,
+        editable: true,
+        valueParser: (value: any, params?: GridCellParams) => {
+          if (params) {
+            const {field, row} = params
+            const {processed, dictEntry} = row
+            if (field.startsWith('category_')) {
+              const cats = dictEntry.categories
+              cats[field.replace(categoryPrefix, '')] = +value
+              editDictionary({
+                type: 'update',
+                term: processed.term,
+                term_type: processed.term_type,
+                categories: cats,
+              })
+            }
+          }
+          return +value
+        },
+      })
+    )
+    return cols
+  }, [Cats, editDictionary])
+  const rows = useMemo(() => {
+    return addedTerms.map(term => {
       if (!(term in termSet)) {
         termSet[term] = processTerm(Dict[term].type === 'regex' ? new RegExp(term) : term, Data)
       }
-      return termSet[term]
-    }
-  }
+      const processed = termSet[term]
+      const dictEntry = Dict[term]
+      const row: {[index: string]: typeof processed | typeof dictEntry | string | number} = processed
+        ? processed.type === 'fixed'
+          ? {
+              processed,
+              dictEntry,
+              id: term,
+              sense: dictEntry.sense,
+              frequency: relativeFrequency(processed.index, Data.terms && Data.terms.length),
+              matches: processed.recognized ? 1 : 0,
+              senses: processed.synsets.length,
+              related: processed.related.length,
+            }
+          : {
+              processed,
+              dictEntry,
+              id: term,
+              sense: dictEntry.sense,
+              matches: processed.matches.length,
+            }
+        : {
+            processed,
+            dictEntry,
+            id: term,
+            matches: 0,
+          }
+      if (dictEntry.categories) {
+        const cats = dictEntry.categories
+        Object.keys(cats).forEach(cat => {
+          row['category_' + cat] = cats[cat]
+        })
+      }
+      return row
+    })
+  }, [addedTerms, Data, Dict, termSet])
   return (
     <Box>
       {!Data.termAssociations || !Data.synsetInfo ? (
@@ -85,18 +151,6 @@ export default function AddedTerms({
             add={(term: string | RegExp, type: string) => {
               editDictionary({type: 'add', term: term, term_type: type})
             }}
-            asTable={asTable}
-            displayToggle={(e: SyntheticEvent, checked: boolean) => {
-              settings.asTable = checked
-              localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-              setAsTable(checked)
-            }}
-            sortBy={sortBy}
-            setSortBy={(e: SelectChangeEvent<HTMLSelectElement>) => {
-              settings.sortBy = e.target.value as SortOptions
-              localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-              setSortBy(settings.sortBy)
-            }}
           />
           <Box
             component="main"
@@ -107,71 +161,14 @@ export default function AddedTerms({
               bottom: 0,
               left: 0,
               overflowY: 'auto',
-              mt: '3.5em',
+              mt: '3em',
               mb: drawerOpen ? '45vh' : 0,
-              pr: 1,
-              pb: 1,
-              pl: 1,
             }}
           >
             {!addedTerms.length ? (
               <Typography align="center">Add terms, or import an existing dictionary.</Typography>
-            ) : asTable ? (
-              <Table
-                stickyHeader
-                sx={{
-                  '& .MuiTableCell-root': {p: 0.5, textAlign: 'right'},
-                  '& th.MuiTableCell-root:first-of-type': {textAlign: 'left'},
-                }}
-              >
-                <TableHead>
-                  <TableRow>
-                    <TableCell component="th">Term</TableCell>
-                    <TableCell component="th">Sense</TableCell>
-                    <TableCell component="th">Frequency</TableCell>
-                    <TableCell component="th">Matches</TableCell>
-                    <TableCell component="th">Senses</TableCell>
-                    <TableCell component="th">Related</TableCell>
-                    {Cats.map(cat => (
-                      <TableCell key={'category_' + cat} component="th">
-                        {cat}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {addedTerms.map(term => {
-                    const processed = getProcessed(term)
-                    return processed ? <TermRow key={term} processed={processed} edit={editDictionary} /> : <></>
-                  })}
-                </TableBody>
-              </Table>
             ) : (
-              addedTerms.map(term => {
-                const processed = getProcessed(term)
-                return processed ? (
-                  <TermCard
-                    key={term}
-                    processed={processed}
-                    onRemove={() => {
-                      editDictionary({type: 'remove', term: term})
-                    }}
-                    onUpdate={(value: string) => {
-                      if (value && !isInDict(value)) {
-                        editDictionary({
-                          type: 'replace',
-                          term: value,
-                          term_type: processed.term_type,
-                          originalTerm: term,
-                        })
-                      }
-                    }}
-                    edit={editDictionary}
-                  />
-                ) : (
-                  <></>
-                )
-              })
+              <DataGrid rows={rows} columns={cols} disableRowSelectionOnClick />
             )}
           </Box>
         </Container>

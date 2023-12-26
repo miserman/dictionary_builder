@@ -1,17 +1,8 @@
 import {
   Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardHeader,
-  FormControl,
-  IconButton,
-  InputLabel,
   Link,
   List,
   ListItem,
-  Menu,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -28,13 +19,13 @@ import {
   Typography,
 } from '@mui/material'
 import {relativeFrequency, sortByLength} from './utils'
-import {Close, Done} from '@mui/icons-material'
-import {ChangeEvent, SyntheticEvent, useContext, useState} from 'react'
+import {ChangeEvent, useContext, useState} from 'react'
 import {ResourceContext, Synset} from './resources'
-import {AllCategoies, BuildContext, type DictionaryEditor, Processed, processTerm} from './building'
+import {BuildContext, Processed, processTerm, BuildEditContext} from './building'
 import {InfoDrawerContext} from './infoDrawer'
 import {SynsetLink} from './synset'
 import {extractExpanded} from './wordParts'
+import {useGridApiContext} from '@mui/x-data-grid'
 
 export type FixedTerm = {
   type: 'fixed'
@@ -58,16 +49,29 @@ export type FuzzyTerm = {
   common_matches?: string[]
 }
 
-function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: DictionaryEditor; label?: string}) {
+export function TermSenseEdit({
+  id,
+  field,
+  processed,
+  label,
+}: {
+  id: string
+  field: string
+  processed: FixedTerm | FuzzyTerm
+  label?: string
+}) {
   const Dict = useContext(BuildContext)
+  const edit = useContext(BuildEditContext)
+  const gridApi = useGridApiContext()
   const currentSense = Dict[processed.term].sense
   const {sense_keys} = useContext(ResourceContext)
-  return processed.synsets.length ? (
+  return processed.type === 'fixed' && processed.synsets.length ? (
     <Select
       fullWidth
       aria-label="assign synset"
       value={currentSense}
       onChange={(e: SelectChangeEvent) => {
+        gridApi.current.setEditCellValue({id, field, value: e.target.value})
         edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
       }}
       label={label}
@@ -88,177 +92,11 @@ function TermSenseEdit({processed, edit, label}: {processed: FixedTerm; edit: Di
     <TextField
       value={currentSense}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
+        gridApi.current.setEditCellValue({id, field, value: e.target.value})
         edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
       }}
       label={label}
     ></TextField>
-  )
-}
-
-function TermCategoryEdit({processed, edit}: {processed: FixedTerm | FuzzyTerm; edit: DictionaryEditor}) {
-  const Dict = useContext(BuildContext)
-  const currentCategories = Dict[processed.term].categories
-  const categories = useContext(AllCategoies)
-
-  const [openAt, setOpenAt] = useState<HTMLElement | null>(null)
-  return (
-    <Box>
-      <Button
-        variant="contained"
-        sx={{p: 2}}
-        onClick={(e: SyntheticEvent<HTMLButtonElement>) => setOpenAt(e.currentTarget)}
-      >
-        Categories
-      </Button>
-      <Menu anchorEl={openAt} open={!!openAt} onClose={() => setOpenAt(null)}>
-        {categories.map(cat => {
-          return (
-            <MenuItem key={cat}>
-              <TextField
-                label={cat}
-                size="small"
-                variant="filled"
-                value={currentCategories[cat] || ''}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  currentCategories[cat] = +e.target.value
-                  edit({
-                    type: 'update',
-                    term: processed.term,
-                    term_type: processed.term_type,
-                    categories: currentCategories,
-                  })
-                }}
-              ></TextField>
-            </MenuItem>
-          )
-        })}
-      </Menu>
-    </Box>
-  )
-}
-
-export function TermCard({
-  processed,
-  onRemove,
-  onUpdate,
-  edit,
-}: {
-  processed: FuzzyTerm | FixedTerm
-  onRemove: () => void
-  onUpdate: (value: string) => void
-  edit: DictionaryEditor
-}) {
-  const [editedTerm, setEditedTerm] = useState(processed.term)
-  return (
-    <Card sx={{m: 0.5}}>
-      {processed.recognized ? (
-        <Done color="success" sx={{fontSize: '.8rem', position: 'absolute'}} aria-label="recognized" />
-      ) : (
-        <></>
-      )}
-      <CardHeader
-        title={
-          <Stack direction="row">
-            <TextField
-              variant="standard"
-              value={editedTerm}
-              onChange={(e: SyntheticEvent) =>
-                e.target && 'value' in e.target && setEditedTerm(e.target.value as string)
-              }
-              onKeyUp={(e: SyntheticEvent) => 'code' in e && e.code === 'Enter' && onUpdate(editedTerm)}
-            ></TextField>
-            {editedTerm !== processed.term ? (
-              <Button
-                onClick={() => {
-                  onUpdate(editedTerm)
-                }}
-              >
-                Update
-              </Button>
-            ) : (
-              <></>
-            )}
-          </Stack>
-        }
-        action={
-          <IconButton onClick={onRemove}>
-            <Close />
-          </IconButton>
-        }
-      ></CardHeader>
-      <CardContent sx={{height: '25vh', pt: 0}}>
-        <TermDisplay term={processed.term} />
-      </CardContent>
-      <CardActions>
-        <Stack direction="row" spacing={1}>
-          {processed.type === 'fixed' ? (
-            <FormControl>
-              {processed.synsets.length ? <InputLabel>Assigned Sense</InputLabel> : <></>}
-              <TermSenseEdit processed={processed} edit={edit} label="Assigned Sense" />
-            </FormControl>
-          ) : (
-            <></>
-          )}
-          <TermCategoryEdit processed={processed} edit={edit} />
-        </Stack>
-      </CardActions>
-    </Card>
-  )
-}
-
-export function TermRow({processed, edit}: {processed: FuzzyTerm | FixedTerm; edit: DictionaryEditor}) {
-  const {terms} = useContext(ResourceContext)
-  const cats = useContext(AllCategoies)
-  const Dict = useContext(BuildContext)
-  const dictEntry = Dict[processed.term]
-  return (
-    <TableRow className="dense-table-row">
-      <TableCell component="th" width={1}>
-        <TermLink term={processed.term} />
-      </TableCell>
-      {processed.type === 'fixed' ? (
-        <>
-          <TableCell width={1}>
-            <TermSenseEdit processed={processed} edit={edit} />
-          </TableCell>
-          <TableCell width={1}>{relativeFrequency(processed.index, terms && terms.length)}</TableCell>
-          <TableCell width={1}>{processed.recognized ? 1 : 0}</TableCell>
-          <TableCell width={1}>{processed.synsets.length}</TableCell>
-          <TableCell width={1}>{processed.related.length}</TableCell>
-        </>
-      ) : (
-        <>
-          <TableCell width={1}></TableCell>
-          <TableCell width={1}></TableCell>
-          <TableCell width={1}>{processed.matches.length}</TableCell>
-          <TableCell width={1}></TableCell>
-          <TableCell width={1}></TableCell>
-        </>
-      )}
-      {cats.map(cat => (
-        <TableCell key={cat} className="table-cell-input">
-          <TextField
-            sx={{textAlign: 'right'}}
-            fullWidth
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              const value = +e.target.value
-              if (value) {
-                dictEntry.categories[cat] = value
-              } else {
-                delete dictEntry.categories[cat]
-              }
-              edit({
-                type: 'update',
-                term: processed.term,
-                term_type: processed.term_type,
-                categories: dictEntry.categories,
-              })
-            }}
-            value={dictEntry.categories[cat] ? dictEntry.categories[cat] : ''}
-          ></TextField>
-        </TableCell>
-      ))}
-    </TableRow>
   )
 }
 

@@ -1,18 +1,6 @@
 import {SavedSearch, SearchOff} from '@mui/icons-material'
-import {
-  AppBar,
-  Autocomplete,
-  Button,
-  IconButton,
-  ListItem,
-  SelectChangeEvent,
-  Stack,
-  TextField,
-  Toolbar,
-  Tooltip,
-} from '@mui/material'
+import {AppBar, Autocomplete, Button, IconButton, ListItem, Stack, TextField, Toolbar, Tooltip} from '@mui/material'
 import {SyntheticEvent, useContext, useState} from 'react'
-import {SortOptions} from './addedTerms'
 import {InfoDrawerContext} from './infoDrawer'
 import {extractMatches, globToRegex, prepareRegex, special, wildcards} from './utils'
 import {ResourceContext} from './resources'
@@ -23,18 +11,10 @@ export function Nav({
   terms,
   exists,
   add,
-  asTable,
-  displayToggle,
-  sortBy,
-  setSortBy,
 }: {
   terms?: readonly string[]
   exists: (term: string) => boolean
   add: (term: string | RegExp, type: string) => void
-  asTable: boolean
-  displayToggle: (e: SyntheticEvent, checked: boolean) => void
-  sortBy: SortOptions
-  setSortBy: (e: SelectChangeEvent<HTMLSelectElement>) => void
 }) {
   const [inputTerm, setInputTerm] = useState('')
   const [alreadyAdded, setAlreadyAdded] = useState(false)
@@ -85,8 +65,9 @@ export function Nav({
             onKeyUp={(e: SyntheticEvent) => {
               if ('code' in e && e.code === 'Enter') {
                 const newValue = 'value' in e.target ? (e.target.value as string) : ''
-                if (newValue === inputTerm) addTerm(newValue)
-              } else if (terms) {
+                if (newValue === inputTerm) return addTerm(newValue)
+              }
+              if (terms) {
                 const suggestions: string[] = []
                 if (inputTerm && collapsedTerms) {
                   let ex: RegExp | undefined
@@ -149,7 +130,7 @@ export function Nav({
             Add
           </Button>
         </Stack>
-        <SettingsMenu asTable={asTable} displayToggle={displayToggle} sortBy={sortBy} setSortBy={setSortBy} />
+        <SettingsMenu />
       </Toolbar>
     </AppBar>
   )

@@ -214,7 +214,7 @@ export function ExportMenu() {
             )}
           </Stack>
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={() => {
               if (name && content) {
                 const a = document.createElement('a')
