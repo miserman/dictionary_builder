@@ -1,7 +1,8 @@
-import {ReactNode, createContext, useContext, useMemo, useReducer, useState} from 'react'
+import {ReactNode, createContext, useContext, useEffect, useMemo, useReducer, useState} from 'react'
 import {FixedTerm, FuzzyTerm} from './term'
 import {ResourceContext, TermResources} from './resources'
 import {extractMatches, globToRegex, prepareRegex, wildcards} from './utils'
+import {loadSettings} from './settingsMenu'
 
 type NumberObject = {[index: string]: number}
 export type Dict = {
@@ -24,7 +25,7 @@ type DictionaryActions =
     }
 type CategoryActions = {type: 'collect'; dictionary: Dict; reset?: boolean} | {type: 'add' | 'remove'; cat: string}
 export type DictionaryEditor = (action: DictionaryActions) => void
-export const DictionaryName = createContext('Dictionary')
+export const DictionaryName = createContext('default')
 export const DictionaryNameSetter = createContext((name: string) => {})
 export const Dictionaries = createContext<{[index: string]: Dict}>({})
 export const ManageDictionaries = createContext((action: DictionaryStorageAction) => {})
@@ -32,8 +33,6 @@ export const BuildContext = createContext<Dict>({})
 export const BuildEditContext = createContext((action: DictionaryActions) => {})
 export const AllCategoies = createContext<string[]>([])
 export const CategoryEditContext = createContext((action: CategoryActions) => {})
-export const CategoryMenuOpen = createContext(false)
-export const CategoryMenuToggler = createContext((open: boolean) => {})
 
 type ProcessedTerms = {[index: string]: FuzzyTerm | FixedTerm}
 export const Processed = createContext<ProcessedTerms>({})
@@ -90,16 +89,17 @@ export function Building({children}: {children: ReactNode}) {
   const processedTerms = useMemo(() => {
     return {} as ProcessedTerms
   }, [])
+  const settings = useMemo(loadSettings, [])
   const dictionaries = useMemo(() => {
-    const stored = {Dictionary: {}} as {[index: string]: Dict}
+    const stored = {default: {}} as {[index: string]: Dict}
     if ('undefined' !== typeof window) {
-      const names = JSON.parse(localStorage.getItem('dictionary_names') || '[]') as string[]
+      const names = settings.dictionary_names || []
       names.forEach(name => {
         stored[name] = JSON.parse(localStorage.getItem('dict_' + name) || '{}') as Dict
       })
     }
     return stored
-  }, [])
+  }, [settings])
   const editCategories = (state: string[], action: CategoryActions) => {
     switch (action.type) {
       case 'collect':
@@ -119,21 +119,22 @@ export function Building({children}: {children: ReactNode}) {
     if (action.type === 'delete') {
       delete dictionaries[action.name]
       localStorage.removeItem('dict_' + action.name)
-      if (action.name === 'Dictionary') dictionaries.Dictionary = {}
+      if (action.name === 'default') dictionaries.default = {}
       if (name === action.name) {
-        setName('Dictionary')
-        dictionaryAction({type: 'change_dict', dict: dictionaries.Dictionary})
+        setCurrent('default')
+        dictionaryAction({type: 'change_dict', dict: dictionaries.default})
       }
     } else {
       if (action.type !== 'set') dictionaries[action.name] = action.dict
       if (name) localStorage.setItem('dict_' + action.name, JSON.stringify(dictionaries[name]))
       if (action.type !== 'save') {
-        setName(action.name)
+        setCurrent(action.name)
         dictionaryAction({type: 'change_dict', dict: dictionaries[action.name]})
       }
       localStorage.setItem('dict_' + action.name, JSON.stringify(dictionaries[action.name]))
     }
-    localStorage.setItem('dictionary_names', JSON.stringify(Object.keys(dictionaries)))
+    settings.dictionary_names = Object.keys(dictionaries)
+    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
   }
   const editDictionary = (state: Dict, action: DictionaryActions) => {
     if (action.type === 'change_dict') {
@@ -169,35 +170,39 @@ export function Building({children}: {children: ReactNode}) {
     manageDictionaries({type: 'save', name, dict: newState})
     return newState
   }
-  const [name, setName] = useState('Dictionary')
+  const [name, setName] = useState(settings.selected || 'default')
+  const setCurrent = (name: string) => {
+    const current = name in dictionaries ? name : 'default'
+    setName(current)
+    settings.selected = current
+    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+  }
   const [categories, categoryAction] = useReducer(editCategories, [])
-  const [dictionary, dictionaryAction] = useReducer(editDictionary, dictionaries.Dictionary)
-  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
+  const [dictionary, dictionaryAction] = useReducer(editDictionary, dictionaries.default)
+  useEffect(() => {
+    if (!settings.selected || !(settings.selected in dictionaries)) settings.selected = 'default'
+    dictionaryAction({
+      type: 'change_dict',
+      dict: dictionaries[settings.selected],
+    })
+  }, [settings, dictionaries])
   return (
     <Dictionaries.Provider value={dictionaries}>
       <ManageDictionaries.Provider value={manageDictionaries}>
         <DictionaryName.Provider value={name}>
           <BuildContext.Provider value={dictionary}>
             <AllCategoies.Provider value={categories}>
-              <CategoryMenuOpen.Provider value={categoryMenuOpen}>
-                <DictionaryNameSetter.Provider
-                  value={(name: string) => {
-                    setName(name)
-                  }}
-                >
-                  <BuildEditContext.Provider value={dictionaryAction}>
-                    <CategoryEditContext.Provider value={categoryAction}>
-                      <CategoryMenuToggler.Provider
-                        value={(open: boolean) => {
-                          setCategoryMenuOpen(open)
-                        }}
-                      >
-                        <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
-                      </CategoryMenuToggler.Provider>
-                    </CategoryEditContext.Provider>
-                  </BuildEditContext.Provider>
-                </DictionaryNameSetter.Provider>
-              </CategoryMenuOpen.Provider>
+              <DictionaryNameSetter.Provider
+                value={(name: string) => {
+                  setCurrent(name)
+                }}
+              >
+                <BuildEditContext.Provider value={dictionaryAction}>
+                  <CategoryEditContext.Provider value={categoryAction}>
+                    <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
+                  </CategoryEditContext.Provider>
+                </BuildEditContext.Provider>
+              </DictionaryNameSetter.Provider>
             </AllCategoies.Provider>
           </BuildContext.Provider>
         </DictionaryName.Provider>

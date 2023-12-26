@@ -1,6 +1,6 @@
 import {Close} from '@mui/icons-material'
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Stack, TextField} from '@mui/material'
-import {ChangeEvent, KeyboardEvent, SyntheticEvent, useContext, useState} from 'react'
+import {ChangeEvent, KeyboardEvent, useContext, useState} from 'react'
 import {ManageDictionaries} from './building'
 
 export function ImportMenu() {
@@ -15,7 +15,7 @@ export function ImportMenu() {
   }
   return (
     <>
-      <Button variant="outlined" onClick={toggleMenu}>
+      <Button variant="contained" onClick={toggleMenu}>
         New
       </Button>
       <Dialog open={menuOpen} onClose={toggleMenu}>

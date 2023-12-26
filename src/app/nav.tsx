@@ -1,5 +1,16 @@
 import {SavedSearch, SearchOff} from '@mui/icons-material'
-import {AppBar, Autocomplete, Button, IconButton, ListItem, Stack, TextField, Toolbar, Tooltip} from '@mui/material'
+import {
+  AppBar,
+  Autocomplete,
+  Button,
+  IconButton,
+  ListItem,
+  SelectChangeEvent,
+  Stack,
+  TextField,
+  Toolbar,
+  Tooltip,
+} from '@mui/material'
 import {SyntheticEvent, useContext, useState} from 'react'
 import {SortOptions} from './addedTerms'
 import {InfoDrawerContext} from './infoDrawer'
@@ -23,7 +34,7 @@ export function Nav({
   asTable: boolean
   displayToggle: (e: SyntheticEvent, checked: boolean) => void
   sortBy: SortOptions
-  setSortBy: (by: SortOptions) => void
+  setSortBy: (e: SelectChangeEvent<HTMLSelectElement>) => void
 }) {
   const [inputTerm, setInputTerm] = useState('')
   const [alreadyAdded, setAlreadyAdded] = useState(false)

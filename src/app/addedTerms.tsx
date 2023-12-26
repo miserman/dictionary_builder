@@ -4,6 +4,7 @@ import {
   Container,
   List,
   ListItem,
+  SelectChangeEvent,
   Stack,
   Table,
   TableBody,
@@ -12,12 +13,13 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
-import {SyntheticEvent, useContext, useState} from 'react'
+import {SyntheticEvent, useContext, useMemo, useState} from 'react'
 import {Done, Error} from '@mui/icons-material'
 import {TermCard, TermRow} from './term'
 import {ResourceContext} from './resources'
 import {Nav} from './nav'
 import {AllCategoies, BuildContext, BuildEditContext, Processed, processTerm} from './building'
+import {loadSettings} from './settingsMenu'
 
 const resources = [
   {key: 'terms', label: 'Terms'},
@@ -39,8 +41,9 @@ export default function AddedTerms({
   const Cats = useContext(AllCategoies)
   const termSet = useContext(Processed)
   const editDictionary = useContext(BuildEditContext)
-  const [asTable, setAsTable] = useState(true)
-  const [sortBy, setSortBy] = useState<SortOptions>('time')
+  const settings = useMemo(loadSettings, [])
+  const [asTable, setAsTable] = useState('asTable' in settings ? (settings.asTable as boolean) : true)
+  const [sortBy, setSortBy] = useState<SortOptions>(settings.sortBy || 'time')
   const isInDict = (term: string) => term in Dict
   const addedTerms = Object.keys(Dict).sort(sortBy === 'time' ? (a, b) => Dict[a].added - Dict[b].added : undefined)
   const getProcessed = (term: string) => {
@@ -83,9 +86,17 @@ export default function AddedTerms({
               editDictionary({type: 'add', term: term, term_type: type})
             }}
             asTable={asTable}
-            displayToggle={(e: SyntheticEvent, checked: boolean) => setAsTable(checked)}
+            displayToggle={(e: SyntheticEvent, checked: boolean) => {
+              settings.asTable = checked
+              localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+              setAsTable(checked)
+            }}
             sortBy={sortBy}
-            setSortBy={setSortBy}
+            setSortBy={(e: SelectChangeEvent<HTMLSelectElement>) => {
+              settings.sortBy = e.target.value as SortOptions
+              localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+              setSortBy(settings.sortBy)
+            }}
           />
           <Box
             component="main"
