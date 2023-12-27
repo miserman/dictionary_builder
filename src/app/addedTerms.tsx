@@ -4,7 +4,7 @@ import {Done, Error} from '@mui/icons-material'
 import {TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
 import {Nav} from './nav'
-import {AllCategoies, BuildContext, BuildEditContext, Processed, processTerm} from './building'
+import {AllCategories, BuildContext, BuildEditContext, Processed, processTerm} from './building'
 import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams} from '@mui/x-data-grid'
 import {relativeFrequency} from './utils'
 
@@ -26,11 +26,11 @@ export default function AddedTerms({
 }) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
-  const Cats = useContext(AllCategoies)
+  const Cats = useContext(AllCategories)
   const termSet = useContext(Processed)
   const editDictionary = useContext(BuildEditContext)
   const isInDict = (term: string) => term in Dict
-  const addedTerms = Object.keys(Dict)
+  const addedTerms = Object.keys(Dict).reverse()
   const cols: GridColDef[] = useMemo(() => {
     const cols: GridColDef[] = [
       {
@@ -59,7 +59,8 @@ export default function AddedTerms({
         headerName: cat,
         editable: true,
         valueParser: (value: any, params?: GridCellParams) => {
-          if (params) {
+          const parsed = +value || ''
+          if (params && parsed) {
             const {field, row} = params
             const {processed, dictEntry} = row
             if (field.startsWith('category_')) {
@@ -73,52 +74,54 @@ export default function AddedTerms({
               })
             }
           }
-          return +value
+          return parsed
         },
       })
     )
     return cols
   }, [Cats, editDictionary])
   const rows = useMemo(() => {
-    return addedTerms.map(term => {
-      if (!(term in termSet)) {
-        termSet[term] = processTerm(Dict[term].type === 'regex' ? new RegExp(term) : term, Data)
-      }
-      const processed = termSet[term]
-      const dictEntry = Dict[term]
-      const row: {[index: string]: typeof processed | typeof dictEntry | string | number} = processed
-        ? processed.type === 'fixed'
-          ? {
-              processed,
-              dictEntry,
-              id: term,
-              sense: dictEntry.sense,
-              frequency: relativeFrequency(processed.index, Data.terms && Data.terms.length),
-              matches: processed.recognized ? 1 : 0,
-              senses: processed.synsets.length,
-              related: processed.related.length,
-            }
-          : {
-              processed,
-              dictEntry,
-              id: term,
-              sense: dictEntry.sense,
-              matches: processed.matches.length,
-            }
-        : {
-            processed,
-            dictEntry,
-            id: term,
-            matches: 0,
+    return Data.termAssociations
+      ? addedTerms.map(term => {
+          if (!(term in termSet)) {
+            termSet[term] = processTerm(Dict[term].type === 'regex' ? new RegExp(term) : term, Data)
           }
-      if (dictEntry.categories) {
-        const cats = dictEntry.categories
-        Object.keys(cats).forEach(cat => {
-          row['category_' + cat] = cats[cat]
+          const processed = termSet[term]
+          const dictEntry = Dict[term]
+          const row: {[index: string]: typeof processed | typeof dictEntry | string | number} = processed
+            ? processed.type === 'fixed'
+              ? {
+                  processed,
+                  dictEntry,
+                  id: term,
+                  sense: dictEntry.sense,
+                  frequency: relativeFrequency(processed.index, Data.terms && Data.terms.length),
+                  matches: processed.recognized ? 1 : 0,
+                  senses: processed.synsets.length,
+                  related: processed.related.length,
+                }
+              : {
+                  processed,
+                  dictEntry,
+                  id: term,
+                  sense: dictEntry.sense,
+                  matches: processed.matches.length,
+                }
+            : {
+                processed,
+                dictEntry,
+                id: term,
+                matches: 0,
+              }
+          if (dictEntry.categories) {
+            const cats = dictEntry.categories
+            Object.keys(cats).forEach(cat => {
+              row['category_' + cat] = cats[cat]
+            })
+          }
+          return row
         })
-      }
-      return row
-    })
+      : []
   }, [addedTerms, Data, Dict, termSet])
   return (
     <Box>
@@ -168,7 +171,13 @@ export default function AddedTerms({
             {!addedTerms.length ? (
               <Typography align="center">Add terms, or import an existing dictionary.</Typography>
             ) : (
-              <DataGrid rows={rows} columns={cols} disableRowSelectionOnClick />
+              <DataGrid
+                rows={rows}
+                columns={cols}
+                disableRowSelectionOnClick
+                showCellVerticalBorder
+                density="compact"
+              />
             )}
           </Box>
         </Container>

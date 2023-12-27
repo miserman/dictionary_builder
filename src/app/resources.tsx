@@ -27,7 +27,7 @@ type Synsets = readonly Synset[]
 export type TermResources = {
   terms?: readonly string[]
   termLookup?: {[index: string]: number}
-  collapsedTerms?: string
+  collapsedTerms?: {[index: string]: string}
   termAssociations?: AssociatedIndices
   sense_keys?: readonly string[]
   synsetInfo?: Synsets
@@ -49,7 +49,7 @@ export function Resources({
 }) {
   const [terms, setTerms] = useState<readonly string[]>()
   const [termLookup, setTermLookup] = useState<{[index: string]: number}>()
-  const [collapsedTerms, setCollapsedTerms] = useState<string>()
+  const [collapsedTerms, setCollapsedTerms] = useState<{[index: string]: string}>()
   const [termAssociations, setTermAssociations] = useState<AssociatedIndices>()
   const [sense_keys, setSenseKeys] = useState<readonly string[]>()
   const [synsetInfo, setSynsetInfo] = useState<Synsets>()
@@ -61,9 +61,23 @@ export function Resources({
         const arr = Object.freeze(data.split('\n'))
         setTerms(arr)
         const obj: {[index: string]: number} = {}
-        arr.forEach((term, index) => (obj[term] = index))
+        const separated: {[index: string]: string[]} = {
+          all: arr as string[],
+        }
+        let initial = ''
+        arr.forEach((term, index) => {
+          obj[term] = index
+          initial = term[0]
+          if (initial in separated) {
+            separated[initial].push(term)
+          } else {
+            separated[initial] = [term]
+          }
+        })
         setTermLookup(Object.freeze(obj))
-        setCollapsedTerms(';;' + arr.join(';;') + ';;')
+        const collapsed: {[index: string]: string} = {}
+        Object.keys(separated).forEach(k => (collapsed[k] = ';;' + separated[k].join(';;') + ';;'))
+        setCollapsedTerms(Object.freeze(collapsed))
       })
       .finally(() => loadingTerms(false))
   }, [loadingTerms])

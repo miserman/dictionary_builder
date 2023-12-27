@@ -17,12 +17,12 @@ export function relativeFrequency(index: number, n?: number) {
   return n && -1 !== index ? ((1 - index / n) * 100).toFixed(2) : '0'
 }
 
-export function extractMatches(ex: RegExp, from: string, out: string[] = [], limit = Infinity) {
-  for (let match: RegExpExecArray | null, cleaned = ''; out.length < limit && (match = ex.exec(from)); ) {
+export function extractMatches(ex: RegExp, from: {[index: string]: string}, out: string[] = [], limit = Infinity) {
+  const collapsed = from[ex.source[1] in from ? ex.source[1] : 'all']
+  for (let match: RegExpExecArray | null, cleaned = ''; out.length < limit && (match = ex.exec(collapsed)); ) {
     cleaned = match[0].replace(termBounds, '')
     if (cleaned) out.push(cleaned)
   }
-  return out
 }
 
 const regexDots = /\./g

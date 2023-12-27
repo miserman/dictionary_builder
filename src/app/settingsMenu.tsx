@@ -49,7 +49,10 @@ export function SettingsMenu() {
               onClick={() => {
                 const settings = loadSettings()
                 if (settings.dictionary_names) {
-                  settings.dictionary_names.forEach(name => localStorage.removeItem(name))
+                  settings.dictionary_names.forEach(name => {
+                    localStorage.removeItem('dict_' + name)
+                    localStorage.removeItem('dict_history_' + name)
+                  })
                 }
                 localStorage.removeItem('dictionary_builder_settings')
                 window.location.reload()

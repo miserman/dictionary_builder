@@ -13,6 +13,8 @@ export type DictionaryStorageAction =
 type DictionaryActions =
   | {type: 'change_dict'; dict: Dict}
   | {type: 'remove'; term: string | RegExp}
+  | {type: 'remove_category'; name: string}
+  | {type: 'add_category'; name: string; weights: NumberObject}
   | {type: 'add' | 'update'; term: string | RegExp; term_type: string; categories?: NumberObject; sense?: string}
   | {
       type: 'replace'
@@ -23,6 +25,17 @@ type DictionaryActions =
       sense?: string
     }
 type CategoryActions = {type: 'collect'; dictionary: Dict; reset?: boolean} | {type: 'add' | 'remove'; cat: string}
+type HistoryEntry = {
+  time?: number
+  type: string
+  name: string
+  value?: string | number | DictEntry | NumberObject
+  original?: string | number | DictEntry
+}
+export type EditeditHistory =
+  | {type: 'add' | 'remove'; entry: HistoryEntry}
+  | {type: 'replace'; history: HistoryEntry[]}
+  | {type: 'clear'}
 export type DictionaryEditor = (action: DictionaryActions) => void
 export const DictionaryName = createContext('default')
 export const DictionaryNameSetter = createContext((name: string) => {})
@@ -30,8 +43,12 @@ export const Dictionaries = createContext<{[index: string]: Dict}>({})
 export const ManageDictionaries = createContext((action: DictionaryStorageAction) => {})
 export const BuildContext = createContext<Dict>({})
 export const BuildEditContext = createContext((action: DictionaryActions) => {})
-export const AllCategoies = createContext<string[]>([])
+export const AllCategories = createContext<string[]>([])
 export const CategoryEditContext = createContext((action: CategoryActions) => {})
+export const EditHistory = createContext<HistoryEntry[]>([])
+export const EditHistoryEditor = createContext((action: EditeditHistory) => {})
+export const EditHistoryIndex = createContext(0)
+export const EditHistoryIndexSetter = createContext((index: number) => {})
 
 type ProcessedTerms = {[index: string]: FuzzyTerm | FixedTerm}
 export const Processed = createContext<ProcessedTerms>({})
@@ -50,12 +67,17 @@ const makeFixedTerm = (term: string, {terms, termLookup, termAssociations, synse
   if (termAssociations && synsetInfo && terms && -1 !== processed.index) {
     processed.recognized = true
     const associated = termAssociations[processed.index]
-    processed.related = associated[0]
-      ? (Array.isArray(associated[0]) ? associated[0] : [associated[0]]).map(index => terms[index - 1])
-      : []
-    processed.synsets = associated[1]
-      ? (Array.isArray(associated[1]) ? associated[1] : [associated[1]]).map(index => synsetInfo[index - 1])
-      : []
+    if (!associated) {
+      const a = 1
+    }
+    processed.related =
+      associated && associated[0]
+        ? (Array.isArray(associated[0]) ? associated[0] : [associated[0]]).map(index => terms[index - 1])
+        : []
+    processed.synsets =
+      associated && associated[1]
+        ? (Array.isArray(associated[1]) ? associated[1] : [associated[1]]).map(index => synsetInfo[index - 1])
+        : []
   }
   return processed
 }
@@ -99,25 +121,40 @@ export function Building({children}: {children: ReactNode}) {
     }
     return stored
   }, [settings])
-  const editCategories = (state: string[], action: CategoryActions) => {
-    switch (action.type) {
-      case 'collect':
-        const cats: Set<string> = new Set(action.reset ? [] : state)
-        Object.keys(action.dictionary).forEach(term => {
-          const {categories} = action.dictionary[term]
-          Object.keys(categories).forEach(cat => cats.add(cat))
-        })
-        return Array.from(cats).sort()
-      case 'add':
-        return state.includes(action.cat) ? [...state] : [...state, action.cat].sort()
-      default:
-        return state.filter(cat => cat !== action.cat)
-    }
+  const [name, setName] = useState(settings.selected || 'default')
+  const loadHistory = () => {
+    return 'undefined' === typeof window
+      ? []
+      : (JSON.parse(localStorage.getItem('dict_history_' + name) || '[]') as HistoryEntry[])
   }
+
+  const [historyIndex, setHistoryIndex] = useState(0)
+  const editHistory = (action: EditeditHistory) => {
+    if (action.type === 'replace') {
+      setHistory(action.history)
+      return action.history
+    }
+    const newHistory = action.type === 'clear' ? [] : [...history]
+    if (action.type === 'remove') {
+      newHistory.pop()
+    } else if (action.type !== 'clear') {
+      if (historyIndex) {
+        newHistory.splice(0, historyIndex)
+      }
+      action.entry.time = Date.now()
+      newHistory.push(action.entry)
+    }
+    if (newHistory.length > 1000) newHistory.splice(1000, newHistory.length)
+    localStorage.setItem('dict_history_' + name, JSON.stringify(newHistory))
+    setHistory(newHistory)
+  }
+  const [history, setHistory] = useState<HistoryEntry[]>([])
+
   const manageDictionaries = (action: DictionaryStorageAction) => {
     if (action.type === 'delete') {
       delete dictionaries[action.name]
       localStorage.removeItem('dict_' + action.name)
+      localStorage.removeItem('dict_history_' + action.name)
       if (action.name === 'default') dictionaries.default = {}
       if (name === action.name) {
         setCurrent('default')
@@ -135,48 +172,103 @@ export function Building({children}: {children: ReactNode}) {
     settings.dictionary_names = Object.keys(dictionaries)
     localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
   }
+  const editCategories = (state: string[], action: CategoryActions) => {
+    switch (action.type) {
+      case 'collect':
+        const cats: Set<string> = new Set(action.reset ? [] : state)
+        Object.keys(action.dictionary).forEach(term => {
+          const {categories} = action.dictionary[term]
+          Object.keys(categories).forEach(cat => cats.add(cat))
+        })
+        return Array.from(cats).sort()
+      case 'add':
+        return state.includes(action.cat) ? [...state] : [...state, action.cat].sort()
+      default:
+        return state.filter(cat => cat !== action.cat)
+    }
+  }
+  const [categories, categoryAction] = useReducer(editCategories, [])
   const editDictionary = (state: Dict, action: DictionaryActions) => {
     if (action.type === 'change_dict') {
+      editHistory({type: 'replace', history: loadHistory()})
       categoryAction({type: 'collect', dictionary: action.dict, reset: true})
       return action.dict
     }
     const newState = {...state} as Dict
-    const term = 'string' === typeof action.term ? action.term : action.term.source
-    if (action.type === 'remove') {
-      delete newState[term]
-    } else {
-      if (action.type === 'replace')
-        delete newState['string' === typeof action.originalTerm ? action.originalTerm : action.originalTerm.source]
-      const processed = processedTerms[term]
-      if (!processed || action.term_type !== processed.term_type) {
-        processedTerms[term] = processTerm(action.term, data)
+    if (action.type === 'remove_category') {
+      const edited_terms: NumberObject = {}
+      let nTerms = 0
+      Object.keys(newState).forEach(term => {
+        const entry = newState[term]
+        if (action.name in entry.categories && entry.categories[action.name]) {
+          nTerms++
+          edited_terms[term] = entry.categories[action.name]
+          delete entry.categories[action.name]
+        }
+      })
+      if (nTerms) {
+        editHistory({
+          type: 'add',
+          entry: {type: 'remove_category', name: action.name, value: edited_terms},
+        })
       }
-      if (!action.sense) {
+    } else if (action.type === 'add_category') {
+      Object.keys(action.weights).forEach(term => {
+        if (term in newState) newState[term].categories[action.name] = action.weights[term]
+      })
+      editHistory({type: 'add', entry: {type: 'add_category', name: action.name, value: action.weights}})
+    } else {
+      const term = 'string' === typeof action.term ? action.term : action.term.source
+      if (action.type === 'remove') {
+        delete newState[term]
+        editHistory({type: 'add', entry: {type: 'remove_term', name: term, value: state[term]}})
+      } else {
         const processed = processedTerms[term]
-        if (processed.type === 'fixed' && processed.synsets.length === 1 && data.sense_keys) {
-          action.sense = data.sense_keys[processed.synsets[0].index]
+        if (!processed || action.term_type !== processed.term_type) {
+          processedTerms[term] = processTerm(action.term, data)
+        }
+        if (!action.sense) {
+          const processed = processedTerms[term]
+          if (processed.type === 'fixed' && processed.synsets.length === 1 && data.sense_keys) {
+            action.sense = data.sense_keys[processed.synsets[0].index]
+          }
+        }
+        const existing = newState[term] || {}
+        newState[term] = {
+          added: existing.added || Date.now(),
+          type: existing.type || (processed && processed.term_type) || 'fixed',
+          categories: action.categories || existing.categories || {},
+          sense: action.sense || existing.sense || '',
+        }
+        if (action.type === 'replace') {
+          const original = 'string' === typeof action.originalTerm ? action.originalTerm : action.originalTerm.source
+          delete newState[original]
+          editHistory({
+            type: 'add',
+            entry: {type: 'replace_term', name: term, value: state[term], original: state[original]},
+          })
+        } else {
+          if (!(term in newState)) {
+            editHistory({type: 'add', entry: {type: 'add_term', name: term, value: state[term]}})
+          } else {
+            editHistory({
+              type: 'add',
+              entry: {type: 'edit_term', name: term, value: state[term], original: state[term]},
+            })
+          }
         }
       }
-      const existing = newState[term] || {}
-      newState[term] = {
-        added: existing.added || Date.now(),
-        type: existing.type || (processed && processed.term_type) || 'fixed',
-        categories: action.categories || existing.categories || {},
-        sense: action.sense || existing.sense || '',
-      }
+      categoryAction({type: 'collect', dictionary: newState})
     }
-    categoryAction({type: 'collect', dictionary: newState})
     manageDictionaries({type: 'save', name, dict: newState})
     return newState
   }
-  const [name, setName] = useState(settings.selected || 'default')
   const setCurrent = (name: string) => {
     const current = name in dictionaries ? name : 'default'
     setName(current)
     settings.selected = current
     localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
   }
-  const [categories, categoryAction] = useReducer(editCategories, [])
   const [dictionary, dictionaryAction] = useReducer(editDictionary, dictionaries.default)
   useEffect(() => {
     if (!settings.selected || !(settings.selected in dictionaries)) settings.selected = 'default'
@@ -186,26 +278,34 @@ export function Building({children}: {children: ReactNode}) {
     })
   }, [settings, dictionaries])
   return (
-    <Dictionaries.Provider value={dictionaries}>
-      <ManageDictionaries.Provider value={manageDictionaries}>
-        <DictionaryName.Provider value={name}>
-          <BuildContext.Provider value={dictionary}>
-            <AllCategoies.Provider value={categories}>
-              <DictionaryNameSetter.Provider
-                value={(name: string) => {
-                  setCurrent(name)
-                }}
-              >
-                <BuildEditContext.Provider value={dictionaryAction}>
-                  <CategoryEditContext.Provider value={categoryAction}>
-                    <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
-                  </CategoryEditContext.Provider>
-                </BuildEditContext.Provider>
-              </DictionaryNameSetter.Provider>
-            </AllCategoies.Provider>
-          </BuildContext.Provider>
-        </DictionaryName.Provider>
-      </ManageDictionaries.Provider>
-    </Dictionaries.Provider>
+    <EditHistoryIndex.Provider value={historyIndex}>
+      <EditHistoryIndexSetter.Provider value={setHistoryIndex}>
+        <EditHistory.Provider value={history}>
+          <EditHistoryEditor.Provider value={editHistory}>
+            <Dictionaries.Provider value={dictionaries}>
+              <ManageDictionaries.Provider value={manageDictionaries}>
+                <DictionaryName.Provider value={name}>
+                  <BuildContext.Provider value={dictionary}>
+                    <AllCategories.Provider value={categories}>
+                      <DictionaryNameSetter.Provider
+                        value={(name: string) => {
+                          setCurrent(name)
+                        }}
+                      >
+                        <BuildEditContext.Provider value={dictionaryAction}>
+                          <CategoryEditContext.Provider value={categoryAction}>
+                            <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
+                          </CategoryEditContext.Provider>
+                        </BuildEditContext.Provider>
+                      </DictionaryNameSetter.Provider>
+                    </AllCategories.Provider>
+                  </BuildContext.Provider>
+                </DictionaryName.Provider>
+              </ManageDictionaries.Provider>
+            </Dictionaries.Provider>
+          </EditHistoryEditor.Provider>
+        </EditHistory.Provider>
+      </EditHistoryIndexSetter.Provider>
+    </EditHistoryIndex.Provider>
   )
 }
