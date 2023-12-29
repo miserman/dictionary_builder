@@ -1,6 +1,6 @@
 import {SavedSearch, SearchOff} from '@mui/icons-material'
 import {AppBar, Autocomplete, Button, IconButton, ListItem, Stack, TextField, Toolbar, Tooltip} from '@mui/material'
-import {SyntheticEvent, useContext, useState} from 'react'
+import {KeyboardEvent, SyntheticEvent, useContext, useState} from 'react'
 import {InfoDrawerContext} from './infoDrawer'
 import {extractMatches, globToRegex, prepareRegex, special, wildcards} from './utils'
 import {ResourceContext} from './resources'
@@ -62,10 +62,10 @@ export function Nav({
           <Autocomplete
             options={termSuggestions}
             value={inputTerm}
-            onKeyUp={(e: SyntheticEvent) => {
-              if ('code' in e && e.code === 'Enter') {
+            onKeyUp={(e: KeyboardEvent<HTMLDivElement>) => {
+              if (e.code === 'Enter') {
                 const newValue = 'value' in e.target ? (e.target.value as string) : ''
-                if (newValue === inputTerm) return addTerm(newValue)
+                if (!newValue || newValue === inputTerm) return addTerm(inputTerm)
               }
               if (terms) {
                 const suggestions: string[] = []

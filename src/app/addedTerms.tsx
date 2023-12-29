@@ -1,11 +1,18 @@
-import {Box, CircularProgress, Container, List, ListItem, Stack, Typography} from '@mui/material'
-import {useContext, useMemo} from 'react'
-import {Done, Error} from '@mui/icons-material'
-import {TermLink, TermSenseEdit} from './term'
-import {ResourceContext} from './resources'
+import {Box, CircularProgress, Container, IconButton, List, ListItem, Stack, Typography} from '@mui/material'
+import {KeyboardEvent, useCallback, useContext, useMemo, useState} from 'react'
+import {Done, Error, RemoveCircleOutline} from '@mui/icons-material'
+import {FixedTerm, FuzzyTerm, TermLink, TermSenseEdit} from './term'
+import {ResourceContext, TermResources} from './resources'
 import {Nav} from './nav'
-import {AllCategories, BuildContext, BuildEditContext, Processed, processTerm} from './building'
-import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams} from '@mui/x-data-grid'
+import {AllCategories, BuildContext, BuildEditContext, Dict, DictEntry, Processed, processTerm} from './building'
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderEditCellParams,
+  GridCellParams,
+  GridToolbarQuickFilter,
+  GridEventListener,
+} from '@mui/x-data-grid'
 import {relativeFrequency} from './utils'
 
 const resources = [
@@ -15,6 +22,47 @@ const resources = [
   {key: 'synsetInfo', label: 'Synset Info'},
 ] as const
 export type SortOptions = 'term' | 'time'
+
+type GridRow = {[index: string]: FuzzyTerm | FixedTerm | DictEntry | string | number}
+function makeRowData(term: string, termSet: {[index: string]: FixedTerm | FuzzyTerm}, Data: TermResources, Dict: Dict) {
+  if (!(term in termSet)) {
+    termSet[term] = processTerm(Dict[term].type === 'regex' ? new RegExp(term) : term, Data)
+  }
+  const processed = termSet[term]
+  const dictEntry = Dict[term]
+  const row: GridRow = processed
+    ? processed.type === 'fixed'
+      ? {
+          processed,
+          dictEntry,
+          id: term,
+          sense: dictEntry.sense,
+          frequency: relativeFrequency(processed.index, Data.terms && Data.terms.length),
+          matches: processed.recognized ? 1 : 0,
+          senses: processed.synsets.length,
+          related: processed.related.length,
+        }
+      : {
+          processed,
+          dictEntry,
+          id: term,
+          sense: dictEntry.sense,
+          matches: processed.matches.length,
+        }
+    : {
+        processed,
+        dictEntry,
+        id: term,
+        matches: 0,
+      }
+  if (dictEntry.categories) {
+    const cats = dictEntry.categories
+    Object.keys(cats).forEach(cat => {
+      row['category_' + cat] = cats[cat]
+    })
+  }
+  return row
+}
 
 const categoryPrefix = /^category_/
 export default function AddedTerms({
@@ -31,8 +79,51 @@ export default function AddedTerms({
   const editDictionary = useContext(BuildEditContext)
   const isInDict = (term: string) => term in Dict
   const addedTerms = Object.keys(Dict).reverse()
+  const editFromEvent = useCallback(
+    (value: string | number, params: GridCellParams) => {
+      const {field, row} = params
+      const {processed, dictEntry} = row
+      if (field && field.startsWith('category_')) {
+        const cats = {...dictEntry.categories}
+        const cat = field.replace(categoryPrefix, '')
+        if (cat in cats && !value) {
+          delete cats[cat]
+        } else if (value) {
+          cats[cat] = value
+        }
+        editDictionary({
+          type: 'update',
+          term: processed.term,
+          term_type: processed.term_type,
+          categories: cats,
+        })
+      }
+    },
+    [editDictionary]
+  )
   const cols: GridColDef[] = useMemo(() => {
     const cols: GridColDef[] = [
+      {
+        field: '',
+        headerName: '',
+        width: 1,
+        sortable: false,
+        disableColumnMenu: true,
+        renderCell: (params: GridRenderEditCellParams) => {
+          return (
+            <IconButton
+              sx={{opacity: 0.4, cursor: 'not-allowed'}}
+              size="small"
+              aria-label="remove term"
+              onClick={() => {
+                editDictionary({type: 'remove', term: params.id as string})
+              }}
+            >
+              <RemoveCircleOutline sx={{fontSize: '.9em'}} />
+            </IconButton>
+          )
+        },
+      },
       {
         field: 'id',
         headerName: 'Term',
@@ -60,68 +151,21 @@ export default function AddedTerms({
         editable: true,
         valueParser: (value: any, params?: GridCellParams) => {
           const parsed = +value || ''
-          if (params && parsed) {
-            const {field, row} = params
-            const {processed, dictEntry} = row
-            if (field.startsWith('category_')) {
-              const cats = dictEntry.categories
-              cats[field.replace(categoryPrefix, '')] = +value
-              editDictionary({
-                type: 'update',
-                term: processed.term,
-                term_type: processed.term_type,
-                categories: cats,
-              })
-            }
+          if (params) {
+            editFromEvent(parsed, params)
           }
           return parsed
         },
       })
     )
     return cols
-  }, [Cats, editDictionary])
+  }, [Cats, editDictionary, editFromEvent])
   const rows = useMemo(() => {
-    return Data.termAssociations
-      ? addedTerms.map(term => {
-          if (!(term in termSet)) {
-            termSet[term] = processTerm(Dict[term].type === 'regex' ? new RegExp(term) : term, Data)
-          }
-          const processed = termSet[term]
-          const dictEntry = Dict[term]
-          const row: {[index: string]: typeof processed | typeof dictEntry | string | number} = processed
-            ? processed.type === 'fixed'
-              ? {
-                  processed,
-                  dictEntry,
-                  id: term,
-                  sense: dictEntry.sense,
-                  frequency: relativeFrequency(processed.index, Data.terms && Data.terms.length),
-                  matches: processed.recognized ? 1 : 0,
-                  senses: processed.synsets.length,
-                  related: processed.related.length,
-                }
-              : {
-                  processed,
-                  dictEntry,
-                  id: term,
-                  sense: dictEntry.sense,
-                  matches: processed.matches.length,
-                }
-            : {
-                processed,
-                dictEntry,
-                id: term,
-                matches: 0,
-              }
-          if (dictEntry.categories) {
-            const cats = dictEntry.categories
-            Object.keys(cats).forEach(cat => {
-              row['category_' + cat] = cats[cat]
-            })
-          }
-          return row
-        })
-      : []
+    const out: GridRow[] = new Array(addedTerms.length)
+    if (Data.termAssociations && Data.synsetInfo) {
+      addedTerms.forEach(async (term, index) => (out[index] = makeRowData(term, termSet, Data, Dict)))
+    }
+    return out
   }, [addedTerms, Data, Dict, termSet])
   return (
     <Box>
@@ -176,7 +220,14 @@ export default function AddedTerms({
                 columns={cols}
                 disableRowSelectionOnClick
                 showCellVerticalBorder
+                disableDensitySelector
                 density="compact"
+                slots={{toolbar: GridToolbarQuickFilter}}
+                onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
+                  if (e.key === 'Delete' || e.key === 'Backspace') {
+                    editFromEvent(0, params)
+                  }
+                }}
               />
             )}
           </Box>

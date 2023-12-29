@@ -1,4 +1,4 @@
-import {Close, DeleteOutline} from '@mui/icons-material'
+import {Close, RemoveCircleOutline} from '@mui/icons-material'
 import {
   Button,
   Card,
@@ -11,7 +11,6 @@ import {
   InputLabel,
   List,
   ListItem,
-  ListItemButton,
   ListItemText,
   MenuItem,
   Select,
@@ -20,25 +19,19 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import {ChangeEvent, KeyboardEvent, useContext, useState} from 'react'
+import {ChangeEvent, KeyboardEvent, useContext, useMemo, useState} from 'react'
 import {
   AllCategories,
   BuildEditContext,
   CategoryEditContext,
   Dictionaries,
   DictionaryName,
-  EditHistory,
-  EditHistoryEditor,
-  EditHistoryIndex,
-  EditHistoryIndexSetter,
   ManageDictionaries,
 } from './building'
 import {ImportMenu} from './importMenu'
 import {ExportMenu} from './exportMenu'
+import {History} from './history'
 
-const byTime = function (a: {time?: number}, b: {time?: number}) {
-  return b.time && a.time ? b.time - a.time : -1
-}
 export function DictionaryMenu() {
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
@@ -51,10 +44,6 @@ export function DictionaryMenu() {
   const categories = useContext(AllCategories)
   const editCategories = useContext(CategoryEditContext)
   const dictionaryAction = useContext(BuildEditContext)
-  const history = useContext(EditHistory)
-  const editHistory = useContext(EditHistoryEditor)
-  const historyIndex = useContext(EditHistoryIndex)
-  const setHistoryIndex = useContext(EditHistoryIndexSetter)
   const [newCategory, setNewCategory] = useState('')
   const add = () => {
     if (newCategory && -1 === categories.indexOf(newCategory)) {
@@ -62,6 +51,25 @@ export function DictionaryMenu() {
       setNewCategory('')
     }
   }
+  const cats = useMemo(
+    () =>
+      categories.map(cat => (
+        <ListItem key={cat} sx={{p: 0}}>
+          <ListItemText primary={cat} />
+          <IconButton
+            aria-label="delete category"
+            sx={{opacity: 0.5}}
+            onClick={() => {
+              dictionaryAction({type: 'remove_category', name: cat})
+              editCategories({type: 'remove', cat: cat})
+            }}
+          >
+            <RemoveCircleOutline />
+          </IconButton>
+        </ListItem>
+      )),
+    [categories, dictionaryAction, editCategories]
+  )
   return (
     <>
       <Button variant="text" sx={{fontWeight: 'bold'}} onClick={toggleMenu}>
@@ -110,22 +118,7 @@ export function DictionaryMenu() {
               <Card elevation={5} sx={{height: '40%', minHeight: '300px', display: 'flex', flexDirection: 'column'}}>
                 <CardHeader title={<Typography>Categories</Typography>} sx={{pb: 0}} />
                 <CardContent sx={{pt: 0, pb: 0, mb: 'auto', overflowY: 'auto'}}>
-                  <List>
-                    {categories.map(cat => (
-                      <ListItem key={cat} sx={{p: 0}}>
-                        <ListItemText primary={cat} />
-                        <IconButton
-                          aria-label="delete category"
-                          onClick={() => {
-                            dictionaryAction({type: 'remove_category', name: cat})
-                            editCategories({type: 'remove', cat: cat})
-                          }}
-                        >
-                          <DeleteOutline />
-                        </IconButton>
-                      </ListItem>
-                    ))}
-                  </List>
+                  <List>{cats}</List>
                 </CardContent>
                 <CardActions>
                   <Stack direction="row">
@@ -145,39 +138,7 @@ export function DictionaryMenu() {
                   </Stack>
                 </CardActions>
               </Card>
-              <Card elevation={5} sx={{height: '60%', minHeight: '300px', display: 'flex', flexDirection: 'column'}}>
-                <CardHeader title={<Typography>Edit History</Typography>} sx={{pb: 0}} />
-                <CardContent sx={{p: 0, mb: 'auto', overflowY: 'auto'}}>
-                  <List sx={{overflowX: 'hidden'}}>
-                    {history.sort(byTime).map((edit, index) => (
-                      <ListItem key={index} sx={{p: 0}}>
-                        <ListItemButton
-                          sx={{borderLeft: historyIndex >= index ? '2px solid #fff' : ''}}
-                          onClick={() => {
-                            setHistoryIndex(index)
-                          }}
-                        >
-                          <ListItemText
-                            sx={{m: 0}}
-                            primary={edit.type + ': ' + edit.name}
-                            secondary={edit.time ? new Date(edit.time).toLocaleString() : ''}
-                          />
-                        </ListItemButton>
-                      </ListItem>
-                    ))}
-                  </List>
-                </CardContent>
-                <CardActions>
-                  <Button
-                    fullWidth
-                    onClick={() => {
-                      editHistory({type: 'clear'})
-                    }}
-                  >
-                    Clear
-                  </Button>
-                </CardActions>
-              </Card>
+              <History />
             </Stack>
           </CardContent>
           <CardActions>

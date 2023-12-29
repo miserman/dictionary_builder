@@ -68,10 +68,12 @@ export function Resources({
         arr.forEach((term, index) => {
           obj[term] = index
           initial = term[0]
-          if (initial in separated) {
-            separated[initial].push(term)
-          } else {
-            separated[initial] = [term]
+          if (initial) {
+            if (initial in separated) {
+              separated[initial].push(term)
+            } else {
+              separated[initial] = [term]
+            }
           }
         })
         setTermLookup(Object.freeze(obj))

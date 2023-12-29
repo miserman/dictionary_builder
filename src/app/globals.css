@@ -1,6 +1,12 @@
 .number {
   color: #a1d9ee;
 }
+.code {
+  font-size: 0.7em;
+  font-family: monospace;
+  opacity: 0.85;
+  padding: 0 1em;
+}
 .dense-table-row td,
 .dense-table-row th {
   max-width: 10em;
@@ -14,4 +20,9 @@
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.MuiDataGrid-root > .MuiFormControl-root {
+  position: absolute;
+  bottom: 4px;
+  left: 12px;
 }

@@ -29,7 +29,7 @@ const HiddenInput = styled('input')({
 
 const tab = /\\t/
 const padding = /^\s+|\s+$/g
-const quote_padding = /^"|"$/g
+const quote_padding = /^["\s]+|["\s]+$/g
 const dic_seps = /\t+/g
 function makeDictEntry(cats: NumberObject, sense?: string) {
   return {
@@ -54,7 +54,7 @@ function parseDict(raw: string) {
             const line = lines[i].replace(padding, '')
             if (line === '%') break
             const parts = line.split(dic_seps)
-            if (parts.length > 1) {
+            if (parts.length > 1 && parts[1]) {
               categories[parts[0]] = parts[1]
             }
           }
@@ -62,12 +62,14 @@ function parseDict(raw: string) {
             const line = lines[i].replace(padding, '')
             const parts = line.split(dic_seps)
             if (parts.length > 1) {
-              const term = parts.splice(0, 1)[0]
-              const cats: NumberObject = {}
-              parts.forEach(index => {
-                if (index in categories) cats[categories[index]] = 1
-              })
-              parsed[term] = makeDictEntry(cats)
+              const term = parts.splice(0, 1)[0].toLowerCase()
+              if (term) {
+                const cats: NumberObject = {}
+                parts.forEach(index => {
+                  if (index in categories) cats[categories[index]] = 1
+                })
+                parsed[term] = makeDictEntry(cats)
+              }
             }
           }
         }
@@ -75,23 +77,31 @@ function parseDict(raw: string) {
         // assumed to be JSON
         const initial = JSON.parse(raw)
         Object.keys(initial).forEach(cat => {
-          const terms = initial[cat]
-          if (Array.isArray(terms)) {
-            terms.forEach(term => {
-              if (term in parsed) {
-                parsed[term].categories[cat] = 1
-              } else {
-                parsed[term] = makeDictEntry({[cat]: 1})
-              }
-            })
-          } else {
-            Object.keys(terms).forEach(term => {
-              if (term in parsed) {
-                parsed[term].categories[cat] = terms[term]
-              } else {
-                parsed[term] = makeDictEntry({[cat]: terms[term]})
-              }
-            })
+          if (cat) {
+            const terms = initial[cat]
+            if (Array.isArray(terms)) {
+              terms.forEach(term => {
+                term = term.toLowerCase()
+                if (term) {
+                  if (term in parsed) {
+                    parsed[term].categories[cat] = 1
+                  } else {
+                    parsed[term] = makeDictEntry({[cat]: 1})
+                  }
+                }
+              })
+            } else {
+              Object.keys(terms).forEach(term => {
+                term = term.toLowerCase()
+                if (term) {
+                  if (term in parsed) {
+                    parsed[term].categories[cat] = terms[term]
+                  } else {
+                    parsed[term] = makeDictEntry({[cat]: terms[term]})
+                  }
+                }
+              })
+            }
           }
         })
       } else {
@@ -105,12 +115,14 @@ function parseDict(raw: string) {
         categories.splice(0, 1)
         lines.forEach(l => {
           const weights = l.split(sep)
-          const term = weights.splice(0, 1)[0].replace(quote_padding, '')
-          const cats: NumberObject = {}
-          weights.forEach((weight, index) => {
-            if (weight) cats[categories[index]] = +weight
-          })
-          parsed[term] = makeDictEntry(cats)
+          const term = weights.splice(0, 1)[0].toLowerCase().replace(quote_padding, '')
+          if (term) {
+            const cats: NumberObject = {}
+            weights.forEach((weight, index) => {
+              if (weight && categories[index]) cats[categories[index]] = +weight
+            })
+            parsed[term] = makeDictEntry(cats)
+          }
         })
       }
     } catch {}
