@@ -1,18 +1,11 @@
 import {Box, CircularProgress, Container, IconButton, List, ListItem, Stack, Typography} from '@mui/material'
-import {KeyboardEvent, useCallback, useContext, useMemo, useState} from 'react'
+import {KeyboardEvent, useCallback, useContext, useMemo} from 'react'
 import {Done, Error, RemoveCircleOutline} from '@mui/icons-material'
 import {FixedTerm, FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {ResourceContext, TermResources} from './resources'
 import {Nav} from './nav'
 import {AllCategories, BuildContext, BuildEditContext, Dict, DictEntry, Processed, processTerm} from './building'
-import {
-  DataGrid,
-  GridColDef,
-  GridRenderEditCellParams,
-  GridCellParams,
-  GridToolbarQuickFilter,
-  GridEventListener,
-} from '@mui/x-data-grid'
+import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams, GridToolbarQuickFilter} from '@mui/x-data-grid'
 import {relativeFrequency} from './utils'
 
 const resources = [
@@ -23,22 +16,37 @@ const resources = [
 ] as const
 export type SortOptions = 'term' | 'time'
 
-type GridRow = {[index: string]: FuzzyTerm | FixedTerm | DictEntry | string | number}
+type GridRow = {
+  [index: string]: number | string | FixedTerm | FuzzyTerm | DictEntry
+  dictEntry: DictEntry
+  id: string
+  sense: string
+  matches: number
+} & (
+  | {processed: FuzzyTerm}
+  | {
+      processed: FixedTerm
+      sense: string
+      frequency: string
+      senses: number
+      related: number
+    }
+)
 function makeRowData(term: string, termSet: {[index: string]: FixedTerm | FuzzyTerm}, Data: TermResources, Dict: Dict) {
   if (!(term in termSet)) {
     termSet[term] = processTerm(Dict[term].type === 'regex' ? new RegExp(term) : term, Data)
   }
   const processed = termSet[term]
   const dictEntry = Dict[term]
-  const row: GridRow = processed
-    ? processed.type === 'fixed'
+  const row: GridRow =
+    processed.type === 'fixed'
       ? {
           processed,
           dictEntry,
           id: term,
           sense: dictEntry.sense,
-          frequency: relativeFrequency(processed.index, Data.terms && Data.terms.length),
           matches: processed.recognized ? 1 : 0,
+          frequency: relativeFrequency(processed.index, Data.terms && Data.terms.length),
           senses: processed.synsets.length,
           related: processed.related.length,
         }
@@ -49,12 +57,6 @@ function makeRowData(term: string, termSet: {[index: string]: FixedTerm | FuzzyT
           sense: dictEntry.sense,
           matches: processed.matches.length,
         }
-    : {
-        processed,
-        dictEntry,
-        id: term,
-        matches: 0,
-      }
   if (dictEntry.categories) {
     const cats = dictEntry.categories
     Object.keys(cats).forEach(cat => {
@@ -64,6 +66,9 @@ function makeRowData(term: string, termSet: {[index: string]: FixedTerm | FuzzyT
   return row
 }
 
+function byTime(a: GridRow, b: GridRow) {
+  return b.dictEntry.added - a.dictEntry.added
+}
 const categoryPrefix = /^category_/
 export default function AddedTerms({
   loading,
@@ -163,9 +168,9 @@ export default function AddedTerms({
   const rows = useMemo(() => {
     const out: GridRow[] = new Array(addedTerms.length)
     if (Data.termAssociations && Data.synsetInfo) {
-      addedTerms.forEach(async (term, index) => (out[index] = makeRowData(term, termSet, Data, Dict)))
+      addedTerms.forEach((term, index) => (out[index] = makeRowData(term, termSet, Data, Dict)))
     }
-    return out
+    return out.sort(byTime)
   }, [addedTerms, Data, Dict, termSet])
   return (
     <Box>

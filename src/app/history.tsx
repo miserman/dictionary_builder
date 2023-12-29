@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import {useContext, useMemo} from 'react'
 import {Dict, EditHistory, EditHistoryEditor, HistoryContainer, HistoryEntry, HistoryStepper} from './building'
-import {ChevronLeft, ChevronRight} from '@mui/icons-material'
+import {ChevronLeft, ChevronRight, LastPage} from '@mui/icons-material'
 
 function undoChange(change: HistoryEntry, dict: Dict) {
   switch (change.type) {
@@ -29,8 +29,8 @@ function undoChange(change: HistoryEntry, dict: Dict) {
       dict[change.originalName] = change.originalValue
       return
     case 'edit_term':
-      const current = {...dict[change.name]}
       if (change.value.field === 'categories') {
+        const current = {...dict[change.name]}
         change.value.edits.forEach(e => {
           if (e.from) {
             current.categories[e.category] = e.from
@@ -39,7 +39,7 @@ function undoChange(change: HistoryEntry, dict: Dict) {
           }
         })
       } else {
-        current[change.value.field] = change.value.original as 'fixed'
+        dict[change.name][change.value.field] = change.value.original as 'fixed'
       }
       return
     case 'add_category':
@@ -70,8 +70,8 @@ function redoChange(change: HistoryEntry, dict: Dict) {
       dict[change.name] = change.value
       return
     case 'edit_term':
-      const current = {...dict[change.name]}
       if (change.value.field === 'categories') {
+        const current = {...dict[change.name]}
         change.value.edits.forEach(e => {
           if (e.to) {
             current.categories[e.category] = e.to
@@ -80,7 +80,7 @@ function redoChange(change: HistoryEntry, dict: Dict) {
           }
         })
       } else {
-        current[change.value.field] = change.value.new as 'fixed'
+        dict[change.name][change.value.field] = change.value.new as 'fixed'
       }
       return
     case 'add_category':
@@ -89,11 +89,9 @@ function redoChange(change: HistoryEntry, dict: Dict) {
       })
       return
     case 'remove_category':
-      Object.keys(dict).forEach(term => {
+      Object.keys(change.value).forEach(term => {
         const e = dict[term]
-        Object.keys(e.categories).forEach(cat => {
-          if (cat in change.value) delete e.categories[cat]
-        })
+        if (e && e.categories && change.name in e.categories) delete e.categories[change.name]
       })
       return
   }
@@ -101,11 +99,11 @@ function redoChange(change: HistoryEntry, dict: Dict) {
 export function moveInHistory(to: number, history: HistoryContainer, dict: Dict) {
   let i = history.position
   if (to > history.position) {
-    for (; i < to + 1; i++) {
+    for (i = Math.max(0, i); i < to + 1; i++) {
       if (history.edits[i]) undoChange(history.edits[i], dict)
     }
   } else {
-    for (; i > to; i--) {
+    for (i = Math.min(history.edits.length - 1, i); i > to; i--) {
       if (history.edits[i]) redoChange(history.edits[i], dict)
     }
   }
@@ -167,6 +165,9 @@ export function History() {
         </IconButton>
         <IconButton onClick={() => historyStep(-1)}>
           <ChevronRight />
+        </IconButton>
+        <IconButton onClick={() => historyStep(-1000)}>
+          <LastPage />
         </IconButton>
       </Stack>
       <CardContent sx={{p: 0, mb: 'auto', overflowY: 'auto'}}>

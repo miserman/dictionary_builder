@@ -60,25 +60,24 @@ export function Resources({
       .then(data => {
         const arr = Object.freeze(data.split('\n'))
         setTerms(arr)
-        const obj: {[index: string]: number} = {}
-        const separated: {[index: string]: string[]} = {
-          all: arr as string[],
+        const collapsed: {[index: string]: string} = {
+          all: ';;' + arr.join(';;') + ';;',
         }
-        let initial = ''
+
+        const obj: {[index: string]: number} = {}
+
         arr.forEach((term, index) => {
           obj[term] = index
-          initial = term[0]
+          const initial = term[0]
           if (initial) {
-            if (initial in separated) {
-              separated[initial].push(term)
+            if (initial in collapsed) {
+              collapsed[initial] += term + ';;'
             } else {
-              separated[initial] = [term]
+              collapsed[initial] = ';;' + term + ';;'
             }
           }
         })
         setTermLookup(Object.freeze(obj))
-        const collapsed: {[index: string]: string} = {}
-        Object.keys(separated).forEach(k => (collapsed[k] = ';;' + separated[k].join(';;') + ';;'))
         setCollapsedTerms(Object.freeze(collapsed))
       })
       .finally(() => loadingTerms(false))

@@ -6,7 +6,9 @@ import {Building} from './building'
 import {InfoDrawer, InfoDrawerActions, InfoDrawerContext, InfoDrawerState} from './infoDrawer'
 import AddedTerms from './addedTerms'
 
-const theme = createTheme({palette: {mode: 'dark', primary: {main: '#b393d3'}, success: {main: '#4986cb'}}})
+const theme = createTheme({
+  palette: {mode: 'dark', primary: {main: '#b393d3'}, success: {main: '#4986cb'}, error: {main: '#e0561c'}},
+})
 
 const manageInfoDrawerState = (state: InfoDrawerState[], action: InfoDrawerActions) => {
   switch (action.type) {

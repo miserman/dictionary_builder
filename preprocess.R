@@ -61,7 +61,7 @@ if (file.exists(paste0(baseDir, "term_hits_trimmed.json"))) {
     structure(seq_along(term_hits), names = names(term_hits)),
     function(i) {
       l <- term_hits[[i]]
-      l <- sort(l[l / term_spaces[[i]] > .35], TRUE)
+      l <- sort(l[l / term_spaces[[i]] > .4], TRUE)
       if (length(l)) as.integer(names(l)) else NULL
     }
   )

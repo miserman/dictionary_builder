@@ -116,120 +116,125 @@ export function ExportMenu() {
   const dict = useContext(Dictionaries)[currentDictionary]
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
-  const [format, setFormat] = useState<Formats>('csv')
+  const [format, setFormat] = useState<Formats>('dic')
   const [sep, setSep] = useState(',')
   const [name, setName] = useState(currentDictionary)
   const [jsonType, setJsonType] = useState<JSONTypes>('unweighted')
-  const content = useMemo(() => exportDict(dict, format, sep, jsonType), [dict, format, sep, jsonType])
+  const content = useMemo(
+    () => (menuOpen ? exportDict(dict, format, sep, jsonType) : ''),
+    [menuOpen, dict, format, sep, jsonType]
+  )
   return (
     <>
       <Button variant="contained" onClick={toggleMenu}>
         Export
       </Button>
-      <Dialog open={menuOpen} onClose={toggleMenu}>
-        <DialogTitle>Export Dictionary</DialogTitle>
-        <IconButton
-          aria-label="close"
-          onClick={toggleMenu}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 12,
-            color: theme.palette.grey[500],
-          }}
-        >
-          <Close />
-        </IconButton>
-        <DialogContent sx={{p: 1}}>
-          <Stack spacing={1}>
-            <TextField
-              size="small"
-              label="name"
-              value={name}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                setName(e.target.value)
-              }}
-            />
-            <textarea
-              style={{
-                backgroundColor: theme.palette.background.default,
-                color: theme.palette.text.primary,
-                whiteSpace: 'nowrap',
-                minWidth: '30em',
-                minHeight: '20em',
-              }}
-              value={content}
-              onChange={() => {}}
-            ></textarea>
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{justifyContent: 'space-between'}}>
-          <Stack direction="row" spacing={1}>
-            <FormControl>
-              <InputLabel>Format</InputLabel>
-              <Select
-                label="Format"
-                size="small"
-                value={format as ''}
-                onChange={(e: SelectChangeEvent<HTMLDivElement>) => {
-                  setFormat(e.target.value as Formats)
-                }}
-              >
-                <MenuItem value="dic">.dic</MenuItem>
-                <MenuItem value="json">.json</MenuItem>
-                <MenuItem value="csv">.csv</MenuItem>
-              </Select>
-            </FormControl>
-            {format === 'csv' ? (
-              <TextField
-                sx={{maxWidth: '5em'}}
-                size="small"
-                label="Separator"
-                value={sep}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  setSep(e.target.value)
-                }}
-              ></TextField>
-            ) : (
-              <></>
-            )}{' '}
-            {format === 'json' ? (
-              <FormControl>
-                <InputLabel>Type</InputLabel>
-                <Select
-                  label="Type"
-                  size="small"
-                  value={jsonType as ''}
-                  onChange={(e: SelectChangeEvent<HTMLDivElement>) => {
-                    setJsonType(e.target.value as JSONTypes)
-                  }}
-                >
-                  <MenuItem value="weighted">Weighted</MenuItem>
-                  <MenuItem value="unweighted">Unweighted</MenuItem>
-                  <MenuItem value="full">Full</MenuItem>
-                </Select>
-              </FormControl>
-            ) : (
-              <></>
-            )}
-          </Stack>
-          <Button
-            variant="contained"
-            onClick={() => {
-              if (name && content) {
-                const a = document.createElement('a')
-                a.setAttribute('href', URL.createObjectURL(new Blob([content], {type: 'text/plain'})))
-                a.setAttribute('download', exportName(name, format, sep))
-                document.body.appendChild(a)
-                a.click()
-                document.body.removeChild(a)
-              }
+      {menuOpen && (
+        <Dialog open={menuOpen} onClose={toggleMenu}>
+          <DialogTitle>Export Dictionary</DialogTitle>
+          <IconButton
+            aria-label="close"
+            onClick={toggleMenu}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 12,
+              color: theme.palette.grey[500],
             }}
           >
-            Download
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <Close />
+          </IconButton>
+          <DialogContent sx={{p: 1}}>
+            <Stack spacing={1}>
+              <TextField
+                size="small"
+                label="name"
+                value={name}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  setName(e.target.value)
+                }}
+              />
+              <textarea
+                style={{
+                  backgroundColor: theme.palette.background.default,
+                  color: theme.palette.text.primary,
+                  whiteSpace: 'nowrap',
+                  minWidth: '30em',
+                  minHeight: '20em',
+                }}
+                value={content}
+                onChange={() => {}}
+              ></textarea>
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{justifyContent: 'space-between'}}>
+            <Stack direction="row" spacing={1}>
+              <FormControl>
+                <InputLabel>Format</InputLabel>
+                <Select
+                  label="Format"
+                  size="small"
+                  value={format as ''}
+                  onChange={(e: SelectChangeEvent<HTMLDivElement>) => {
+                    setFormat(e.target.value as Formats)
+                  }}
+                >
+                  <MenuItem value="dic">.dic</MenuItem>
+                  <MenuItem value="json">.json</MenuItem>
+                  <MenuItem value="csv">.csv</MenuItem>
+                </Select>
+              </FormControl>
+              {format === 'csv' ? (
+                <TextField
+                  sx={{maxWidth: '5em'}}
+                  size="small"
+                  label="Separator"
+                  value={sep}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    setSep(e.target.value)
+                  }}
+                ></TextField>
+              ) : (
+                <></>
+              )}{' '}
+              {format === 'json' ? (
+                <FormControl>
+                  <InputLabel>Type</InputLabel>
+                  <Select
+                    label="Type"
+                    size="small"
+                    value={jsonType as ''}
+                    onChange={(e: SelectChangeEvent<HTMLDivElement>) => {
+                      setJsonType(e.target.value as JSONTypes)
+                    }}
+                  >
+                    <MenuItem value="weighted">Weighted</MenuItem>
+                    <MenuItem value="unweighted">Unweighted</MenuItem>
+                    <MenuItem value="full">Full</MenuItem>
+                  </Select>
+                </FormControl>
+              ) : (
+                <></>
+              )}
+            </Stack>
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (name && content) {
+                  const a = document.createElement('a')
+                  a.setAttribute('href', URL.createObjectURL(new Blob([content], {type: 'text/plain'})))
+                  a.setAttribute('download', exportName(name, format, sep))
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                }
+              }}
+            >
+              Download
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </>
   )
 }

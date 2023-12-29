@@ -120,7 +120,7 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
     processed.matches.forEach(match => {
       if (!root || match.length < root.length) root = match
     })
-    processed.common_matches = extractExpanded(root, {all: ';;' + processed.matches.join(';;') + ';;'})
+    processed.common_matches = extractExpanded(root, ';;' + processed.matches.join(';;') + ';;')
   }
   return (
     <Box sx={{height: '100%', overflowY: 'auto'}}>
@@ -186,7 +186,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const containerStyle = {p: 1, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}
   const {terms, collapsedTerms, sense_keys} = useContext(ResourceContext)
   if (!processed.forms) {
-    processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms : {all: ''})
+    processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
     processed.forms.sort(sortByLength)
   }
   return (

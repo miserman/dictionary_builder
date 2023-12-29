@@ -141,18 +141,20 @@ export function Building({children}: {children: ReactNode}) {
       return
     }
     const newHistory = action.type === 'clear' ? [] : [...history.edits]
+    let position = action.type === 'clear' ? -1 : history.position
     if (action.type === 'remove') {
       newHistory.pop()
     } else if (action.type !== 'clear') {
-      if (history.position > -1) {
-        newHistory.splice(0, history.position + 1)
+      if (position > -1) {
+        newHistory.splice(0, position + 1)
+        position = -1
       }
-      action.entry.time = Date.now()
+      if (!action.entry.time) action.entry.time = Date.now()
       newHistory.splice(0, 0, action.entry)
     }
     if (newHistory.length > 1000) newHistory.splice(1000, newHistory.length - 999)
-    localStorage.setItem('dict_history_' + name, JSON.stringify({edits: newHistory, position: history.position}))
-    setHistory({edits: newHistory, position: history.position})
+    localStorage.setItem('dict_history_' + name, JSON.stringify({edits: newHistory, position: position}))
+    setHistory({edits: newHistory, position: position})
   }
   const [history, setHistory] = useState<{edits: HistoryEntry[]; position: number}>(loadHistory())
 

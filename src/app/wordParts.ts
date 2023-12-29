@@ -134,7 +134,7 @@ const collapsedPrefixes = ';(?:' + commonPrefixes.join('|') + ')?-?'
 const collapsedSuffixes = '-?(?:' + commonSuffixes.join('|') + ')?(?:' + addableSuffixes.join('|') + ')?\\;'
 
 const terminalVowels = /[aeiouy]$/
-export function extractExpanded(term: string, collapsedTerms: {[index: string]: string}) {
+export function extractExpanded(term: string, collapsed: string) {
   const forms = new Set()
   term = term.replace(special, '\\$&')
   let termPattern: RegExp | undefined
@@ -153,7 +153,6 @@ export function extractExpanded(term: string, collapsedTerms: {[index: string]: 
     )
   } catch {}
   if (termPattern) {
-    const collapsed = collapsedTerms[term[0] in collapsedTerms ? term[0] : 'all']
     for (let match: RegExpExecArray | null; (match = termPattern.exec(collapsed)); ) {
       if (match[0] && ';' + term + ';' !== match[0]) forms.add(match[0].replace(termBounds, ''))
     }

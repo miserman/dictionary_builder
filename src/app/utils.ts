@@ -14,7 +14,7 @@ export function sortByLength(a: string, b: string) {
 }
 
 export function relativeFrequency(index: number, n?: number) {
-  return n && -1 !== index ? ((1 - index / n) * 100).toFixed(2) : '0'
+  return n && -1 !== index ? ((1 - index / n) * 100).toFixed(2) : '0.00'
 }
 
 export function extractMatches(ex: RegExp, from: {[index: string]: string}, out: string[] = [], limit = Infinity) {
