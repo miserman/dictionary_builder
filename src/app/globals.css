@@ -1,11 +1,11 @@
 .number {
   color: #a1d9ee;
 }
-.code {
+p.code {
   font-size: 0.7em;
   font-family: monospace;
   opacity: 0.85;
-  padding: 0 1em;
+  padding: 0 0.5em;
 }
 .dense-table-row td,
 .dense-table-row th {
@@ -26,6 +26,9 @@
   bottom: 4px;
   left: 12px;
 }
-.MuiDataGrid-selectedRowCount {
+div.MuiDataGrid-selectedRowCount {
   visibility: hidden;
+}
+button.close-button {
+  opacity: 0.6;
 }

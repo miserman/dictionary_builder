@@ -1,6 +1,6 @@
-import {ReactNode, createContext, useContext, useEffect, useMemo, useReducer, useState} from 'react'
-import {FixedTerm, FuzzyTerm} from './term'
-import {ResourceContext, TermResources} from './resources'
+import {type ReactNode, createContext, useContext, useEffect, useMemo, useReducer, useState} from 'react'
+import type {FixedTerm, FuzzyTerm} from './term'
+import {ResourceContext, type TermResources} from './resources'
 import {extractMatches, globToRegex, prepareRegex, wildcard} from './utils'
 import {loadSettings} from './settingsMenu'
 import {moveInHistory} from './history'
@@ -54,6 +54,8 @@ export const CategoryEditContext = createContext((action: CategoryActions) => {}
 export const EditHistory = createContext<HistoryContainer>({edits: [], position: -1})
 export const EditHistoryEditor = createContext((action: EditeditHistory) => {})
 export const HistoryStepper = createContext((direction: number) => {})
+export const ProcessingContext = createContext(true)
+export const ProcessingContextSetter = createContext((processing: boolean) => {})
 
 type ProcessedTerms = {[index: string]: FuzzyTerm | FixedTerm}
 export const Processed = createContext<ProcessedTerms>({})
@@ -334,33 +336,38 @@ export function Building({children}: {children: ReactNode}) {
     localStorage.setItem('dict_history_' + name, JSON.stringify(newHistory))
     dictionaryAction({type: 'history_bulk', dict: newDict})
   }
+  const [processing, setProcessing] = useState(true)
   return (
-    <EditHistory.Provider value={history}>
-      <EditHistoryEditor.Provider value={editHistory}>
-        <Dictionaries.Provider value={dictionaries}>
-          <ManageDictionaries.Provider value={manageDictionaries}>
-            <DictionaryName.Provider value={name}>
-              <BuildContext.Provider value={dictionary}>
-                <AllCategories.Provider value={categories}>
-                  <DictionaryNameSetter.Provider
-                    value={(name: string) => {
-                      setCurrent(name)
-                    }}
-                  >
-                    <BuildEditContext.Provider value={dictionaryAction}>
-                      <CategoryEditContext.Provider value={categoryAction}>
-                        <HistoryStepper.Provider value={historyStep}>
-                          <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
-                        </HistoryStepper.Provider>
-                      </CategoryEditContext.Provider>
-                    </BuildEditContext.Provider>
-                  </DictionaryNameSetter.Provider>
-                </AllCategories.Provider>
-              </BuildContext.Provider>
-            </DictionaryName.Provider>
-          </ManageDictionaries.Provider>
-        </Dictionaries.Provider>
-      </EditHistoryEditor.Provider>
-    </EditHistory.Provider>
+    <ProcessingContext.Provider value={processing}>
+      <ProcessingContextSetter.Provider value={setProcessing}>
+        <EditHistory.Provider value={history}>
+          <EditHistoryEditor.Provider value={editHistory}>
+            <Dictionaries.Provider value={dictionaries}>
+              <ManageDictionaries.Provider value={manageDictionaries}>
+                <DictionaryName.Provider value={name}>
+                  <BuildContext.Provider value={dictionary}>
+                    <AllCategories.Provider value={categories}>
+                      <DictionaryNameSetter.Provider
+                        value={(name: string) => {
+                          setCurrent(name)
+                        }}
+                      >
+                        <BuildEditContext.Provider value={dictionaryAction}>
+                          <CategoryEditContext.Provider value={categoryAction}>
+                            <HistoryStepper.Provider value={historyStep}>
+                              <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
+                            </HistoryStepper.Provider>
+                          </CategoryEditContext.Provider>
+                        </BuildEditContext.Provider>
+                      </DictionaryNameSetter.Provider>
+                    </AllCategories.Provider>
+                  </BuildContext.Provider>
+                </DictionaryName.Provider>
+              </ManageDictionaries.Provider>
+            </Dictionaries.Provider>
+          </EditHistoryEditor.Provider>
+        </EditHistory.Provider>
+      </ProcessingContextSetter.Provider>
+    </ProcessingContext.Provider>
   )
 }

@@ -11,10 +11,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import {ChangeEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
+import {type ChangeEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import {HistoryStepper} from './building'
 
-export const INFO_DRAWER_HEIGHT = '40vh'
+export const INFO_DRAWER_HEIGHT = '41vh'
 export const TERM_EDITOR_WIDTH = '200px'
 
 export type Settings = {
@@ -73,7 +73,7 @@ export function SettingsMenu() {
           <CardHeader
             title={<Typography>Settings</Typography>}
             action={
-              <IconButton onClick={toggleMenu} aria-label="close settings menu">
+              <IconButton onClick={toggleMenu} aria-label="close settings menu" className="close-button">
                 <Close />
               </IconButton>
             }

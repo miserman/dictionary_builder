@@ -19,8 +19,8 @@ import {
   Typography,
 } from '@mui/material'
 import {relativeFrequency, sortByLength} from './utils'
-import {ChangeEvent, useContext, useState} from 'react'
-import {ResourceContext, Synset} from './resources'
+import {type ChangeEvent, useContext, useState} from 'react'
+import {ResourceContext, type Synset} from './resources'
 import {BuildContext, Processed, processTerm, BuildEditContext} from './building'
 import {InfoDrawerContext} from './infoDrawer'
 import {SynsetLink} from './synset'

@@ -19,7 +19,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import {ChangeEvent, KeyboardEvent, useContext, useMemo, useState} from 'react'
+import {type ChangeEvent, type KeyboardEvent, useContext, useMemo, useState} from 'react'
 import {
   AllCategories,
   BuildEditContext,
@@ -86,9 +86,9 @@ export function DictionaryMenu() {
           }}
         >
           <CardHeader
-            title={<Typography>Dictionary Menu</Typography>}
+            title={<Typography fontWeight="bold">Dictionary Menu</Typography>}
             action={
-              <IconButton onClick={toggleMenu} aria-label="close dictionary menu">
+              <IconButton onClick={toggleMenu} aria-label="close dictionary menu" className="close-button">
                 <Close />
               </IconButton>
             }
@@ -116,7 +116,7 @@ export function DictionaryMenu() {
           <CardContent sx={{alignContent: 'left', mb: 'auto', pt: 0, pb: 1, height: '100%', overflow: 'hidden'}}>
             <Stack spacing={1} sx={{height: '100%', overflowY: 'auto'}}>
               <Card elevation={5} sx={{height: '40%', minHeight: '300px', display: 'flex', flexDirection: 'column'}}>
-                <CardHeader title={<Typography>Categories</Typography>} sx={{pb: 0}} />
+                <CardHeader title={<Typography fontWeight="bold">Categories</Typography>} sx={{pb: 0}} />
                 <CardContent sx={{pt: 0, pb: 0, mb: 'auto', overflowY: 'auto'}}>
                   <List>{cats}</List>
                 </CardContent>

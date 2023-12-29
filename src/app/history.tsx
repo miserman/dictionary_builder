@@ -13,7 +13,14 @@ import {
   Typography,
 } from '@mui/material'
 import {useContext, useMemo} from 'react'
-import {Dict, EditHistory, EditHistoryEditor, HistoryContainer, HistoryEntry, HistoryStepper} from './building'
+import {
+  type Dict,
+  EditHistory,
+  EditHistoryEditor,
+  type HistoryContainer,
+  type HistoryEntry,
+  HistoryStepper,
+} from './building'
 import {ChevronLeft, ChevronRight, LastPage} from '@mui/icons-material'
 
 function undoChange(change: HistoryEntry, dict: Dict) {
@@ -132,7 +139,7 @@ export function History() {
                     {edit.name}
                   </Typography>
                   {edit.type === 'edit_term' ? (
-                    <Typography className="code">
+                    <Typography className="code" sx={{wordBreak: 'break-all'}}>
                       {edit.value.field === 'categories'
                         ? edit.value.edits.map(edit => edit.category + ': ' + edit.from + ' -> ' + edit.to).join('\n')
                         : edit.value.field + ': ' + edit.value.original + ' -> ' + edit.value.new}
@@ -158,7 +165,7 @@ export function History() {
       elevation={5}
       sx={{height: '60%', minHeight: '300px', position: 'relative', display: 'flex', flexDirection: 'column'}}
     >
-      <CardHeader title={<Typography>Edit History</Typography>} sx={{pb: 0}} />
+      <CardHeader title={<Typography fontWeight="bold">Edit History</Typography>} sx={{pb: 0}} />
       <Stack direction="row" sx={{position: 'absolute', top: 8, right: 8}}>
         <IconButton onClick={() => historyStep(1)} aria-label="undo">
           <ChevronLeft />

@@ -1,6 +1,6 @@
 'use client'
 import {CssBaseline, ThemeProvider, createTheme} from '@mui/material'
-import {StrictMode, useReducer, useState} from 'react'
+import {StrictMode, useReducer} from 'react'
 import {Resources} from './resources'
 import {Building} from './building'
 import {InfoDrawer, InfoDrawerActions, InfoDrawerContext, InfoDrawerState} from './infoDrawer'
@@ -22,33 +22,15 @@ const manageInfoDrawerState = (state: InfoDrawerState[], action: InfoDrawerActio
 }
 
 export default function Home() {
-  const [loadingTerms, setLoadingTerms] = useState(true)
-  const [loadingTermAssociations, setLoadingTermAssociations] = useState(true)
-  const [loadingSenseKeys, setLoadingSenseKeys] = useState(true)
-  const [loadingSynsetInfo, setLoadingSynsetInfo] = useState(true)
-
   const [infoDrawerState, updateInfoDrawerState] = useReducer(manageInfoDrawerState, [])
   return (
     <StrictMode>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Resources
-          loadingTerms={setLoadingTerms}
-          loadingTermAssociations={setLoadingTermAssociations}
-          loadingSenseKeys={setLoadingSenseKeys}
-          loadingSynsetInfo={setLoadingSynsetInfo}
-        >
+        <Resources>
           <Building>
             <InfoDrawerContext.Provider value={updateInfoDrawerState}>
-              <AddedTerms
-                loading={{
-                  terms: loadingTerms,
-                  termAssociations: loadingTermAssociations,
-                  sense_keys: loadingSenseKeys,
-                  synsetInfo: loadingSynsetInfo,
-                }}
-                drawerOpen={!!infoDrawerState.length}
-              />
+              <AddedTerms drawerOpen={!!infoDrawerState.length} />
               <InfoDrawer state={infoDrawerState} edit={updateInfoDrawerState}></InfoDrawer>
             </InfoDrawerContext.Provider>
           </Building>

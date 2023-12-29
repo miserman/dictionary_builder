@@ -64,7 +64,7 @@ export function InfoDrawer({state, edit}: {state: InfoDrawerState[]; edit: (acti
       <Card>
         <CardHeader
           action={
-            <IconButton aria-label="Close info drawer" onClick={close}>
+            <IconButton aria-label="Close info drawer" onClick={close} className="close-button">
               <Close />
             </IconButton>
           }

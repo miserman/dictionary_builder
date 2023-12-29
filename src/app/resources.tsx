@@ -1,4 +1,6 @@
-import {ReactNode, createContext, useEffect, useState} from 'react'
+import {Done, Error} from '@mui/icons-material'
+import {CircularProgress, List, ListItem, Stack, Typography} from '@mui/material'
+import {type ReactNode, createContext, useEffect, useState} from 'react'
 
 type AssociatedIndices = {[index: string]: [number | number[], (number | number[])?]}
 export type Synset = {
@@ -34,25 +36,25 @@ export type TermResources = {
 }
 export const ResourceContext = createContext<TermResources>({})
 
-export function Resources({
-  loadingTerms,
-  loadingTermAssociations,
-  loadingSenseKeys,
-  loadingSynsetInfo,
-  children,
-}: {
-  loadingTerms: (loading: boolean) => void
-  loadingTermAssociations: (loading: boolean) => void
-  loadingSenseKeys: (loading: boolean) => void
-  loadingSynsetInfo: (loading: boolean) => void
-  children: ReactNode
-}) {
+const resources = [
+  {key: 'terms', label: 'Terms'},
+  {key: 'termAssociations', label: 'Term Associations'},
+  {key: 'sense_keys', label: 'Sense Keys'},
+  {key: 'synsetInfo', label: 'Synset Info'},
+] as const
+
+export function Resources({children}: {children: ReactNode}) {
   const [terms, setTerms] = useState<readonly string[]>()
   const [termLookup, setTermLookup] = useState<{[index: string]: number}>()
   const [collapsedTerms, setCollapsedTerms] = useState<{[index: string]: string}>()
   const [termAssociations, setTermAssociations] = useState<AssociatedIndices>()
   const [sense_keys, setSenseKeys] = useState<readonly string[]>()
   const [synsetInfo, setSynsetInfo] = useState<Synsets>()
+
+  const [loadingTerms, setLoadingTerms] = useState(true)
+  const [loadingTermAssociations, setLoadingTermAssociations] = useState(true)
+  const [loadingSenseKeys, setLoadingSenseKeys] = useState(true)
+  const [loadingSynsetInfo, setLoadingSynsetInfo] = useState(true)
 
   useEffect(() => {
     fetch('/dictionary_builder/data/terms.txt')
@@ -80,7 +82,7 @@ export function Resources({
         setTermLookup(Object.freeze(obj))
         setCollapsedTerms(Object.freeze(collapsed))
       })
-      .finally(() => loadingTerms(false))
+      .finally(() => setLoadingTerms(false))
   }, [loadingTerms])
   useEffect(() => {
     fetch('/dictionary_builder/data/term_associations.json')
@@ -88,7 +90,7 @@ export function Resources({
       .then(data => {
         setTermAssociations(data)
       })
-      .finally(() => loadingTermAssociations(false))
+      .finally(() => setLoadingTermAssociations(false))
   }, [loadingTermAssociations])
   useEffect(() => {
     fetch('/dictionary_builder/data/sense_keys.txt')
@@ -96,7 +98,7 @@ export function Resources({
       .then(data => {
         setSenseKeys(Object.freeze(data.split('\n')))
       })
-      .finally(() => loadingSenseKeys(false))
+      .finally(() => setLoadingSenseKeys(false))
   }, [loadingSenseKeys])
   useEffect(() => {
     fetch('/dictionary_builder/data/synset_info.json')
@@ -109,12 +111,41 @@ export function Resources({
           })
         )
       })
-      .finally(() => loadingSynsetInfo(false))
+      .finally(() => setLoadingSynsetInfo(false))
   }, [loadingSynsetInfo])
-
+  const Data = {terms, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}
+  const loading = {
+    terms: loadingTerms,
+    termAssociations: loadingTermAssociations,
+    sense_keys: loadingSenseKeys,
+    synsetInfo: loadingSynsetInfo,
+  }
   return (
-    <ResourceContext.Provider value={{terms, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}}>
-      {children}
+    <ResourceContext.Provider value={Data}>
+      {termAssociations && synsetInfo ? (
+        children
+      ) : (
+        <Stack sx={{margin: 'auto', marginTop: 10, maxWidth: 350}}>
+          <Typography>Loading Resources...</Typography>
+          <List>
+            {resources.map(({key, label}) => (
+              <ListItem key={key}>
+                <Typography>
+                  {Data[key] ? (
+                    <Done color="success" />
+                  ) : loading[key] ? (
+                    <CircularProgress size="1.5rem" />
+                  ) : (
+                    <Error color="error" sx={{marginBottom: -0.8}} />
+                  )}
+                  {!Data[key] && !loading[key] ? 'Failed to load ' : ''}
+                  {label}
+                </Typography>
+              </ListItem>
+            ))}
+          </List>
+        </Stack>
+      )}
     </ResourceContext.Provider>
   )
 }

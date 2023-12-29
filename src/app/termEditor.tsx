@@ -14,7 +14,7 @@ import {
 import {Close} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {TERM_EDITOR_WIDTH} from './settingsMenu'
-import {KeyboardEvent, useState} from 'react'
+import {type KeyboardEvent, useState} from 'react'
 import {DataGrid, GridCellParams, type GridColDef} from '@mui/x-data-grid'
 import type {Dict, DictEntry} from './building'
 
@@ -36,10 +36,9 @@ export function TermEditor({
   bottomMargin: number | string
 }) {
   const [showEmptyCategories, setShowEmptyCategories] = useState(false)
-  if (!term) return <></>
+  if (!term || !(term in processedTerms) || !(term in dict)) return <></>
   const processed = processedTerms[term]
   const dictEntry = dict[term]
-  if (!processed || !dictEntry) return <></>
   const cols: GridColDef[] = [
     {field: 'id', headerName: 'Name', width: 110},
     {
@@ -83,12 +82,12 @@ export function TermEditor({
       <Card sx={{height: '100%', pb: '2.5em'}} elevation={1}>
         <CardHeader
           action={
-            <IconButton aria-label="Close term editor" onClick={() => close('')}>
+            <IconButton aria-label="Close term editor" onClick={() => close('')} className="close-button">
               <Close />
             </IconButton>
           }
           title={
-            <Typography>
+            <Typography fontWeight="bold" sx={{whiteSpace: 'nowrap'}}>
               <TermLink term={processed.term} />
             </Typography>
           }
@@ -104,7 +103,7 @@ export function TermEditor({
               <TermSenseEdit label="Sense" id="" field="" processed={processed} />
             </FormControl>
             <Stack direction="column" spacing={1} sx={{height: '100%'}}>
-              <Typography>Category Weights</Typography>
+              <Typography fontWeight="bold">Category Weights</Typography>
               <FormControlLabel
                 sx={{width: '100%'}}
                 control={

@@ -16,8 +16,8 @@ import {
   styled,
   useTheme,
 } from '@mui/material'
-import {ChangeEvent, useContext, useMemo, useState} from 'react'
-import {Dict, Dictionaries, DictionaryName, NumberObject} from './building'
+import {type ChangeEvent, useContext, useMemo, useState} from 'react'
+import {type Dict, Dictionaries, DictionaryName, type NumberObject} from './building'
 
 const HiddenA = styled('a')({
   clip: 'rect(0 0 0 0)',

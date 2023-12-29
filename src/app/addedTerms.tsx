@@ -1,10 +1,18 @@
-import {Box, CircularProgress, Container, IconButton, List, ListItem, Stack, Typography} from '@mui/material'
-import {KeyboardEvent, useCallback, useContext, useMemo, useState} from 'react'
-import {Done, Error, RemoveCircleOutline} from '@mui/icons-material'
-import {FixedTerm, FuzzyTerm, TermLink, TermSenseEdit} from './term'
-import {ResourceContext, TermResources} from './resources'
+import {Box, Container, IconButton, Typography} from '@mui/material'
+import {type KeyboardEvent, useCallback, useContext, useMemo, useState} from 'react'
+import {RemoveCircleOutline} from '@mui/icons-material'
+import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
+import {ResourceContext, type TermResources} from './resources'
 import {Nav} from './nav'
-import {AllCategories, BuildContext, BuildEditContext, Dict, DictEntry, Processed, processTerm} from './building'
+import {
+  AllCategories,
+  BuildContext,
+  BuildEditContext,
+  type Dict,
+  type DictEntry,
+  Processed,
+  processTerm,
+} from './building'
 import {
   DataGrid,
   GridColDef,
@@ -17,12 +25,6 @@ import {relativeFrequency} from './utils'
 import {TermEditor} from './termEditor'
 import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
 
-const resources = [
-  {key: 'terms', label: 'Terms'},
-  {key: 'termAssociations', label: 'Term Associations'},
-  {key: 'sense_keys', label: 'Sense Keys'},
-  {key: 'synsetInfo', label: 'Synset Info'},
-] as const
 export type SortOptions = 'term' | 'time'
 
 export type GridRow = {
@@ -79,13 +81,7 @@ function byTime(a: GridRow, b: GridRow) {
   return b.dictEntry.added - a.dictEntry.added
 }
 const categoryPrefix = /^category_/
-export default function AddedTerms({
-  loading,
-  drawerOpen,
-}: {
-  loading: {terms: boolean; termAssociations: boolean; sense_keys: boolean; synsetInfo: boolean}
-  drawerOpen: boolean
-}) {
+export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
   const Cats = useContext(AllCategories)
@@ -191,84 +187,60 @@ export default function AddedTerms({
   }, [addedTerms, Data, Dict, termSet])
   const bottomMargin = drawerOpen ? INFO_DRAWER_HEIGHT : 0
   const [editorTerm, setEditorTerm] = useState('')
+  if (editorTerm && (!(editorTerm in termSet) || !(editorTerm in Dict))) setEditorTerm('')
   return (
-    <Box>
-      {!Data.termAssociations || !Data.synsetInfo ? (
-        <Stack sx={{margin: 'auto', marginTop: 10, maxWidth: 350}}>
-          <Typography>Loading Resources...</Typography>
-          <List>
-            {resources.map(({key, label}) => (
-              <ListItem key={key}>
-                <Typography>
-                  {Data[key] ? (
-                    <Done color="success" />
-                  ) : loading[key] ? (
-                    <CircularProgress size="1.5rem" />
-                  ) : (
-                    <Error color="error" sx={{marginBottom: -0.8}} />
-                  )}
-                  {!Data[key] && !loading[key] ? 'Failed to load ' : ''}
-                  {label}
-                </Typography>
-              </ListItem>
-            ))}
-          </List>
-        </Stack>
-      ) : (
-        <Container>
-          <Nav
-            terms={Data.terms}
-            exists={isInDict}
-            add={(term: string | RegExp, type: string) => {
-              editDictionary({type: 'add', term: term, term_type: type})
+    <Container>
+      <Nav
+        terms={Data.terms}
+        exists={isInDict}
+        add={(term: string | RegExp, type: string) => {
+          editDictionary({type: 'add', term: term, term_type: type})
+        }}
+      />
+      <TermEditor
+        term={editorTerm}
+        processedTerms={termSet}
+        dict={Dict}
+        close={setEditorTerm}
+        categories={Cats}
+        editor={editFromEvent}
+        bottomMargin={bottomMargin}
+      />
+      <Box
+        component="main"
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: editorTerm ? TERM_EDITOR_WIDTH : 0,
+          overflowY: 'auto',
+          mt: '3em',
+          mb: bottomMargin,
+        }}
+      >
+        {!addedTerms.length ? (
+          <Typography align="center">Add terms, or import an existing dictionary.</Typography>
+        ) : (
+          <DataGrid
+            rows={rows}
+            columns={cols}
+            showCellVerticalBorder
+            disableDensitySelector
+            pageSizeOptions={[100]}
+            density="compact"
+            slots={{toolbar: GridToolbarQuickFilter}}
+            onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
+              if (e.key === 'Delete' || e.key === 'Backspace') {
+                editFromEvent(0, params)
+              }
+            }}
+            onRowClick={({row}: {row: GridRow}) => {
+              setEditorTerm(row.id)
             }}
           />
-          <TermEditor
-            term={editorTerm}
-            processedTerms={termSet}
-            dict={Dict}
-            close={setEditorTerm}
-            categories={Cats}
-            editor={editFromEvent}
-            bottomMargin={bottomMargin}
-          />
-          <Box
-            component="main"
-            sx={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              left: editorTerm ? TERM_EDITOR_WIDTH : 0,
-              overflowY: 'auto',
-              mt: '3em',
-              mb: bottomMargin,
-            }}
-          >
-            {!addedTerms.length ? (
-              <Typography align="center">Add terms, or import an existing dictionary.</Typography>
-            ) : (
-              <DataGrid
-                rows={rows}
-                columns={cols}
-                showCellVerticalBorder
-                disableDensitySelector
-                pageSizeOptions={[100]}
-                density="compact"
-                slots={{toolbar: GridToolbarQuickFilter}}
-                onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
-                  if (e.key === 'Delete' || e.key === 'Backspace') {
-                    editFromEvent(0, params)
-                  }
-                }}
-                onRowClick={({row}: {row: GridRow}) => {
-                  setEditorTerm(row.id)
-                }}
-              />
-            )}
-          </Box>
-        </Container>
-      )}
-    </Box>
+        )}
+      </Box>
+    </Container>
   )
 }
