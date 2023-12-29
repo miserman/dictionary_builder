@@ -1,12 +1,21 @@
 import {Box, CircularProgress, Container, IconButton, List, ListItem, Stack, Typography} from '@mui/material'
-import {KeyboardEvent, useCallback, useContext, useMemo} from 'react'
+import {KeyboardEvent, useCallback, useContext, useMemo, useState} from 'react'
 import {Done, Error, RemoveCircleOutline} from '@mui/icons-material'
 import {FixedTerm, FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {ResourceContext, TermResources} from './resources'
 import {Nav} from './nav'
 import {AllCategories, BuildContext, BuildEditContext, Dict, DictEntry, Processed, processTerm} from './building'
-import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams, GridToolbarQuickFilter} from '@mui/x-data-grid'
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderEditCellParams,
+  GridCellParams,
+  GridToolbarQuickFilter,
+  useGridApiRef,
+} from '@mui/x-data-grid'
 import {relativeFrequency} from './utils'
+import {TermEditor} from './termEditor'
+import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
 
 const resources = [
   {key: 'terms', label: 'Terms'},
@@ -16,7 +25,7 @@ const resources = [
 ] as const
 export type SortOptions = 'term' | 'time'
 
-type GridRow = {
+export type GridRow = {
   [index: string]: number | string | FixedTerm | FuzzyTerm | DictEntry
   dictEntry: DictEntry
   id: string
@@ -88,9 +97,9 @@ export default function AddedTerms({
     (value: string | number, params: GridCellParams) => {
       const {field, row} = params
       const {processed, dictEntry} = row
-      if (field && field.startsWith('category_')) {
+      if (field && (field === 'from_term_editor' || field.startsWith('category_'))) {
         const cats = {...dictEntry.categories}
-        const cat = field.replace(categoryPrefix, '')
+        const cat = field === 'from_term_editor' ? row.id : field.replace(categoryPrefix, '')
         if (cat in cats && !value) {
           delete cats[cat]
         } else if (value) {
@@ -106,6 +115,7 @@ export default function AddedTerms({
     },
     [editDictionary]
   )
+  const gridApi = useGridApiRef()
   const cols: GridColDef[] = useMemo(() => {
     const cols: GridColDef[] = [
       {
@@ -141,7 +151,14 @@ export default function AddedTerms({
         headerName: 'Sense',
         editable: true,
         renderEditCell: (params: GridRenderEditCellParams) => {
-          return <TermSenseEdit id={params.id as string} field={params.field} processed={params.row.processed} />
+          return (
+            <TermSenseEdit
+              id={params.id as string}
+              field={params.field}
+              processed={params.row.processed}
+              gridApi={gridApi}
+            />
+          )
         },
       },
       {field: 'frequency', headerName: 'Frequency'},
@@ -164,7 +181,7 @@ export default function AddedTerms({
       })
     )
     return cols
-  }, [Cats, editDictionary, editFromEvent])
+  }, [Cats, editDictionary, editFromEvent, gridApi])
   const rows = useMemo(() => {
     const out: GridRow[] = new Array(addedTerms.length)
     if (Data.termAssociations && Data.synsetInfo) {
@@ -172,6 +189,8 @@ export default function AddedTerms({
     }
     return out.sort(byTime)
   }, [addedTerms, Data, Dict, termSet])
+  const bottomMargin = drawerOpen ? INFO_DRAWER_HEIGHT : 0
+  const [editorTerm, setEditorTerm] = useState('')
   return (
     <Box>
       {!Data.termAssociations || !Data.synsetInfo ? (
@@ -204,6 +223,15 @@ export default function AddedTerms({
               editDictionary({type: 'add', term: term, term_type: type})
             }}
           />
+          <TermEditor
+            term={editorTerm}
+            processedTerms={termSet}
+            dict={Dict}
+            close={setEditorTerm}
+            categories={Cats}
+            editor={editFromEvent}
+            bottomMargin={bottomMargin}
+          />
           <Box
             component="main"
             sx={{
@@ -211,10 +239,10 @@ export default function AddedTerms({
               top: 0,
               right: 0,
               bottom: 0,
-              left: 0,
+              left: editorTerm ? TERM_EDITOR_WIDTH : 0,
               overflowY: 'auto',
               mt: '3em',
-              mb: drawerOpen ? '45vh' : 0,
+              mb: bottomMargin,
             }}
           >
             {!addedTerms.length ? (
@@ -223,15 +251,18 @@ export default function AddedTerms({
               <DataGrid
                 rows={rows}
                 columns={cols}
-                disableRowSelectionOnClick
                 showCellVerticalBorder
                 disableDensitySelector
+                pageSizeOptions={[100]}
                 density="compact"
                 slots={{toolbar: GridToolbarQuickFilter}}
                 onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
                   if (e.key === 'Delete' || e.key === 'Backspace') {
                     editFromEvent(0, params)
                   }
+                }}
+                onRowClick={({row}: {row: GridRow}) => {
+                  setEditorTerm(row.id)
                 }}
               />
             )}

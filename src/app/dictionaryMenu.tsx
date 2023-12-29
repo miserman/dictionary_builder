@@ -88,7 +88,7 @@ export function DictionaryMenu() {
           <CardHeader
             title={<Typography>Dictionary Menu</Typography>}
             action={
-              <IconButton onClick={toggleMenu}>
+              <IconButton onClick={toggleMenu} aria-label="close dictionary menu">
                 <Close />
               </IconButton>
             }

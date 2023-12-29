@@ -251,7 +251,7 @@ export function Building({children}: {children: ReactNode}) {
           added: existing.added || Date.now(),
           type: existing.type || (processed && processed.term_type) || 'fixed',
           categories: {...(action.categories || existing.categories || {})},
-          sense: action.sense || existing.sense || '',
+          sense: 'sense' in action ? action.sense || '' : existing.sense || '',
         }
         if (action.type === 'replace') {
           const original = 'string' === typeof action.originalTerm ? action.originalTerm : action.originalTerm.source

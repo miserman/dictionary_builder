@@ -14,6 +14,9 @@ import {
 import {ChangeEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import {HistoryStepper} from './building'
 
+export const INFO_DRAWER_HEIGHT = '40vh'
+export const TERM_EDITOR_WIDTH = '200px'
+
 export type Settings = {
   selected?: string
   dictionary_names?: string[]
@@ -54,7 +57,7 @@ export function SettingsMenu() {
   }, [undo, redo, listener])
   return (
     <>
-      <IconButton onClick={toggleMenu}>
+      <IconButton onClick={toggleMenu} aria-label="toggle settings menu">
         <Menu />
       </IconButton>
       <Drawer anchor="right" open={menuOpen} onClose={toggleMenu}>
@@ -70,7 +73,7 @@ export function SettingsMenu() {
           <CardHeader
             title={<Typography>Settings</Typography>}
             action={
-              <IconButton onClick={toggleMenu}>
+              <IconButton onClick={toggleMenu} aria-label="close settings menu">
                 <Close />
               </IconButton>
             }

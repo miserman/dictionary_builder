@@ -171,7 +171,7 @@ export function ImportMenu() {
       <Dialog open={menuOpen} onClose={toggleMenu}>
         <DialogTitle>Add Dictionary</DialogTitle>
         <IconButton
-          aria-label="close"
+          aria-label="close import menu"
           onClick={toggleMenu}
           sx={{
             position: 'absolute',

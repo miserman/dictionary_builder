@@ -25,7 +25,6 @@ import {BuildContext, Processed, processTerm, BuildEditContext} from './building
 import {InfoDrawerContext} from './infoDrawer'
 import {SynsetLink} from './synset'
 import {extractExpanded} from './wordParts'
-import {useGridApiContext} from '@mui/x-data-grid'
 
 export type FixedTerm = {
   type: 'fixed'
@@ -54,24 +53,26 @@ export function TermSenseEdit({
   field,
   processed,
   label,
+  gridApi,
 }: {
+  processed: FixedTerm | FuzzyTerm
   id: string
   field: string
-  processed: FixedTerm | FuzzyTerm
   label?: string
+  gridApi?: {current: {setEditCellValue: (params: any) => void}}
 }) {
   const Dict = useContext(BuildContext)
   const edit = useContext(BuildEditContext)
-  const gridApi = useGridApiContext()
   const currentSense = Dict[processed.term].sense
   const {sense_keys} = useContext(ResourceContext)
   return processed.type === 'fixed' && processed.synsets.length ? (
     <Select
       fullWidth
+      size="small"
       aria-label="assign synset"
       value={currentSense}
       onChange={(e: SelectChangeEvent) => {
-        gridApi.current.setEditCellValue({id, field, value: e.target.value})
+        gridApi && gridApi.current.setEditCellValue({id, field, value: e.target.value})
         edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
       }}
       label={label}
@@ -90,9 +91,10 @@ export function TermSenseEdit({
     </Select>
   ) : (
     <TextField
+      size="small"
       value={currentSense}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
-        gridApi.current.setEditCellValue({id, field, value: e.target.value})
+        gridApi && gridApi.current.setEditCellValue({id, field, value: e.target.value})
         edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
       }}
       label={label}

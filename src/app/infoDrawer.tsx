@@ -5,6 +5,7 @@ import {TermDisplay} from './term'
 import {Close} from '@mui/icons-material'
 import type {Synset} from './resources'
 import {SynsetDisplay} from './synset'
+import {INFO_DRAWER_HEIGHT} from './settingsMenu'
 
 export type InfoDrawerState = {type: 'term'; value: string} | {type: 'synset'; value: string; info: Synset}
 export type InfoDrawerActions = {type: 'add'; state: InfoDrawerState} | {type: 'back' | 'reset'}
@@ -16,7 +17,7 @@ function TermContent({term}: {term: string}) {
   const isInDict = term in Dict
   return (
     <>
-      <CardContent sx={{overflowY: 'auto', pt: 0}}>
+      <CardContent sx={{overflowY: 'auto', pb: 0, pt: 0}}>
         <TermDisplay term={term} />
       </CardContent>
       <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
@@ -52,13 +53,18 @@ export function InfoDrawer({state, edit}: {state: InfoDrawerState[]; edit: (acti
       hideBackdrop={true}
       anchor="bottom"
       sx={{
-        '& .MuiPaper-root': {height: '45vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'},
+        '& .MuiPaper-root': {
+          height: INFO_DRAWER_HEIGHT,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        },
       }}
     >
       <Card>
         <CardHeader
           action={
-            <IconButton aria-label="Close" onClick={close}>
+            <IconButton aria-label="Close info drawer" onClick={close}>
               <Close />
             </IconButton>
           }

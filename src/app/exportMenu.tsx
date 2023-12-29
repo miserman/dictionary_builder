@@ -133,7 +133,7 @@ export function ExportMenu() {
         <Dialog open={menuOpen} onClose={toggleMenu}>
           <DialogTitle>Export Dictionary</DialogTitle>
           <IconButton
-            aria-label="close"
+            aria-label="close export menu"
             onClick={toggleMenu}
             sx={{
               position: 'absolute',

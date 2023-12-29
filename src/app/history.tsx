@@ -160,13 +160,13 @@ export function History() {
     >
       <CardHeader title={<Typography>Edit History</Typography>} sx={{pb: 0}} />
       <Stack direction="row" sx={{position: 'absolute', top: 8, right: 8}}>
-        <IconButton onClick={() => historyStep(1)}>
+        <IconButton onClick={() => historyStep(1)} aria-label="undo">
           <ChevronLeft />
         </IconButton>
-        <IconButton onClick={() => historyStep(-1)}>
+        <IconButton onClick={() => historyStep(-1)} aria-label="redo">
           <ChevronRight />
         </IconButton>
-        <IconButton onClick={() => historyStep(-1000)}>
+        <IconButton onClick={() => historyStep(-1000)} aria-label="jump to current">
           <LastPage />
         </IconButton>
       </Stack>

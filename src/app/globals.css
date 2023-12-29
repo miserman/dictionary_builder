@@ -16,7 +16,7 @@
   padding: 0 0.5em;
   text-align: right;
 }
-.dense-table-row .MuiSelect-select p {
+.MuiSelect-select p {
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -25,4 +25,7 @@
   position: absolute;
   bottom: 4px;
   left: 12px;
+}
+.MuiDataGrid-selectedRowCount {
+  visibility: hidden;
 }
