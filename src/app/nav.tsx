@@ -2,10 +2,11 @@ import {SavedSearch, SearchOff} from '@mui/icons-material'
 import {AppBar, Autocomplete, Button, IconButton, ListItem, Stack, TextField, Toolbar, Tooltip} from '@mui/material'
 import {type KeyboardEvent, type SyntheticEvent, useContext, useState} from 'react'
 import {InfoDrawerContext} from './infoDrawer'
-import {extractMatches, globToRegex, prepareRegex, special, wildcards} from './utils'
+import {globToRegex, prepareRegex, special, wildcards} from './utils'
 import {ResourceContext} from './resources'
 import {SettingsMenu} from './settingsMenu'
 import {DictionaryMenu} from './dictionaryMenu'
+import {extractMatches} from './processTerms'
 
 export function Nav({
   terms,

@@ -71,7 +71,7 @@ export function SettingsMenu() {
           }}
         >
           <CardHeader
-            title={<Typography>Settings</Typography>}
+            title={<Typography fontWeight="bold">Settings</Typography>}
             action={
               <IconButton onClick={toggleMenu} aria-label="close settings menu" className="close-button">
                 <Close />
@@ -79,8 +79,9 @@ export function SettingsMenu() {
             }
           />
           <CardContent sx={{alignContent: 'left', mb: 'auto'}}>
-            <Stack spacing={3}>
-              <Typography>Keybinds</Typography>
+            <Typography fontWeight="bold">Keybinds</Typography>
+            <Typography variant="caption">CTRL + </Typography>
+            <Stack spacing={2} sx={{mt: 1}}>
               <TextField
                 size="small"
                 label="undo"

@@ -14,30 +14,30 @@ import {
 import {Close} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {TERM_EDITOR_WIDTH} from './settingsMenu'
-import {type KeyboardEvent, useState} from 'react'
+import {type KeyboardEvent, useState, useContext} from 'react'
 import {DataGrid, GridCellParams, type GridColDef} from '@mui/x-data-grid'
-import type {Dict, DictEntry} from './building'
+import {BuildContext, type DictEntry} from './building'
+import {getProcessedTerm} from './processTerms'
+import {ResourceContext} from './resources'
 
 export function TermEditor({
   term,
-  processedTerms,
-  dict,
   close,
   categories,
   editor,
   bottomMargin,
 }: {
   term: string
-  processedTerms: {[index: string]: FixedTerm | FuzzyTerm}
-  dict: Dict
   close: (term: string) => void
   categories: string[]
   editor: (value: string | number, params: GridCellParams) => void
   bottomMargin: number | string
 }) {
+  const data = useContext(ResourceContext)
+  const dict = useContext(BuildContext)
   const [showEmptyCategories, setShowEmptyCategories] = useState(false)
-  if (!term || !(term in processedTerms) || !(term in dict)) return <></>
-  const processed = processedTerms[term]
+  if (!term || !(term in dict)) return <></>
+  const processed = getProcessedTerm(term, data, dict)
   const dictEntry = dict[term]
   const cols: GridColDef[] = [
     {field: 'id', headerName: 'Name', width: 110},
@@ -73,7 +73,7 @@ export function TermEditor({
         position: 'absolute',
         top: 0,
         bottom: 0,
-        left: 0,
+        right: 0,
         width: TERM_EDITOR_WIDTH,
         mt: '3em',
         mb: bottomMargin,

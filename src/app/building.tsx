@@ -1,9 +1,8 @@
 import {type ReactNode, createContext, useContext, useEffect, useMemo, useReducer, useState} from 'react'
-import type {FixedTerm, FuzzyTerm} from './term'
-import {ResourceContext, type TermResources} from './resources'
-import {extractMatches, globToRegex, prepareRegex, wildcard} from './utils'
+import {ResourceContext} from './resources'
 import {loadSettings} from './settingsMenu'
 import {moveInHistory} from './history'
+import {getProcessedTerm} from './processTerms'
 
 export type NumberObject = {[index: string]: number}
 export type DictEntry = {added: number; type: 'fixed' | 'glob' | 'regex'; categories: NumberObject; sense: string}
@@ -57,66 +56,8 @@ export const HistoryStepper = createContext((direction: number) => {})
 export const ProcessingContext = createContext(true)
 export const ProcessingContextSetter = createContext((processing: boolean) => {})
 
-type ProcessedTerms = {[index: string]: FuzzyTerm | FixedTerm}
-export const Processed = createContext<ProcessedTerms>({})
-
-const makeFixedTerm = (term: string, {terms, termLookup, termAssociations, synsetInfo}: TermResources) => {
-  const processed = {
-    type: 'fixed',
-    term: term,
-    term_type: 'fixed',
-    categories: {},
-    recognized: false,
-    index: terms && termLookup ? termLookup[term] || -1 : -1,
-    related: [],
-    synsets: [],
-  } as FixedTerm
-  if (termAssociations && synsetInfo && terms && -1 !== processed.index) {
-    processed.recognized = true
-    const associated = termAssociations[processed.index]
-    if (!associated) {
-      const a = 1
-    }
-    processed.related =
-      associated && associated[0]
-        ? (Array.isArray(associated[0]) ? associated[0] : [associated[0]]).map(index => terms[index - 1])
-        : []
-    processed.synsets =
-      associated && associated[1]
-        ? (Array.isArray(associated[1]) ? associated[1] : [associated[1]]).map(index => synsetInfo[index - 1])
-        : []
-  }
-  return processed
-}
-
-export const processTerm = (term: string | RegExp, data: TermResources) => {
-  const isString = 'string' === typeof term
-  if (isString && !wildcard.test(term)) {
-    return makeFixedTerm(term, data)
-  } else {
-    const processed = isString ? globToRegex(term) : term.source
-    const container = {
-      type: 'fuzzy',
-      term_type: isString ? 'glob' : 'regex',
-      term: isString ? term : term.source,
-      categories: {},
-      recognized: false,
-      regex: new RegExp(isString ? processed : prepareRegex(processed), 'g'),
-      matches: [],
-    } as FuzzyTerm
-    if (data.collapsedTerms) {
-      extractMatches(container.regex, data.collapsedTerms, container.matches)
-    }
-    container.recognized = !!container.matches.length
-    return container
-  }
-}
-
 export function Building({children}: {children: ReactNode}) {
   const data = useContext(ResourceContext)
-  const processedTerms = useMemo(() => {
-    return {} as ProcessedTerms
-  }, [])
   const settings = useMemo(loadSettings, [])
   const dictionaries = useMemo(() => {
     const stored = {default: {}} as {[index: string]: Dict}
@@ -238,12 +179,8 @@ export function Building({children}: {children: ReactNode}) {
         delete newState[term]
         editHistory({type: 'add', entry: {type: 'remove_term', name: term, value: state[term]}})
       } else {
-        const processed = processedTerms[term]
-        if (!processed || action.term_type !== processed.term_type) {
-          processedTerms[term] = processTerm(action.term, data)
-        }
+        const processed = getProcessedTerm(term, data, newState)
         if (!action.sense) {
-          const processed = processedTerms[term]
           if (processed.type === 'fixed' && processed.synsets.length === 1 && data.sense_keys) {
             action.sense = data.sense_keys[processed.synsets[0].index]
           }
@@ -336,38 +273,31 @@ export function Building({children}: {children: ReactNode}) {
     localStorage.setItem('dict_history_' + name, JSON.stringify(newHistory))
     dictionaryAction({type: 'history_bulk', dict: newDict})
   }
-  const [processing, setProcessing] = useState(true)
   return (
-    <ProcessingContext.Provider value={processing}>
-      <ProcessingContextSetter.Provider value={setProcessing}>
-        <EditHistory.Provider value={history}>
-          <EditHistoryEditor.Provider value={editHistory}>
-            <Dictionaries.Provider value={dictionaries}>
-              <ManageDictionaries.Provider value={manageDictionaries}>
-                <DictionaryName.Provider value={name}>
-                  <BuildContext.Provider value={dictionary}>
-                    <AllCategories.Provider value={categories}>
-                      <DictionaryNameSetter.Provider
-                        value={(name: string) => {
-                          setCurrent(name)
-                        }}
-                      >
-                        <BuildEditContext.Provider value={dictionaryAction}>
-                          <CategoryEditContext.Provider value={categoryAction}>
-                            <HistoryStepper.Provider value={historyStep}>
-                              <Processed.Provider value={processedTerms}>{children}</Processed.Provider>
-                            </HistoryStepper.Provider>
-                          </CategoryEditContext.Provider>
-                        </BuildEditContext.Provider>
-                      </DictionaryNameSetter.Provider>
-                    </AllCategories.Provider>
-                  </BuildContext.Provider>
-                </DictionaryName.Provider>
-              </ManageDictionaries.Provider>
-            </Dictionaries.Provider>
-          </EditHistoryEditor.Provider>
-        </EditHistory.Provider>
-      </ProcessingContextSetter.Provider>
-    </ProcessingContext.Provider>
+    <EditHistory.Provider value={history}>
+      <EditHistoryEditor.Provider value={editHistory}>
+        <Dictionaries.Provider value={dictionaries}>
+          <ManageDictionaries.Provider value={manageDictionaries}>
+            <DictionaryName.Provider value={name}>
+              <BuildContext.Provider value={dictionary}>
+                <AllCategories.Provider value={categories}>
+                  <DictionaryNameSetter.Provider
+                    value={(name: string) => {
+                      setCurrent(name)
+                    }}
+                  >
+                    <BuildEditContext.Provider value={dictionaryAction}>
+                      <CategoryEditContext.Provider value={categoryAction}>
+                        <HistoryStepper.Provider value={historyStep}>{children}</HistoryStepper.Provider>
+                      </CategoryEditContext.Provider>
+                    </BuildEditContext.Provider>
+                  </DictionaryNameSetter.Provider>
+                </AllCategories.Provider>
+              </BuildContext.Provider>
+            </DictionaryName.Provider>
+          </ManageDictionaries.Provider>
+        </Dictionaries.Provider>
+      </EditHistoryEditor.Provider>
+    </EditHistory.Provider>
   )
 }

@@ -21,10 +21,11 @@ import {
 import {relativeFrequency, sortByLength} from './utils'
 import {type ChangeEvent, useContext, useState} from 'react'
 import {ResourceContext, type Synset} from './resources'
-import {BuildContext, Processed, processTerm, BuildEditContext} from './building'
+import {BuildContext, BuildEditContext} from './building'
 import {InfoDrawerContext} from './infoDrawer'
 import {SynsetLink} from './synset'
 import {extractExpanded} from './wordParts'
+import {getProcessedTerm} from './processTerms'
 
 export type FixedTerm = {
   type: 'fixed'
@@ -103,7 +104,6 @@ export function TermSenseEdit({
 }
 
 function TermFuzzy({processed}: {processed: FuzzyTerm}) {
-  const processedTerms = useContext(Processed)
   const data = useContext(ResourceContext)
 
   const [page, setPage] = useState(0)
@@ -147,8 +147,7 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
             </TableHead>
             <TableBody>
               {pageMatches.map((match, index) => {
-                if (!(match in processedTerms)) processedTerms[match] = processTerm(match, data)
-                const processedMatch = processedTerms[match] as FixedTerm
+                const processedMatch = getProcessedTerm(match, data) as FixedTerm
                 return (
                   <TableRow key={match + index} sx={{height: 33}} hover>
                     <TableCell>{<TermLink term={match}></TermLink>}</TableCell>
@@ -267,9 +266,7 @@ export function TermLink({term}: {term: string}) {
 }
 
 export function TermDisplay({term}: {term: string}) {
-  const processedTerms = useContext(Processed)
   const data = useContext(ResourceContext)
-  if (!(term in processedTerms)) processedTerms[term] = processTerm(term, data)
-  const processed = processedTerms[term]
+  const processed = getProcessedTerm(term, data)
   return processed.type === 'fixed' ? <TermFixed processed={processed} /> : <TermFuzzy processed={processed} />
 }

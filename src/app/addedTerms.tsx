@@ -1,18 +1,10 @@
-import {Box, Container, IconButton, Typography} from '@mui/material'
-import {type KeyboardEvent, useCallback, useContext, useMemo, useState} from 'react'
+import {Backdrop, Box, CircularProgress, Container, IconButton, Stack, Typography} from '@mui/material'
+import {type KeyboardEvent, useCallback, useContext, useMemo, useState, useEffect} from 'react'
 import {RemoveCircleOutline} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
-import {ResourceContext, type TermResources} from './resources'
+import {ResourceContext} from './resources'
 import {Nav} from './nav'
-import {
-  AllCategories,
-  BuildContext,
-  BuildEditContext,
-  type Dict,
-  type DictEntry,
-  Processed,
-  processTerm,
-} from './building'
+import {AllCategories, BuildContext, BuildEditContext, type DictEntry} from './building'
 import {
   DataGrid,
   GridColDef,
@@ -21,9 +13,9 @@ import {
   GridToolbarQuickFilter,
   useGridApiRef,
 } from '@mui/x-data-grid'
-import {relativeFrequency} from './utils'
 import {TermEditor} from './termEditor'
 import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
+import {makeRows} from './processTerms'
 
 export type SortOptions = 'term' | 'time'
 
@@ -43,39 +35,6 @@ export type GridRow = {
       related: number
     }
 )
-function makeRowData(term: string, termSet: {[index: string]: FixedTerm | FuzzyTerm}, Data: TermResources, Dict: Dict) {
-  if (!(term in termSet)) {
-    termSet[term] = processTerm(Dict[term].type === 'regex' ? new RegExp(term) : term, Data)
-  }
-  const processed = termSet[term]
-  const dictEntry = Dict[term]
-  const row: GridRow =
-    processed.type === 'fixed'
-      ? {
-          processed,
-          dictEntry,
-          id: term,
-          sense: dictEntry.sense,
-          matches: processed.recognized ? 1 : 0,
-          frequency: relativeFrequency(processed.index, Data.terms && Data.terms.length),
-          senses: processed.synsets.length,
-          related: processed.related.length,
-        }
-      : {
-          processed,
-          dictEntry,
-          id: term,
-          sense: dictEntry.sense,
-          matches: processed.matches.length,
-        }
-  if (dictEntry.categories) {
-    const cats = dictEntry.categories
-    Object.keys(cats).forEach(cat => {
-      row['category_' + cat] = cats[cat]
-    })
-  }
-  return row
-}
 
 function byTime(a: GridRow, b: GridRow) {
   return b.dictEntry.added - a.dictEntry.added
@@ -85,10 +44,9 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
   const Cats = useContext(AllCategories)
-  const termSet = useContext(Processed)
   const editDictionary = useContext(BuildEditContext)
   const isInDict = (term: string) => term in Dict
-  const addedTerms = Object.keys(Dict).reverse()
+  const dictTerms = useMemo(() => Object.keys(Dict).sort(), [Dict])
   const editFromEvent = useCallback(
     (value: string | number, params: GridCellParams) => {
       const {field, row} = params
@@ -178,16 +136,21 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
     )
     return cols
   }, [Cats, editDictionary, editFromEvent, gridApi])
-  const rows = useMemo(() => {
-    const out: GridRow[] = new Array(addedTerms.length)
+  const [rows, setRows] = useState<GridRow[]>([])
+  useEffect(() => {
     if (Data.termAssociations && Data.synsetInfo) {
-      addedTerms.forEach((term, index) => (out[index] = makeRowData(term, termSet, Data, Dict)))
+      makeRows(Dict, Data).then(res => {
+        setRows(res.sort(byTime))
+      })
     }
-    return out.sort(byTime)
-  }, [addedTerms, Data, Dict, termSet])
+  }, [Dict, Data])
+  const processing = useMemo(() => {
+    const rowTerms = rows.map(({id}) => id).sort()
+    return rowTerms.length !== dictTerms.length || rowTerms.join() !== dictTerms.join()
+  }, [rows, dictTerms])
   const bottomMargin = drawerOpen ? INFO_DRAWER_HEIGHT : 0
   const [editorTerm, setEditorTerm] = useState('')
-  if (editorTerm && (!(editorTerm in termSet) || !(editorTerm in Dict))) setEditorTerm('')
+  if (editorTerm && !(editorTerm in Dict)) setEditorTerm('')
   return (
     <Container>
       <Nav
@@ -199,8 +162,6 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
       />
       <TermEditor
         term={editorTerm}
-        processedTerms={termSet}
-        dict={Dict}
         close={setEditorTerm}
         categories={Cats}
         editor={editFromEvent}
@@ -211,16 +172,25 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
         sx={{
           position: 'absolute',
           top: 0,
-          right: 0,
+          right: editorTerm ? TERM_EDITOR_WIDTH : 0,
           bottom: 0,
-          left: editorTerm ? TERM_EDITOR_WIDTH : 0,
+          left: 0,
           overflowY: 'auto',
           mt: '3em',
           mb: bottomMargin,
         }}
       >
-        {!addedTerms.length ? (
+        {!dictTerms.length ? (
           <Typography align="center">Add terms, or import an existing dictionary.</Typography>
+        ) : processing ? (
+          <Backdrop open={processing}>
+            <Stack direction="column">
+              <Typography variant="h4" sx={{mb: 4}}>
+                Processing Dictionary
+              </Typography>
+              <CircularProgress sx={{m: 'auto'}} />
+            </Stack>
+          </Backdrop>
         ) : (
           <DataGrid
             rows={rows}
