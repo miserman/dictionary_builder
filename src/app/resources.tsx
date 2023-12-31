@@ -83,7 +83,7 @@ export function Resources({children}: {children: ReactNode}) {
         setCollapsedTerms(Object.freeze(collapsed))
       })
       .finally(() => setLoadingTerms(false))
-  }, [loadingTerms])
+  }, [setLoadingTerms])
   useEffect(() => {
     fetch('/dictionary_builder/data/term_associations.json')
       .then(res => res.json())
@@ -91,7 +91,7 @@ export function Resources({children}: {children: ReactNode}) {
         setTermAssociations(data)
       })
       .finally(() => setLoadingTermAssociations(false))
-  }, [loadingTermAssociations])
+  }, [setLoadingTermAssociations])
   useEffect(() => {
     fetch('/dictionary_builder/data/sense_keys.txt')
       .then(res => res.text())
@@ -99,7 +99,7 @@ export function Resources({children}: {children: ReactNode}) {
         setSenseKeys(Object.freeze(data.split('\n')))
       })
       .finally(() => setLoadingSenseKeys(false))
-  }, [loadingSenseKeys])
+  }, [setLoadingSenseKeys])
   useEffect(() => {
     fetch('/dictionary_builder/data/synset_info.json')
       .then(res => res.json())
@@ -112,7 +112,7 @@ export function Resources({children}: {children: ReactNode}) {
         )
       })
       .finally(() => setLoadingSynsetInfo(false))
-  }, [loadingSynsetInfo])
+  }, [setLoadingSynsetInfo])
   const Data = {terms, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}
   const loading = {
     terms: loadingTerms,
