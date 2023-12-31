@@ -1,6 +1,7 @@
 import {
   Box,
-  Link,
+  Button,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
@@ -22,12 +23,12 @@ import {
 import {relativeFrequency, sortByLength} from './utils'
 import {type ChangeEvent, useContext, useState, useMemo} from 'react'
 import {ResourceContext, type Synset} from './resources'
-import {BuildContext, BuildEditContext, type Dict} from './building'
+import {BuildContext, BuildEditContext, DictionaryActions, type Dict} from './building'
 import {InfoDrawerContext} from './infoDrawer'
 import {SynsetLink} from './synset'
 import {extractExpanded} from './wordParts'
 import {getFuzzyParent, getProcessedTerm} from './processTerms'
-import {ArrowDownward, ArrowUpward, Check, LensBlur} from '@mui/icons-material'
+import {Add, ArrowDownward, ArrowUpward, Check, LensBlur, Remove} from '@mui/icons-material'
 
 export type FixedTerm = {
   type: 'fixed'
@@ -58,13 +59,15 @@ export function TermSenseEdit({
   field,
   processed,
   label,
-  gridApi,
+  labelId,
+  editCell,
 }: {
   processed: FixedTerm | FuzzyTerm
   id: string
   field: string
   label?: string
-  gridApi?: {current: {setEditCellValue: (params: any) => void}}
+  labelId?: string
+  editCell?: (params: any) => void
 }) {
   const Dict = useContext(BuildContext)
   const edit = useContext(BuildEditContext)
@@ -77,10 +80,11 @@ export function TermSenseEdit({
       aria-label="assign synset"
       value={currentSense}
       onChange={(e: SelectChangeEvent) => {
-        gridApi && gridApi.current.setEditCellValue({id, field, value: e.target.value})
+        editCell && editCell({id, field, value: e.target.value})
         edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
       }}
       label={label}
+      labelId={labelId}
     >
       {sense_keys &&
         processed.synsets.map(synset => {
@@ -99,7 +103,7 @@ export function TermSenseEdit({
       size="small"
       value={currentSense}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
-        gridApi && gridApi.current.setEditCellValue({id, field, value: e.target.value})
+        editCell && editCell({id, field, value: e.target.value})
         edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
       }}
       label={label}
@@ -155,14 +159,16 @@ function sortByField({column, asc}: {column: string; asc: boolean}) {
 }
 function TermFuzzy({processed}: {processed: FuzzyTerm}) {
   const dict = useContext(BuildContext)
+  const editDictionary = useContext(BuildEditContext)
   const data = useContext(ResourceContext)
 
   const [page, setPage] = useState(0)
   const [perPage, setPerPage] = useState(5)
   const [sortCol, setSortCol] = useState({column: 'Frequency', asc: false})
   const cols = useMemo(
-    () =>
-      columns.map(col => (
+    () => [
+      <TableCell key="term_action" width={1}></TableCell>,
+      ...columns.map(col => (
         <TableCell
           key={col}
           width={col === 'Match' ? 999 : 1}
@@ -190,6 +196,7 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
           )}
         </TableCell>
       )),
+    ],
     [setSortCol, sortCol]
   )
   const nMatches = processed.matches.length
@@ -240,6 +247,33 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
                 const match = processedMatch.term
                 return (
                   <TableRow key={match + index} sx={{height: 33}} hover>
+                    <TableCell sx={{p: 0}}>
+                      {processedMatch.in_dict ? (
+                        <IconButton
+                          aria-label="remove"
+                          size="small"
+                          edge="start"
+                          sx={{p: 0, opacity: 0.6}}
+                          onClick={() => {
+                            editDictionary({type: 'remove', term: match})
+                          }}
+                        >
+                          <Remove />
+                        </IconButton>
+                      ) : (
+                        <IconButton
+                          aria-label="add"
+                          size="small"
+                          edge="start"
+                          sx={{p: 0, opacity: 0.6}}
+                          onClick={() => {
+                            editDictionary({type: 'add', term: match, term_type: 'fixed'})
+                          }}
+                        >
+                          <Add />
+                        </IconButton>
+                      )}
+                    </TableCell>
                     <TableCell>{<TermLink term={match}></TermLink>}</TableCell>
                     <TableCell align="right">
                       {(processedMatch.frequency && processedMatch.frequency.toFixed(2)) || '0.00'}
@@ -274,12 +308,46 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
   )
 }
 
-export function termListItem(term: string, dict: Dict) {
+const iconStyle = {minWidth: '20px', opacity: 0.8, '& .MuiSvgIcon-root': {fontSize: '1em'}}
+export function termListItem(term: string, dict: Dict, editor: (action: DictionaryActions) => void) {
   const capturedBy = getFuzzyParent(term)
+  const inCurrent = term in dict
   return (
-    <ListItem key={term} sx={{p: 0}}>
+    <ListItem
+      key={term}
+      disableGutters
+      disablePadding
+      sx={{pr: 3}}
+      secondaryAction={
+        inCurrent ? (
+          <IconButton
+            aria-label="remove"
+            size="small"
+            edge="end"
+            sx={iconStyle}
+            onClick={() => {
+              editor({type: 'remove', term: term})
+            }}
+          >
+            <Remove />
+          </IconButton>
+        ) : (
+          <IconButton
+            aria-label="add"
+            size="small"
+            edge="end"
+            sx={iconStyle}
+            onClick={() => {
+              editor({type: 'add', term: term, term_type: 'fixed'})
+            }}
+          >
+            <Add />
+          </IconButton>
+        )
+      }
+    >
       <ListItemIcon sx={iconStyle}>
-        {term in dict ? (
+        {inCurrent ? (
           <Tooltip title="in current dictionary" placement="left">
             <Check color="success" />
           </Tooltip>
@@ -295,10 +363,10 @@ export function termListItem(term: string, dict: Dict) {
     </ListItem>
   )
 }
-const iconStyle = {minWidth: '20px', '& .MuiSvgIcon-root': {fontSize: '1em'}}
 function TermFixed({processed}: {processed: FixedTerm}) {
   const containerStyle = {p: 1, pl: 0, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}
   const dict = useContext(BuildContext)
+  const editDictionary = useContext(BuildEditContext)
   const {terms, collapsedTerms, sense_keys} = useContext(ResourceContext)
   if (!processed.forms) {
     processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
@@ -319,7 +387,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <Typography>Expanded Forms</Typography>
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
-              {processed.forms.map(term => termListItem(term, dict))}
+              {processed.forms.map(term => termListItem(term, dict, editDictionary))}
             </List>
           </Box>
         </Stack>
@@ -331,7 +399,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <Typography>Related Terms</Typography>
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
-              {processed.related.map(term => termListItem(term, dict))}
+              {processed.related.map(term => termListItem(term, dict, editDictionary))}
             </List>
           </Box>
         </Stack>
@@ -344,7 +412,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <Box sx={containerStyle}>
             <List sx={{p: 0}}>
               {processed.synsets.map(info => (
-                <ListItem key={info.index} sx={{p: 0}}>
+                <ListItem key={info.index} disablePadding>
                   <SynsetLink senseKey={sense_keys[info.index]} info={info} />
                 </ListItem>
               ))}
@@ -361,13 +429,14 @@ function TermFixed({processed}: {processed: FixedTerm}) {
 export function TermLink({term}: {term: string}) {
   const updateInfoDrawerState = useContext(InfoDrawerContext)
   return (
-    <Link
-      underline="none"
-      sx={{p: 0, justifyContent: 'flex-start', cursor: 'pointer', display: 'block'}}
+    <Button
+      fullWidth
+      variant="text"
+      sx={{p: 0, justifyContent: 'flex-start', textTransform: 'none'}}
       onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'term', value: term}})}
     >
       {term}
-    </Link>
+    </Button>
   )
 }
 

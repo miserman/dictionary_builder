@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  FormLabel,
   IconButton,
   InputLabel,
   MenuItem,
@@ -13,23 +14,10 @@ import {
   SelectChangeEvent,
   Stack,
   TextField,
-  styled,
   useTheme,
 } from '@mui/material'
 import {type ChangeEvent, useContext, useMemo, useState} from 'react'
 import {type Dict, Dictionaries, DictionaryName, type NumberObject} from './building'
-
-const HiddenA = styled('a')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
-})
 
 type Formats = 'tabular' | 'json' | 'dic'
 type DelTypes = 'csv' | 'tsv' | 'dat'
@@ -151,8 +139,8 @@ export function ExportMenu() {
               position: 'absolute',
               right: 8,
               top: 12,
-              color: theme.palette.grey[500],
             }}
+            className="close-button"
           >
             <Close />
           </IconButton>
@@ -160,30 +148,37 @@ export function ExportMenu() {
             <Stack spacing={1}>
               <TextField
                 size="small"
-                label="name"
+                label="Filename"
                 value={name}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                   setName(e.target.value)
                 }}
               />
-              <textarea
-                style={{
-                  backgroundColor: theme.palette.background.default,
-                  color: theme.palette.text.primary,
-                  whiteSpace: 'pre',
-                  minWidth: '30em',
-                  minHeight: '20em',
-                }}
-                value={content}
-                onChange={() => {}}
-              ></textarea>
+              <FormControl>
+                <FormLabel sx={{fontSize: '.8em'}} htmlFor="export_content">
+                  Export Content
+                </FormLabel>
+                <textarea
+                  id="export_content"
+                  style={{
+                    backgroundColor: theme.palette.background.default,
+                    color: theme.palette.text.primary,
+                    whiteSpace: 'pre',
+                    minWidth: '30em',
+                    minHeight: '20em',
+                  }}
+                  value={content}
+                  onChange={() => {}}
+                ></textarea>
+              </FormControl>
             </Stack>
           </DialogContent>
           <DialogActions sx={{justifyContent: 'space-between'}}>
             <Stack direction="row" spacing={1}>
               <FormControl>
-                <InputLabel>Format</InputLabel>
+                <InputLabel id="export_format">Format</InputLabel>
                 <Select
+                  labelId="export_format"
                   label="Format"
                   size="small"
                   value={format as ''}
@@ -198,8 +193,9 @@ export function ExportMenu() {
               </FormControl>
               {format === 'tabular' ? (
                 <FormControl>
-                  <InputLabel>Type</InputLabel>
+                  <InputLabel id="export_separator">Type</InputLabel>
                   <Select
+                    labelId="export_separator"
                     label="Type"
                     size="small"
                     value={delType as ''}
@@ -217,8 +213,9 @@ export function ExportMenu() {
               )}{' '}
               {format === 'json' ? (
                 <FormControl>
-                  <InputLabel>Type</InputLabel>
+                  <InputLabel id="export_json_type">Type</InputLabel>
                   <Select
+                    labelId="export_json_type"
                     label="Type"
                     size="small"
                     value={jsonType as ''}

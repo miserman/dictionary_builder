@@ -3,7 +3,7 @@ import {useContext} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {InfoDrawerContext} from './infoDrawer'
 import {termListItem} from './term'
-import {BuildContext} from './building'
+import {BuildContext, BuildEditContext} from './building'
 
 export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
   const updateInfoDrawerState = useContext(InfoDrawerContext)
@@ -23,14 +23,15 @@ export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
 function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   const content = info[name] as string | number | number[]
   const dict = useContext(BuildContext)
+  const editDictionary = useContext(BuildEditContext)
   const {terms, sense_keys, synsetInfo} = useContext(ResourceContext)
   if (!terms || !sense_keys || !synsetInfo) return <></>
   const linkTerms = (index: number | number[]) => {
     return terms ? (
       Array.isArray(index) ? (
-        index.map(i => termListItem(terms[i - 1], dict))
+        index.map(i => termListItem(terms[i - 1], dict, editDictionary))
       ) : (
-        termListItem(terms[index - 1], dict)
+        termListItem(terms[index - 1], dict, editDictionary)
       )
     ) : (
       <></>

@@ -1,6 +1,5 @@
 import {Close, Menu} from '@mui/icons-material'
 import {
-  Button,
   Card,
   CardActions,
   CardContent,
@@ -13,6 +12,7 @@ import {
 } from '@mui/material'
 import {type ChangeEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import {HistoryStepper} from './building'
+import {Confirm} from './confirmDialog'
 
 export const INFO_DRAWER_HEIGHT = '41vh'
 export const TERM_EDITOR_WIDTH = '200px'
@@ -107,10 +107,10 @@ export function SettingsMenu() {
             </Stack>
           </CardContent>
           <CardActions>
-            <Button
-              fullWidth
-              color="error"
-              onClick={() => {
+            <Confirm
+              label="Clear Storage"
+              message="Clearing storage will delete all settings, dictionaries, and edit history."
+              onConfirm={() => {
                 const settings = loadSettings()
                 if (settings.dictionary_names) {
                   settings.dictionary_names.forEach(name => {
@@ -121,9 +121,7 @@ export function SettingsMenu() {
                 localStorage.removeItem('dictionary_builder_settings')
                 window.location.reload()
               }}
-            >
-              Clear Storage
-            </Button>
+            />
           </CardActions>
         </Card>
       </Drawer>

@@ -31,6 +31,7 @@ import {
 import {ImportMenu} from './importMenu'
 import {ExportMenu} from './exportMenu'
 import {History} from './history'
+import {Confirm} from './confirmDialog'
 
 export function DictionaryMenu() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -95,8 +96,9 @@ export function DictionaryMenu() {
           />
           <Stack direction="row" sx={{mb: 2}}>
             <FormControl fullWidth>
-              <InputLabel>Current</InputLabel>
+              <InputLabel id="dictionary_select">Current</InputLabel>
               <Select
+                labelId="dictionary_select"
                 label="Current"
                 size="small"
                 value={currentDictionary}
@@ -123,6 +125,7 @@ export function DictionaryMenu() {
                 <CardActions>
                   <Stack direction="row">
                     <TextField
+                      label="New Category Name"
                       size="small"
                       value={newCategory}
                       onKeyDown={(e: KeyboardEvent) => {
@@ -144,16 +147,13 @@ export function DictionaryMenu() {
           <CardActions>
             <Stack direction="column" sx={{width: '100%'}} spacing={1}>
               <ExportMenu />
-              <Button
-                fullWidth
-                variant="outlined"
-                color="error"
-                onClick={() => {
+              <Confirm
+                label="Delete"
+                message={'Delete the ' + currentDictionary + ' dictionary?'}
+                onConfirm={() => {
                   manageDictionaries({type: 'delete', name: currentDictionary})
                 }}
-              >
-                Delete
-              </Button>
+              />
             </Stack>
           </CardActions>
         </Card>

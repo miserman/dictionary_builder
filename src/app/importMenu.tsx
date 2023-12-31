@@ -5,15 +5,19 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  FormLabel,
   IconButton,
   Stack,
   TextField,
+  Tooltip,
   styled,
   useTheme,
 } from '@mui/material'
 import {type ChangeEvent, type DragEvent, type KeyboardEvent, useContext, useState} from 'react'
 import {type Dict, ManageDictionaries, type NumberObject} from './building'
 import {fileBaseName} from './utils'
+import {CopyDictionary} from './copyDictionary'
 
 const HiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -76,7 +80,12 @@ function parseDict(raw: string) {
       } else if (raw[0] === '{') {
         // assumed to be JSON
         const initial = JSON.parse(raw)
-        Object.keys(initial).forEach(cat => {
+        const keys = Object.keys(initial)
+        if (keys.length && 'type' in initial[keys[0]] && 'string' === typeof initial[keys[0]].type) {
+          // assumed to be a full export
+          return initial
+        }
+        keys.forEach(cat => {
           if (cat) {
             const terms = initial[cat]
             if (Array.isArray(terms)) {
@@ -187,7 +196,7 @@ export function ImportMenu() {
           <Stack spacing={1}>
             <TextField
               size="small"
-              label="name"
+              label="Name"
               value={name}
               onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
                 if (name && e.code === 'Enter') {
@@ -198,42 +207,53 @@ export function ImportMenu() {
                 setName(e.target.value)
               }}
             />
-            <textarea
-              style={{
-                backgroundColor: theme.palette.background.default,
-                color: theme.palette.text.primary,
-                whiteSpace: 'pre',
-                minWidth: '30em',
-                minHeight: '20em',
-              }}
-              value={rawContent}
-              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
-                setRawContent(e.target.value)
-              }}
-              placeholder="drag and drop a file, or enter content directly"
-            />
+            <FormControl>
+              <FormLabel sx={{fontSize: '.8em'}} htmlFor="import_content">
+                Import Content
+              </FormLabel>
+              <textarea
+                id="import_content"
+                style={{
+                  backgroundColor: theme.palette.background.default,
+                  color: theme.palette.text.primary,
+                  whiteSpace: rawContent ? 'pre' : 'normal',
+                  minWidth: '30em',
+                  minHeight: '20em',
+                }}
+                value={rawContent}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
+                  setRawContent(e.target.value)
+                }}
+                placeholder="drag and drop a file, or enter content directly; see export menu for format examples"
+              />
+            </FormControl>
           </Stack>
         </DialogContent>
         <DialogActions sx={{justifyContent: 'space-between'}}>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" component="label">
-              File
-              <HiddenInput
-                type="file"
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  if (e.target.files && e.target.files.length) {
-                    const file = e.target.files[0]
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                      if (!name) setName(fileBaseName(file.name))
-                      setRawContent(reader.result as string)
+            <CopyDictionary setName={setName} setContent={setRawContent} />
+            <Tooltip title="select a file to import a dictionary from">
+              <Button variant="outlined" component="label">
+                File
+                <HiddenInput
+                  type="file"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    if (e.target.files && e.target.files.length) {
+                      const file = e.target.files[0]
+                      const reader = new FileReader()
+                      reader.onload = () => {
+                        if (!name) setName(fileBaseName(file.name))
+                        setRawContent(reader.result as string)
+                      }
+                      reader.readAsText(file)
                     }
-                    reader.readAsText(file)
-                  }
-                }}
-              />
-            </Button>
-            <Button onClick={clear}>clear</Button>
+                  }}
+                />
+              </Button>
+            </Tooltip>
+            <Tooltip title="clear current content">
+              <Button onClick={clear}>clear</Button>
+            </Tooltip>
           </Stack>
           <Button variant="contained" onClick={addDict}>
             Add

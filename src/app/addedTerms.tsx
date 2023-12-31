@@ -5,14 +5,7 @@ import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
 import {Nav} from './nav'
 import {AllCategories, BuildContext, BuildEditContext, type DictEntry} from './building'
-import {
-  DataGrid,
-  GridColDef,
-  GridRenderEditCellParams,
-  GridCellParams,
-  GridToolbarQuickFilter,
-  useGridApiRef,
-} from '@mui/x-data-grid'
+import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams, GridToolbarQuickFilter} from '@mui/x-data-grid'
 import {TermEditor} from './termEditor'
 import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
 import {makeRows} from './processTerms'
@@ -69,11 +62,10 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
     },
     [editDictionary]
   )
-  const gridApi = useGridApiRef()
   const cols: GridColDef[] = useMemo(() => {
     const cols: GridColDef[] = [
       {
-        field: '',
+        field: 'remove',
         headerName: '',
         width: 1,
         sortable: false,
@@ -110,7 +102,7 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
               id={params.id as string}
               field={params.field}
               processed={params.row.processed}
-              gridApi={gridApi}
+              editCell={params.api.setEditCellValue}
             />
           )
         },
@@ -135,7 +127,7 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
       })
     )
     return cols
-  }, [Cats, editDictionary, editFromEvent, gridApi])
+  }, [Cats, editDictionary, editFromEvent])
   const [rows, setRows] = useState<GridRow[]>([])
   useEffect(() => {
     if (Data.termAssociations && Data.synsetInfo) {

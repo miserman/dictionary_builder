@@ -10,7 +10,7 @@ export type Dict = {[index: string]: DictEntry}
 export type DictionaryStorageAction =
   | {type: 'set' | 'add' | 'save'; name: string; dict: Dict}
   | {type: 'delete'; name: string}
-type DictionaryActions =
+export type DictionaryActions =
   | {type: 'change_dict'; dict: Dict}
   | {type: 'history_bulk'; dict: Dict}
   | {type: 'remove'; term: string | RegExp}
@@ -126,8 +126,8 @@ export function Building({children}: {children: ReactNode}) {
       case 'collect':
         const cats: Set<string> = new Set(action.reset ? [] : state)
         Object.keys(action.dictionary).forEach(term => {
-          const {categories} = action.dictionary[term]
-          Object.keys(categories).forEach(cat => cats.add(cat))
+          const entry = action.dictionary[term]
+          entry && entry.categories && Object.keys(entry.categories).forEach(cat => cats.add(cat))
         })
         return Array.from(cats).sort()
       case 'add':

@@ -98,9 +98,11 @@ export function TermEditor({
               {processed.type === 'fuzzy' || !processed.synsets.length ? (
                 <></>
               ) : (
-                <InputLabel sx={{mt: '-7px'}}>Sense</InputLabel>
+                <InputLabel sx={{mt: dictEntry.sense ? '' : '-7px'}} id="term_editor_sense">
+                  Sense
+                </InputLabel>
               )}
-              <TermSenseEdit label="Sense" id="" field="" processed={processed} />
+              <TermSenseEdit labelId="term_editor_sense" label="Sense" id="" field="" processed={processed} />
             </FormControl>
             <Stack direction="column" spacing={1} sx={{height: '100%'}}>
               <Typography fontWeight="bold">Category Weights</Typography>

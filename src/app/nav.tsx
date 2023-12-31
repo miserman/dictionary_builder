@@ -98,7 +98,7 @@ export function Nav({
               <TextField
                 {...params}
                 size="small"
-                placeholder="term to add"
+                placeholder="Term to add"
                 value={inputTerm}
                 onChange={updateTerm}
                 error={alreadyAdded}
