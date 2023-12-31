@@ -53,8 +53,6 @@ export const CategoryEditContext = createContext((action: CategoryActions) => {}
 export const EditHistory = createContext<HistoryContainer>({edits: [], position: -1})
 export const EditHistoryEditor = createContext((action: EditeditHistory) => {})
 export const HistoryStepper = createContext((direction: number) => {})
-export const ProcessingContext = createContext(true)
-export const ProcessingContextSetter = createContext((processing: boolean) => {})
 
 export function Building({children}: {children: ReactNode}) {
   const data = useContext(ResourceContext)
@@ -207,16 +205,15 @@ export function Building({children}: {children: ReactNode}) {
           })
         } else {
           if (term in state) {
-            let change: HistoryTermEdit
+            let change: HistoryTermEdit | undefined
             const original = state[term]
             const newEntry = newState[term]
             if (newEntry.type !== original.type) {
               change = {field: 'type', new: newEntry.type, original: original.type}
-            } else if (newEntry.sense !== original.sense) {
+            } else if (original.sense && newEntry.sense !== original.sense) {
               change = {field: 'sense', new: newEntry.sense, original: original.sense}
             } else {
               const catChanges: TermCategoryEdit[] = []
-              change = {field: 'categories', edits: catChanges}
               Object.keys(newEntry.categories).forEach(cat => {
                 if (newEntry.categories[cat] !== original.categories[cat]) {
                   catChanges.push({
@@ -235,11 +232,18 @@ export function Building({children}: {children: ReactNode}) {
                   })
                 }
               })
+              if (catChanges.length) {
+                change = {field: 'categories', edits: catChanges}
+              } else if (newEntry.sense !== original.sense) {
+                change = {field: 'sense', new: newEntry.sense, original: original.sense}
+              }
             }
-            editHistory({
-              type: 'add',
-              entry: {type: 'edit_term', name: term, value: change},
-            })
+            if (change) {
+              editHistory({
+                type: 'add',
+                entry: {type: 'edit_term', name: term, value: change},
+              })
+            }
           } else {
             editHistory({type: 'add', entry: {type: 'add_term', name: term, value: newState[term]}})
           }

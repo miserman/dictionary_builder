@@ -31,11 +31,23 @@ const HiddenA = styled('a')({
   width: 1,
 })
 
-type Formats = 'csv' | 'json' | 'dic'
+type Formats = 'tabular' | 'json' | 'dic'
+type DelTypes = 'csv' | 'tsv' | 'dat'
 type JSONTypes = 'weighted' | 'unweighted' | 'full'
-function exportDict(dict: Dict, format: Formats, sep: string, jsonType: JSONTypes) {
-  switch (format) {
+function getSepChar(type: DelTypes) {
+  switch (type) {
     case 'csv':
+      return ','
+    case 'tsv':
+      return '\t'
+    default:
+      return ' '
+  }
+}
+function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JSONTypes) {
+  switch (format) {
+    case 'tabular':
+      const sep = getSepChar(delType)
       const terms = Object.keys(dict)
       const categories: Set<string> = new Set()
       terms.forEach(term => {
@@ -107,8 +119,8 @@ function exportDict(dict: Dict, format: Formats, sep: string, jsonType: JSONType
   }
 }
 
-function exportName(name: string, format: string, sep: string) {
-  return name + '.' + (format === 'csv' ? (sep === '\t' ? 'tsv' : sep === ',' ? 'csv' : 'txt') : format)
+function exportName(name: string, format: string, delType: string) {
+  return name + '.' + (format === 'tabular' ? delType : format)
 }
 export function ExportMenu() {
   const theme = useTheme()
@@ -117,12 +129,12 @@ export function ExportMenu() {
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const [format, setFormat] = useState<Formats>('dic')
-  const [sep, setSep] = useState(',')
+  const [delType, setDelType] = useState<DelTypes>('csv')
   const [name, setName] = useState(currentDictionary)
   const [jsonType, setJsonType] = useState<JSONTypes>('unweighted')
   const content = useMemo(
-    () => (menuOpen ? exportDict(dict, format, sep, jsonType) : ''),
-    [menuOpen, dict, format, sep, jsonType]
+    () => (menuOpen ? exportDict(dict, format, delType, jsonType) : ''),
+    [menuOpen, dict, format, delType, jsonType]
   )
   return (
     <>
@@ -158,7 +170,7 @@ export function ExportMenu() {
                 style={{
                   backgroundColor: theme.palette.background.default,
                   color: theme.palette.text.primary,
-                  whiteSpace: 'nowrap',
+                  whiteSpace: 'pre',
                   minWidth: '30em',
                   minHeight: '20em',
                 }}
@@ -179,21 +191,27 @@ export function ExportMenu() {
                     setFormat(e.target.value as Formats)
                   }}
                 >
-                  <MenuItem value="dic">.dic</MenuItem>
-                  <MenuItem value="json">.json</MenuItem>
-                  <MenuItem value="csv">.csv</MenuItem>
+                  <MenuItem value="dic">DIC</MenuItem>
+                  <MenuItem value="json">JSON</MenuItem>
+                  <MenuItem value="tabular">Tabular</MenuItem>
                 </Select>
               </FormControl>
-              {format === 'csv' ? (
-                <TextField
-                  sx={{maxWidth: '5em'}}
-                  size="small"
-                  label="Separator"
-                  value={sep}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    setSep(e.target.value)
-                  }}
-                ></TextField>
+              {format === 'tabular' ? (
+                <FormControl>
+                  <InputLabel>Type</InputLabel>
+                  <Select
+                    label="Type"
+                    size="small"
+                    value={delType as ''}
+                    onChange={(e: SelectChangeEvent<HTMLDivElement>) => {
+                      setDelType(e.target.value as DelTypes)
+                    }}
+                  >
+                    <MenuItem value="csv">CSV</MenuItem>
+                    <MenuItem value="tsv">TSV</MenuItem>
+                    <MenuItem value="dat">DAT</MenuItem>
+                  </Select>
+                </FormControl>
               ) : (
                 <></>
               )}{' '}
@@ -223,7 +241,7 @@ export function ExportMenu() {
                 if (name && content) {
                   const a = document.createElement('a')
                   a.setAttribute('href', URL.createObjectURL(new Blob([content], {type: 'text/plain'})))
-                  a.setAttribute('download', exportName(name, format, sep))
+                  a.setAttribute('download', exportName(name, format, delType))
                   document.body.appendChild(a)
                   a.click()
                   document.body.removeChild(a)

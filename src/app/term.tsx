@@ -3,6 +3,7 @@ import {
   Link,
   List,
   ListItem,
+  ListItemIcon,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -19,13 +20,14 @@ import {
   Typography,
 } from '@mui/material'
 import {relativeFrequency, sortByLength} from './utils'
-import {type ChangeEvent, useContext, useState} from 'react'
+import {type ChangeEvent, useContext, useState, useMemo} from 'react'
 import {ResourceContext, type Synset} from './resources'
-import {BuildContext, BuildEditContext} from './building'
+import {BuildContext, BuildEditContext, type Dict} from './building'
 import {InfoDrawerContext} from './infoDrawer'
 import {SynsetLink} from './synset'
 import {extractExpanded} from './wordParts'
-import {getProcessedTerm} from './processTerms'
+import {getFuzzyParent, getProcessedTerm} from './processTerms'
+import {ArrowDownward, ArrowUpward, Check, LensBlur} from '@mui/icons-material'
 
 export type FixedTerm = {
   type: 'fixed'
@@ -37,6 +39,8 @@ export type FixedTerm = {
   forms?: string[]
   related: string[]
   synsets: Synset[]
+  frequency?: number
+  in_dict?: boolean
 }
 export type FuzzyTerm = {
   type: 'fuzzy'
@@ -103,17 +107,109 @@ export function TermSenseEdit({
   )
 }
 
+const columns = ['Match', 'Frequency', 'Senses', 'Related', 'In Dictionary'] as const
+const arrowStyle = {position: 'absolute', fontSize: '1.5em', height: '1.2em', opacity: 0.4}
+function sortByField({column, asc}: {column: string; asc: boolean}) {
+  switch (column) {
+    case 'Match':
+      return asc
+        ? (a: FixedTerm, b: FixedTerm) => {
+            return a.term > b.term ? -1 : 1
+          }
+        : (a: FixedTerm, b: FixedTerm) => {
+            return b.term > a.term ? -1 : 1
+          }
+    case 'Frequency':
+      return asc
+        ? (a: FixedTerm, b: FixedTerm) => {
+            return (a.frequency || 0) - (b.frequency || 0)
+          }
+        : (a: FixedTerm, b: FixedTerm) => {
+            return (b.frequency || 0) - (a.frequency || 0)
+          }
+    case 'Senses':
+      return asc
+        ? (a: FixedTerm, b: FixedTerm) => {
+            return a.synsets.length - b.synsets.length
+          }
+        : (a: FixedTerm, b: FixedTerm) => {
+            return b.synsets.length - a.synsets.length
+          }
+    case 'Related':
+      return asc
+        ? (a: FixedTerm, b: FixedTerm) => {
+            return a.related.length - b.related.length
+          }
+        : (a: FixedTerm, b: FixedTerm) => {
+            return b.related.length - a.related.length
+          }
+    case 'In Dictionary':
+      return asc
+        ? (a: FixedTerm, b: FixedTerm) => {
+            return (a.in_dict || 0) > (b.in_dict || 0) ? -1 : 1
+          }
+        : (a: FixedTerm, b: FixedTerm) => {
+            return (b.in_dict || 0) > (a.in_dict || 0) ? -1 : 1
+          }
+  }
+}
 function TermFuzzy({processed}: {processed: FuzzyTerm}) {
+  const dict = useContext(BuildContext)
   const data = useContext(ResourceContext)
 
   const [page, setPage] = useState(0)
   const [perPage, setPerPage] = useState(5)
-
+  const [sortCol, setSortCol] = useState({column: 'Frequency', asc: false})
+  const cols = useMemo(
+    () =>
+      columns.map(col => (
+        <TableCell
+          key={col}
+          width={col === 'Match' ? 999 : 1}
+          component="th"
+          align={col === 'Match' ? 'left' : 'right'}
+          sx={{cursor: 'pointer', pr: 3}}
+          onClick={() => {
+            const alreadySorting = sortCol.column === col
+            setSortCol(
+              alreadySorting && sortCol.asc
+                ? {column: 'Frequency', asc: false}
+                : {column: col, asc: sortCol.column === col}
+            )
+          }}
+        >
+          {col}
+          {sortCol.column === col ? (
+            sortCol.asc ? (
+              <ArrowUpward sx={arrowStyle} />
+            ) : (
+              <ArrowDownward sx={arrowStyle} />
+            )
+          ) : (
+            <></>
+          )}
+        </TableCell>
+      )),
+    [setSortCol, sortCol]
+  )
   const nMatches = processed.matches.length
-  const pageMatches = []
+  const processedMatches = useMemo(() => {
+    return processed.matches.map(term => {
+      const p = getProcessedTerm(term, data) as FixedTerm
+      p.frequency = relativeFrequency(p.index, data.terms && data.terms.length)
+      p.in_dict = p.term in dict
+      return p
+    })
+  }, [processed, data, dict])
+  if (page > nMatches / perPage) {
+    setPage(0)
+    return <></>
+  }
+  processedMatches.sort(sortByField(sortCol))
+  const pageMatches: FixedTerm[] = []
   if (nMatches) {
-    for (let i = page * perPage, n = Math.min(processed.matches.length, i + perPage); i < n; i++) {
-      pageMatches.push(processed.matches[i])
+    for (let i = page * perPage, n = Math.min(processedMatches.length, i + perPage); i < n; i++) {
+      pageMatches.push(processedMatches[i])
     }
   }
 
@@ -133,29 +229,24 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
             size="small"
             sx={{
               width: '100%',
-              '& .MuiTableCell-root:first-of-type': {pl: 0.5},
-              '& .MuiTableCell-root:last-of-type': {pr: 0.5},
+              '& .MuiTableCell-root:first-of-type': {pl: 1},
             }}
           >
             <TableHead>
-              <TableRow>
-                <TableCell width="999">Match</TableCell>
-                <TableCell align="right">Frequency</TableCell>
-                <TableCell align="right">Senses</TableCell>
-                <TableCell align="right">Related</TableCell>
-              </TableRow>
+              <TableRow>{cols}</TableRow>
             </TableHead>
             <TableBody>
-              {pageMatches.map((match, index) => {
-                const processedMatch = getProcessedTerm(match, data) as FixedTerm
+              {pageMatches.map((processedMatch, index) => {
+                const match = processedMatch.term
                 return (
                   <TableRow key={match + index} sx={{height: 33}} hover>
                     <TableCell>{<TermLink term={match}></TermLink>}</TableCell>
                     <TableCell align="right">
-                      {relativeFrequency(processedMatch.index, data.terms && data.terms.length)}
+                      {(processedMatch.frequency && processedMatch.frequency.toFixed(2)) || '0.00'}
                     </TableCell>
                     <TableCell align="right">{processedMatch.synsets.length}</TableCell>
                     <TableCell align="right">{processedMatch.related.length}</TableCell>
+                    <TableCell align="right">{processedMatch.in_dict ? 'yes' : 'no'}</TableCell>
                   </TableRow>
                 )
               })}
@@ -183,8 +274,31 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
   )
 }
 
+export function termListItem(term: string, dict: Dict) {
+  const capturedBy = getFuzzyParent(term)
+  return (
+    <ListItem key={term} sx={{p: 0}}>
+      <ListItemIcon sx={iconStyle}>
+        {term in dict ? (
+          <Tooltip title="in current dictionary" placement="left">
+            <Check color="success" />
+          </Tooltip>
+        ) : capturedBy && capturedBy in dict ? (
+          <Tooltip title={'captured by ' + capturedBy + ' in current dictionary'} placement="left">
+            <LensBlur color="secondary" />
+          </Tooltip>
+        ) : (
+          <></>
+        )}
+      </ListItemIcon>
+      <TermLink term={term}></TermLink>
+    </ListItem>
+  )
+}
+const iconStyle = {minWidth: '20px', '& .MuiSvgIcon-root': {fontSize: '1em'}}
 function TermFixed({processed}: {processed: FixedTerm}) {
-  const containerStyle = {p: 1, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}
+  const containerStyle = {p: 1, pl: 0, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}
+  const dict = useContext(BuildContext)
   const {terms, collapsedTerms, sense_keys} = useContext(ResourceContext)
   if (!processed.forms) {
     processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
@@ -197,19 +311,15 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <Typography>Relative Frequency</Typography>
         </Tooltip>
         <Box sx={{p: 1}}>
-          <span className="number">{relativeFrequency(processed.index, terms && terms.length)}</span>
+          <span className="number">{relativeFrequency(processed.index, terms && terms.length).toFixed(2)}</span>
         </Box>
       </Stack>
       {processed.forms.length ? (
         <Stack>
           <Typography>Expanded Forms</Typography>
           <Box sx={containerStyle}>
-            <List sx={{p: 0}}>
-              {processed.forms.map(term => (
-                <ListItem key={term} sx={{p: 0}}>
-                  {<TermLink term={term}></TermLink>}
-                </ListItem>
-              ))}
+            <List disablePadding sx={{p: 0}}>
+              {processed.forms.map(term => termListItem(term, dict))}
             </List>
           </Box>
         </Stack>
@@ -220,12 +330,8 @@ function TermFixed({processed}: {processed: FixedTerm}) {
         <Stack>
           <Typography>Related Terms</Typography>
           <Box sx={containerStyle}>
-            <List sx={{p: 0}}>
-              {processed.related.map(term => (
-                <ListItem key={term} sx={{p: 0}}>
-                  {<TermLink term={term}></TermLink>}
-                </ListItem>
-              ))}
+            <List disablePadding sx={{p: 0}}>
+              {processed.related.map(term => termListItem(term, dict))}
             </List>
           </Box>
         </Stack>

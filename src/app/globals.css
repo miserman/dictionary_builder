@@ -32,3 +32,6 @@ div.MuiDataGrid-selectedRowCount {
 button.close-button {
   opacity: 0.6;
 }
+th {
+  white-space: nowrap;
+}

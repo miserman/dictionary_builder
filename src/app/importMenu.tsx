@@ -11,8 +11,8 @@ import {
   styled,
   useTheme,
 } from '@mui/material'
-import {ChangeEvent, KeyboardEvent, useContext, useEffect, useState} from 'react'
-import {Dict, ManageDictionaries, NumberObject} from './building'
+import {type ChangeEvent, type DragEvent, type KeyboardEvent, useContext, useState} from 'react'
+import {type Dict, ManageDictionaries, type NumberObject} from './building'
 import {fileBaseName} from './utils'
 
 const HiddenInput = styled('input')({
@@ -149,26 +149,27 @@ export function ImportMenu() {
       toggleMenu()
     }
   }
-  useEffect(() => {
-    window.addEventListener('drop', (e: DragEvent) => {
-      e.preventDefault()
-      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-        const file = e.dataTransfer.files[0]
-        const reader = new FileReader()
-        reader.onload = () => {
-          if (!name) setName(fileBaseName(file.name))
-          setRawContent(reader.result as string)
-        }
-        reader.readAsText(file)
-      }
-    })
-  }, [name])
   return (
     <>
       <Button variant="contained" onClick={toggleMenu}>
         New
       </Button>
-      <Dialog open={menuOpen} onClose={toggleMenu}>
+      <Dialog
+        open={menuOpen}
+        onClose={toggleMenu}
+        onDrop={(e: DragEvent) => {
+          e.preventDefault()
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+            const file = e.dataTransfer.files[0]
+            const reader = new FileReader()
+            reader.onload = () => {
+              if (!name) setName(fileBaseName(file.name))
+              setRawContent(reader.result as string)
+            }
+            reader.readAsText(file)
+          }
+        }}
+      >
         <DialogTitle>Add Dictionary</DialogTitle>
         <IconButton
           aria-label="close import menu"
@@ -177,8 +178,8 @@ export function ImportMenu() {
             position: 'absolute',
             right: 8,
             top: 12,
-            color: theme.palette.grey[500],
           }}
+          className="close-button"
         >
           <Close />
         </IconButton>
@@ -201,7 +202,7 @@ export function ImportMenu() {
               style={{
                 backgroundColor: theme.palette.background.default,
                 color: theme.palette.text.primary,
-                whiteSpace: 'nowrap',
+                whiteSpace: 'pre',
                 minWidth: '30em',
                 minHeight: '20em',
               }}
@@ -210,7 +211,7 @@ export function ImportMenu() {
                 setRawContent(e.target.value)
               }}
               placeholder="drag and drop a file, or enter content directly"
-            ></textarea>
+            />
           </Stack>
         </DialogContent>
         <DialogActions sx={{justifyContent: 'space-between'}}>

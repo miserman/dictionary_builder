@@ -46,7 +46,7 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
   const Cats = useContext(AllCategories)
   const editDictionary = useContext(BuildEditContext)
   const isInDict = (term: string) => term in Dict
-  const dictTerms = useMemo(() => Object.keys(Dict).sort(), [Dict])
+  const dictTerms = useMemo(() => Object.freeze(Object.keys(Dict).sort()), [Dict])
   const editFromEvent = useCallback(
     (value: string | number, params: GridCellParams) => {
       const {field, row} = params
@@ -145,8 +145,9 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
     }
   }, [Dict, Data])
   const processing = useMemo(() => {
+    if (dictTerms.length < 1000) return false
     const rowTerms = rows.map(({id}) => id).sort()
-    return rowTerms.length !== dictTerms.length || rowTerms.join() !== dictTerms.join()
+    return Math.abs(rowTerms.length - dictTerms.length) < 2 ? false : rowTerms.join() !== dictTerms.join()
   }, [rows, dictTerms])
   const bottomMargin = drawerOpen ? INFO_DRAWER_HEIGHT : 0
   const [editorTerm, setEditorTerm] = useState('')

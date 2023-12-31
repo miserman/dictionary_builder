@@ -1,8 +1,9 @@
-import {Box, Link, Stack, Tooltip, Typography} from '@mui/material'
+import {Box, Link, List, Stack, Tooltip, Typography} from '@mui/material'
 import {useContext} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {InfoDrawerContext} from './infoDrawer'
-import {TermLink} from './term'
+import {termListItem} from './term'
+import {BuildContext} from './building'
 
 export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
   const updateInfoDrawerState = useContext(InfoDrawerContext)
@@ -21,14 +22,15 @@ export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
 
 function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   const content = info[name] as string | number | number[]
+  const dict = useContext(BuildContext)
   const {terms, sense_keys, synsetInfo} = useContext(ResourceContext)
   if (!terms || !sense_keys || !synsetInfo) return <></>
   const linkTerms = (index: number | number[]) => {
     return terms ? (
       Array.isArray(index) ? (
-        index.map(i => <TermLink key={i} term={terms[i - 1]} />)
+        index.map(i => termListItem(terms[i - 1], dict))
       ) : (
-        <TermLink key={index} term={terms[index - 1]} />
+        termListItem(terms[index - 1], dict)
       )
     ) : (
       <></>
@@ -37,7 +39,7 @@ function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   return (
     <Box key={name} sx={{m: 1}}>
       <Typography variant="h5">{name}</Typography>
-      <Typography>
+      <List>
         {'string' === typeof content ? (
           content
         ) : name === 'members' ? (
@@ -50,7 +52,7 @@ function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
         ) : (
           <SynsetLink senseKey={sense_keys[content - 1]} info={synsetInfo[content - 1]} />
         )}
-      </Typography>
+      </List>
     </Box>
   )
 }

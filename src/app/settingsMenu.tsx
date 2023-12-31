@@ -54,7 +54,7 @@ export function SettingsMenu() {
     return () => {
       window.removeEventListener('keydown', listener)
     }
-  }, [undo, redo, listener])
+  }, [listener])
   return (
     <>
       <IconButton onClick={toggleMenu} aria-label="toggle settings menu">

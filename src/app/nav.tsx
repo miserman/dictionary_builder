@@ -83,7 +83,7 @@ export function Nav({
                   } catch {
                     ex = new RegExp(';' + inputTerm.replace(special, '\\%&') + ';', 'g')
                   }
-                  extractMatches(ex, collapsedTerms, suggestions, 100)
+                  extractMatches('', ex, collapsedTerms, suggestions, 100)
                 }
                 setTermSuggestions(suggestions)
               }
