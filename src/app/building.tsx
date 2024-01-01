@@ -15,6 +15,7 @@ export type DictionaryActions =
   | {type: 'history_bulk'; dict: Dict}
   | {type: 'remove'; term: string | RegExp}
   | {type: 'remove_category'; name: string}
+  | {type: 'rename_category'; name: string; newName: string}
   | {type: 'add_category'; name: string; weights: NumberObject}
   | {type: 'add' | 'update'; term: string | RegExp; term_type: string; categories?: NumberObject; sense?: string}
   | {
@@ -32,6 +33,7 @@ type HistoryTermEdit =
   | {field: 'categories'; edits: TermCategoryEdit[]}
 export type HistoryEntry = {time?: number; name: string} & (
   | {type: 'add_category' | 'remove_category'; value: NumberObject}
+  | {type: 'rename_category'; originalName: string}
   | {type: 'add_term' | 'remove_term'; value: DictEntry}
   | {type: 'replace_term'; value: DictEntry; originalName: string; originalValue: DictEntry}
   | {type: 'edit_term'; value: HistoryTermEdit}
@@ -54,6 +56,9 @@ export const EditHistory = createContext<HistoryContainer>({edits: [], position:
 export const EditHistoryEditor = createContext((action: EditeditHistory) => {})
 export const HistoryStepper = createContext((direction: number) => {})
 
+function byLowerAlphabet(a: string, b: string) {
+  return a.toLowerCase() > b.toLowerCase() ? 1 : -1
+}
 export function Building({children}: {children: ReactNode}) {
   const data = useContext(ResourceContext)
   const settings = useMemo(loadSettings, [])
@@ -129,9 +134,9 @@ export function Building({children}: {children: ReactNode}) {
           const entry = action.dictionary[term]
           entry && entry.categories && Object.keys(entry.categories).forEach(cat => cats.add(cat))
         })
-        return Array.from(cats).sort()
+        return Array.from(cats).sort(byLowerAlphabet)
       case 'add':
-        return state.includes(action.cat) ? [...state] : [...state, action.cat].sort()
+        return state.includes(action.cat) ? [...state] : [...state, action.cat].sort(byLowerAlphabet)
       default:
         return state.filter(cat => cat !== action.cat)
     }
@@ -149,7 +154,25 @@ export function Building({children}: {children: ReactNode}) {
       return action.dict
     }
     const newState = {...state} as Dict
-    if (action.type === 'remove_category') {
+    if (action.type === 'rename_category') {
+      let nTerms = 0
+      Object.keys(newState).forEach(term => {
+        const entry = newState[term]
+        if (action.name in entry.categories) {
+          nTerms++
+          if (entry.categories[action.name]) entry.categories[action.newName] = entry.categories[action.name]
+          delete entry.categories[action.name]
+        }
+      })
+      categoryAction({type: 'remove', cat: action.name})
+      categoryAction({type: 'add', cat: action.newName})
+      if (nTerms) {
+        editHistory({
+          type: 'add',
+          entry: {type: 'rename_category', name: action.newName, originalName: action.name},
+        })
+      }
+    } else if (action.type === 'remove_category') {
       const edited_terms: NumberObject = {}
       let nTerms = 0
       Object.keys(newState).forEach(term => {

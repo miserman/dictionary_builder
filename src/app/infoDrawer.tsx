@@ -71,7 +71,7 @@ export function InfoDrawer({state, edit}: {state: InfoDrawerState[]; edit: (acti
           title={
             <Stack direction="row">
               {state.length > 1 ? (
-                <Button onClick={() => edit({type: 'back'})} sx={{opacity: 0.7}}>
+                <Button onClick={() => edit({type: 'back'})} sx={{opacity: 0.8}}>
                   {state[1].value}
                 </Button>
               ) : (

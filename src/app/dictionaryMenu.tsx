@@ -11,6 +11,7 @@ import {
   InputLabel,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   MenuItem,
   Select,
@@ -32,10 +33,12 @@ import {ImportMenu} from './importMenu'
 import {ExportMenu} from './exportMenu'
 import {History} from './history'
 import {Confirm} from './confirmDialog'
+import {CategoryEditor} from './categoryEditor'
 
 export function DictionaryMenu() {
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
+  const [editingCategory, setEditingCategory] = useState('')
 
   const dictionaries = useContext(Dictionaries)
   const manageDictionaries = useContext(ManageDictionaries)
@@ -55,18 +58,26 @@ export function DictionaryMenu() {
   const cats = useMemo(
     () =>
       categories.map(cat => (
-        <ListItem key={cat} sx={{p: 0}}>
-          <ListItemText primary={cat} />
-          <IconButton
-            aria-label="delete category"
-            sx={{opacity: 0.5}}
-            onClick={() => {
-              dictionaryAction({type: 'remove_category', name: cat})
-              editCategories({type: 'remove', cat: cat})
-            }}
-          >
-            <RemoveCircleOutline />
-          </IconButton>
+        <ListItem
+          key={cat}
+          disablePadding
+          disableGutters
+          secondaryAction={
+            <IconButton
+              aria-label="delete category"
+              sx={{opacity: 0.5}}
+              onClick={() => {
+                dictionaryAction({type: 'remove_category', name: cat})
+                editCategories({type: 'remove', cat: cat})
+              }}
+            >
+              <RemoveCircleOutline />
+            </IconButton>
+          }
+        >
+          <ListItemButton dense onClick={() => setEditingCategory(cat)}>
+            <ListItemText primary={cat} />
+          </ListItemButton>
         </ListItem>
       )),
     [categories, dictionaryAction, editCategories]
@@ -119,8 +130,8 @@ export function DictionaryMenu() {
             <Stack spacing={1} sx={{height: '100%', overflowY: 'auto'}}>
               <Card elevation={5} sx={{height: '40%', minHeight: '300px', display: 'flex', flexDirection: 'column'}}>
                 <CardHeader title={<Typography fontWeight="bold">Categories</Typography>} sx={{pb: 0}} />
-                <CardContent sx={{pt: 0, pb: 0, mb: 'auto', overflowY: 'auto'}}>
-                  <List>{cats}</List>
+                <CardContent sx={{p: 0, mb: 'auto', overflowY: 'auto'}}>
+                  <List dense={true}>{cats}</List>
                 </CardContent>
                 <CardActions>
                   <Stack direction="row">
@@ -158,6 +169,7 @@ export function DictionaryMenu() {
           </CardActions>
         </Card>
       </Drawer>
+      <CategoryEditor category={editingCategory} onClose={() => setEditingCategory('')} />
     </>
   )
 }

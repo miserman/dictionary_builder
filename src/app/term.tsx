@@ -308,7 +308,7 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
   )
 }
 
-const iconStyle = {minWidth: '20px', opacity: 0.8, '& .MuiSvgIcon-root': {fontSize: '1em'}}
+const iconStyle = {minWidth: '20px', opacity: 0.9, '& .MuiSvgIcon-root': {fontSize: '1em'}}
 export function termListItem(term: string, dict: Dict, editor: (action: DictionaryActions) => void) {
   const capturedBy = getFuzzyParent(term)
   const inCurrent = term in dict

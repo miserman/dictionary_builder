@@ -30,7 +30,14 @@ export function Confirm({label, message, onConfirm}: {label: string; message: st
           </DialogContent>
           <DialogActions sx={{justifyContent: 'space-between'}}>
             <Button onClick={toggleMenu}>Cancel</Button>
-            <Button variant="contained" color="error" onClick={onConfirm}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => {
+                onConfirm()
+                toggleMenu()
+              }}
+            >
               {label}
             </Button>
           </DialogActions>

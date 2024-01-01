@@ -186,6 +186,13 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
           </Backdrop>
         ) : (
           <DataGrid
+            sx={{
+              '& .MuiFormControl-root': {
+                position: 'absolute',
+                bottom: '4px',
+                left: '12px',
+              },
+            }}
             rows={rows}
             columns={cols}
             showCellVerticalBorder

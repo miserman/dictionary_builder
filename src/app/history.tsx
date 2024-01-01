@@ -62,6 +62,15 @@ function undoChange(change: HistoryEntry, dict: Dict) {
         if (term in change.value) dict[term].categories[change.name] = change.value[term]
       })
       return
+    case 'rename_category':
+      Object.keys(dict).forEach(term => {
+        const entry = dict[term]
+        if (change.name in entry.categories) {
+          if (entry.categories[change.name]) entry.categories[change.originalName] = entry.categories[change.name]
+          delete entry.categories[change.name]
+        }
+      })
+      return
   }
 }
 function redoChange(change: HistoryEntry, dict: Dict) {
@@ -99,6 +108,16 @@ function redoChange(change: HistoryEntry, dict: Dict) {
       Object.keys(change.value).forEach(term => {
         const e = dict[term]
         if (e && e.categories && change.name in e.categories) delete e.categories[change.name]
+      })
+      return
+    case 'rename_category':
+      Object.keys(dict).forEach(term => {
+        const entry = dict[term]
+        if (change.originalName in entry.categories) {
+          if (entry.categories[change.originalName])
+            entry.categories[change.name] = entry.categories[change.originalName]
+          delete entry.categories[change.originalName]
+        }
       })
       return
   }
@@ -144,6 +163,8 @@ export function History() {
                         ? edit.value.edits.map(edit => edit.category + ': ' + edit.from + ' -> ' + edit.to).join('\n')
                         : edit.value.field + ': ' + edit.value.original + ' -> ' + edit.value.new}
                     </Typography>
+                  ) : edit.type === 'rename_category' ? (
+                    <Typography className="code">From {edit.originalName}</Typography>
                   ) : (
                     <></>
                   )}

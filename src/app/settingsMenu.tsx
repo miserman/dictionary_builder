@@ -39,7 +39,7 @@ export function SettingsMenu() {
   const [redo, setRedo] = useState(settings.redo || 'x')
   const listener = useCallback(
     (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
+      if ((e.ctrlKey || e.metaKey) && (!e.target || !('tagName' in e.target) || e.target.tagName !== 'INPUT')) {
         if (e.key === redo) {
           historyStep(-1)
         } else if (e.key === undo) {

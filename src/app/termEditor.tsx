@@ -107,7 +107,6 @@ export function TermEditor({
             <Stack direction="column" spacing={1} sx={{height: '100%'}}>
               <Typography fontWeight="bold">Category Weights</Typography>
               <FormControlLabel
-                sx={{width: '100%'}}
                 control={
                   <Switch
                     size="small"
@@ -119,12 +118,7 @@ export function TermEditor({
                 labelPlacement="start"
               />
               <DataGrid
-                sx={{
-                  '& .MuiToolbar-root': {p: 0},
-                  '& .MuiDataGrid-main': {height: 0},
-                  '& .MuiTablePagination-displayedRows': {m: 0},
-                  '& .MuiTablePagination-actions': {m: 0},
-                }}
+                className="datagrid-vertical"
                 rows={rows}
                 columns={cols}
                 disableRowSelectionOnClick

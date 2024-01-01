@@ -21,11 +21,6 @@ p.code {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.MuiDataGrid-root > .MuiFormControl-root {
-  position: absolute;
-  bottom: 4px;
-  left: 12px;
-}
 div.MuiDataGrid-selectedRowCount {
   visibility: hidden;
 }
@@ -34,4 +29,13 @@ button.close-button {
 }
 th {
   white-space: nowrap;
+}
+.datagrid-vertical .MuiToolbar-root {
+  padding: 0;
+}
+.datagrid-vertical .MuiDataGrid-main {
+  height: 0;
+}
+.datagrid-vertical .MuiTablePagination-actions {
+  margin: 0;
 }
