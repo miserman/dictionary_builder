@@ -4,7 +4,7 @@ import {RemoveCircleOutline} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
 import {Nav} from './nav'
-import {AllCategories, BuildContext, BuildEditContext, type DictEntry} from './building'
+import {AllCategories, BuildContext, BuildEditContext, type TermTypes, type DictEntry} from './building'
 import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams, GridToolbarQuickFilter} from '@mui/x-data-grid'
 import {TermEditor} from './termEditor'
 import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
@@ -149,7 +149,7 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
       <Nav
         terms={Data.terms}
         exists={isInDict}
-        add={(term: string | RegExp, type: string) => {
+        add={(term: string | RegExp, type: TermTypes) => {
           editDictionary({type: 'add', term: term, term_type: type})
         }}
       />

@@ -83,10 +83,12 @@ function processTerm(term: string | RegExp, data: TermResources) {
 }
 
 export function getProcessedTerm(term: string, data: TermResources, dict?: Dict) {
-  if (!(term in Processed)) {
-    Processed[term] = processTerm(dict && term in dict && dict[term].type === 'regex' ? new RegExp(term) : term, data)
+  const type = dict && term in dict && dict[term].type === 'regex' ? 'regex' : 'fixed'
+  const key = term + '_' + type
+  if (!(key in Processed)) {
+    Processed[key] = processTerm(type === 'regex' ? new RegExp(term) : term, data)
   }
-  return Processed[term]
+  return Processed[key]
 }
 
 export async function makeRow(rows: GridRow[], index: number, term: string, dict: Dict, data: TermResources) {

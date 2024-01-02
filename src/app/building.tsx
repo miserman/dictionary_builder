@@ -5,7 +5,8 @@ import {moveInHistory} from './history'
 import {getProcessedTerm} from './processTerms'
 
 export type NumberObject = {[index: string]: number}
-export type DictEntry = {added: number; type: 'fixed' | 'glob' | 'regex'; categories: NumberObject; sense: string}
+export type TermTypes = 'fixed' | 'glob' | 'regex'
+export type DictEntry = {added: number; type: TermTypes; categories: NumberObject; sense: string}
 export type Dict = {[index: string]: DictEntry}
 export type DictionaryStorageAction =
   | {type: 'set' | 'add' | 'save'; name: string; dict: Dict}
@@ -17,11 +18,11 @@ export type DictionaryActions =
   | {type: 'remove_category'; name: string}
   | {type: 'rename_category'; name: string; newName: string}
   | {type: 'add_category'; name: string; weights: NumberObject}
-  | {type: 'add' | 'update'; term: string | RegExp; term_type: string; categories?: NumberObject; sense?: string}
+  | {type: 'add' | 'update'; term: string | RegExp; term_type: TermTypes; categories?: NumberObject; sense?: string}
   | {
       type: 'replace'
       term: string | RegExp
-      term_type: string
+      term_type: TermTypes
       originalTerm: string | RegExp
       categories?: NumberObject
       sense?: string
@@ -200,18 +201,18 @@ export function Building({children}: {children: ReactNode}) {
         delete newState[term]
         editHistory({type: 'add', entry: {type: 'remove_term', name: term, value: state[term]}})
       } else {
+        const existing = newState[term] || {}
+        newState[term] = {
+          added: existing.added || Date.now(),
+          type: action.term_type || existing.type || 'fixed',
+          categories: {...(action.categories || existing.categories || {})},
+          sense: 'sense' in action ? action.sense || '' : existing.sense || '',
+        }
         const processed = getProcessedTerm(term, data, newState)
         if (!action.sense) {
           if (processed.type === 'fixed' && processed.synsets.length === 1 && data.sense_keys) {
             action.sense = data.sense_keys[processed.synsets[0].index]
           }
-        }
-        const existing = newState[term] || {}
-        newState[term] = {
-          added: existing.added || Date.now(),
-          type: existing.type || (processed && processed.term_type) || 'fixed',
-          categories: {...(action.categories || existing.categories || {})},
-          sense: 'sense' in action ? action.sense || '' : existing.sense || '',
         }
         if (action.type === 'replace') {
           const original = 'string' === typeof action.originalTerm ? action.originalTerm : action.originalTerm.source

@@ -1,6 +1,7 @@
 import {Done, Error} from '@mui/icons-material'
 import {CircularProgress, List, ListItem, Stack, Typography} from '@mui/material'
 import {type ReactNode, createContext, useEffect, useState} from 'react'
+import {newline} from './utils'
 
 type AssociatedIndices = {[index: string]: [number | number[], (number | number[])?]}
 export type Synset = {
@@ -60,7 +61,7 @@ export function Resources({children}: {children: ReactNode}) {
     fetch('/dictionary_builder/data/terms.txt')
       .then(res => res.text())
       .then(data => {
-        const arr = Object.freeze(data.split('\n'))
+        const arr = Object.freeze(data.split(newline))
         setTerms(arr)
         const collapsed: {[index: string]: string} = {
           all: ';;' + arr.join(';;') + ';;',
@@ -96,7 +97,7 @@ export function Resources({children}: {children: ReactNode}) {
     fetch('/dictionary_builder/data/sense_keys.txt')
       .then(res => res.text())
       .then(data => {
-        setSenseKeys(Object.freeze(data.split('\n')))
+        setSenseKeys(Object.freeze(data.split(newline)))
       })
       .finally(() => setLoadingSenseKeys(false))
   }, [setLoadingSenseKeys])

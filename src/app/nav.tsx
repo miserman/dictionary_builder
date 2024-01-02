@@ -7,6 +7,7 @@ import {ResourceContext} from './resources'
 import {SettingsMenu} from './settingsMenu'
 import {DictionaryMenu} from './dictionaryMenu'
 import {extractMatches} from './processTerms'
+import type {TermTypes} from './building'
 
 export function Nav({
   terms,
@@ -15,7 +16,7 @@ export function Nav({
 }: {
   terms?: readonly string[]
   exists: (term: string) => boolean
-  add: (term: string | RegExp, type: string) => void
+  add: (term: string | RegExp, type: TermTypes) => void
 }) {
   const [inputTerm, setInputTerm] = useState('')
   const [alreadyAdded, setAlreadyAdded] = useState(false)

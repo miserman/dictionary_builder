@@ -16,7 +16,7 @@ import {
 } from '@mui/material'
 import {type ChangeEvent, type DragEvent, type KeyboardEvent, useContext, useState} from 'react'
 import {type Dict, ManageDictionaries, type NumberObject} from './building'
-import {fileBaseName} from './utils'
+import {fileBaseName, newline} from './utils'
 import {CopyDictionary} from './copyDictionary'
 
 const HiddenInput = styled('input')({
@@ -31,14 +31,19 @@ const HiddenInput = styled('input')({
   width: 1,
 })
 
-const tab = /\\t/
+const tab = /\t/
 const padding = /^\s+|\s+$/g
 const quote_padding = /^["\s]+|["\s]+$/g
-const dic_seps = /\t+/g
-function makeDictEntry(cats: NumberObject, sense?: string) {
+const dic_seps = /\s{2,}|\t+/g
+const regex_open = /[[({]/
+const regex_close = /[\])}]/
+const regex_special = /([\[\]\(\)?^$.+])/
+function makeDictEntry(term: string, cats: NumberObject, sense?: string) {
   return {
     added: Date.now(),
-    type: 'fixed' as const,
+    type: (regex_special.test(term) && (!regex_open.test(term) || regex_close.test(term)) ? 'regex' : 'fixed') as
+      | 'fixed'
+      | 'regex',
     categories: cats,
     sense: sense || '',
   }
@@ -49,7 +54,7 @@ function parseDict(raw: string) {
     try {
       if (raw[0] === '%') {
         // assumed to be dic format
-        const lines = raw.split('\n')
+        const lines = raw.split(newline)
         const categories: {[index: string]: string} = {}
         const n = lines.length
         if (n > 1) {
@@ -72,7 +77,7 @@ function parseDict(raw: string) {
                 parts.forEach(index => {
                   if (index in categories) cats[categories[index]] = 1
                 })
-                parsed[term] = makeDictEntry(cats)
+                parsed[term] = makeDictEntry(term, cats)
               }
             }
           }
@@ -95,7 +100,7 @@ function parseDict(raw: string) {
                   if (term in parsed) {
                     parsed[term].categories[cat] = 1
                   } else {
-                    parsed[term] = makeDictEntry({[cat]: 1})
+                    parsed[term] = makeDictEntry(term, {[cat]: 1})
                   }
                 }
               })
@@ -106,7 +111,7 @@ function parseDict(raw: string) {
                   if (term in parsed) {
                     parsed[term].categories[cat] = terms[term]
                   } else {
-                    parsed[term] = makeDictEntry({[cat]: terms[term]})
+                    parsed[term] = makeDictEntry(term, {[cat]: terms[term]})
                   }
                 }
               })
@@ -115,8 +120,8 @@ function parseDict(raw: string) {
         })
       } else {
         // assumed to be some sort of tabular format
-        const lines = raw.split('\n')
-        const sep = tab.test(lines[0]) ? '\\t' : ','
+        const lines = raw.split(newline)
+        const sep = tab.test(lines[0]) ? '\t' : ','
         const categories = lines
           .splice(0, 1)[0]
           .split(sep)
@@ -130,7 +135,7 @@ function parseDict(raw: string) {
             weights.forEach((weight, index) => {
               if (weight && categories[index]) cats[categories[index]] = +weight
             })
-            parsed[term] = makeDictEntry(cats)
+            parsed[term] = makeDictEntry(term, cats)
           }
         })
       }

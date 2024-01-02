@@ -442,6 +442,7 @@ export function TermLink({term}: {term: string}) {
 
 export function TermDisplay({term}: {term: string}) {
   const data = useContext(ResourceContext)
-  const processed = getProcessedTerm(term, data)
+  const dict = useContext(BuildContext)
+  const processed = getProcessedTerm(term, data, dict)
   return processed.type === 'fixed' ? <TermFixed processed={processed} /> : <TermFuzzy processed={processed} />
 }

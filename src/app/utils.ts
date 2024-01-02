@@ -1,3 +1,4 @@
+export const newline = /[\r\n]+/
 export const wildcard = /\*/
 export const wildcards = /\*/g
 export const special = /([\[\]\(\)*?^$.+])/g
