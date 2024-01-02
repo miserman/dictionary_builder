@@ -38,12 +38,16 @@ const dic_seps = /\s{2,}|\t+/g
 const regex_open = /[[({]/
 const regex_close = /[\])}]/
 const regex_special = /([\[\]\(\)?^$.+])/
+function containsRegex(term: string) {
+  if (!regex_special.test(term)) return false
+  const open = regex_open.test(term)
+  const close = regex_close.test(term)
+  return (open && close) || (!open && !close)
+}
 function makeDictEntry(term: string, cats: NumberObject, sense?: string) {
   return {
     added: Date.now(),
-    type: (regex_special.test(term) && (!regex_open.test(term) || regex_close.test(term)) ? 'regex' : 'fixed') as
-      | 'fixed'
-      | 'regex',
+    type: (containsRegex(term) ? 'regex' : 'fixed') as 'fixed' | 'regex',
     categories: cats,
     sense: sense || '',
   }

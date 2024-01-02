@@ -59,6 +59,13 @@ function makeFixedTerm(term: string, {terms, termLookup, termAssociations, synse
   return processed
 }
 
+function attemptRegex(term: string, flags?: string) {
+  try {
+    return new RegExp(term, flags)
+  } catch {
+    return term
+  }
+}
 function processTerm(term: string | RegExp, data: TermResources) {
   const isString = 'string' === typeof term
   if (isString && !wildcard.test(term)) {
@@ -71,7 +78,7 @@ function processTerm(term: string | RegExp, data: TermResources) {
       term: isString ? term : term.source,
       categories: {},
       recognized: false,
-      regex: new RegExp(isString ? processed : prepareRegex(processed), 'g'),
+      regex: attemptRegex(isString ? processed : prepareRegex(processed), 'g'),
       matches: [],
     } as FuzzyTerm
     if (data.collapsedTerms) {
@@ -86,7 +93,7 @@ export function getProcessedTerm(term: string, data: TermResources, dict?: Dict)
   const type = dict && term in dict && dict[term].type === 'regex' ? 'regex' : 'fixed'
   const key = term + '_' + type
   if (!(key in Processed)) {
-    Processed[key] = processTerm(type === 'regex' ? new RegExp(term) : term, data)
+    Processed[key] = processTerm(type === 'regex' ? attemptRegex(term) : term, data)
   }
   return Processed[key]
 }
