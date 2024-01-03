@@ -24,14 +24,15 @@ function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   const content = info[name] as string | number | number[]
   const dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
+  const updateInfoDrawerState = useContext(InfoDrawerContext)
   const {terms, sense_keys, synsetInfo} = useContext(ResourceContext)
   if (!terms || !sense_keys || !synsetInfo) return <></>
   const linkTerms = (index: number | number[]) => {
     return terms ? (
       Array.isArray(index) ? (
-        index.map(i => termListItem(terms[i - 1], dict, editDictionary))
+        index.map(i => termListItem(terms[i - 1], dict, editDictionary, updateInfoDrawerState))
       ) : (
-        termListItem(terms[index - 1], dict, editDictionary)
+        termListItem(terms[index - 1], dict, editDictionary, updateInfoDrawerState)
       )
     ) : (
       <></>

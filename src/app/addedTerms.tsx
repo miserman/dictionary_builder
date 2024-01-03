@@ -95,6 +95,7 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
       {
         field: 'sense',
         headerName: 'Sense',
+        description: 'assigned sense key',
         editable: true,
         renderEditCell: (params: GridRenderEditCellParams) => {
           return (
@@ -107,10 +108,19 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
           )
         },
       },
-      {field: 'frequency', headerName: 'Frequency'},
-      {field: 'matches', headerName: 'Matches'},
-      {field: 'senses', headerName: 'Senses'},
-      {field: 'related', headerName: 'Related'},
+      {
+        field: 'frequency',
+        headerName: 'Frequency',
+        description:
+          'relative frequency; 100 - index / n terms * 100; terms are loosely sorted by frequency and space coverage',
+      },
+      {field: 'matches', headerName: 'Matches', description: 'number of matches found in the full term list'},
+      {field: 'senses', headerName: 'Senses', description: 'number of directly associated sense'},
+      {
+        field: 'related',
+        headerName: 'Related',
+        description: 'number of similar terms on record, based on agreement between embeddings spaces',
+      },
     ]
     Cats.forEach(cat =>
       cols.push({

@@ -24,7 +24,7 @@ import {relativeFrequency, sortByLength} from './utils'
 import {type ChangeEvent, useContext, useState, useMemo} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {BuildContext, BuildEditContext, DictionaryActions, type Dict} from './building'
-import {InfoDrawerContext} from './infoDrawer'
+import {InfoDrawerActions, InfoDrawerContext} from './infoDrawer'
 import {SynsetLink} from './synset'
 import {extractExpanded} from './wordParts'
 import {getFuzzyParent, getProcessedTerm} from './processTerms'
@@ -309,7 +309,12 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
 }
 
 const iconStyle = {minWidth: '20px', opacity: 0.9, '& .MuiSvgIcon-root': {fontSize: '1em'}}
-export function termListItem(term: string, dict: Dict, editor: (action: DictionaryActions) => void) {
+export function termListItem(
+  term: string,
+  dict: Dict,
+  editor: (action: DictionaryActions) => void,
+  showTerm: (action: InfoDrawerActions) => void
+) {
   const capturedBy = getFuzzyParent(term)
   const inCurrent = term in dict
   return (
@@ -353,7 +358,14 @@ export function termListItem(term: string, dict: Dict, editor: (action: Dictiona
           </Tooltip>
         ) : capturedBy && capturedBy in dict ? (
           <Tooltip title={'captured by ' + capturedBy + ' in current dictionary'} placement="left">
-            <LensBlur color="secondary" />
+            <IconButton
+              sx={{p: 0, '& .MuiSvgIcon-root': {fontSize: '.7em'}}}
+              onClick={() => {
+                showTerm({type: 'add', state: {type: 'term', value: capturedBy}})
+              }}
+            >
+              <LensBlur color="secondary" />
+            </IconButton>
           </Tooltip>
         ) : (
           <></>
@@ -367,6 +379,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const containerStyle = {p: 1, pl: 0, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}
   const dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
+  const updateInfoDrawerState = useContext(InfoDrawerContext)
   const {terms, collapsedTerms, sense_keys} = useContext(ResourceContext)
   if (!processed.forms) {
     processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
@@ -375,7 +388,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   return (
     <Stack direction="row" spacing={4} sx={{height: '100%'}}>
       <Stack>
-        <Tooltip title="100 - index / n terms * 100; terms are losely sorted by frequency and space coverage">
+        <Tooltip title="100 - index / n terms * 100; terms are loosely sorted by frequency and space coverage">
           <Typography>Relative Frequency</Typography>
         </Tooltip>
         <Box sx={{p: 1}}>
@@ -387,7 +400,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <Typography>Expanded Forms</Typography>
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
-              {processed.forms.map(term => termListItem(term, dict, editDictionary))}
+              {processed.forms.map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}
             </List>
           </Box>
         </Stack>
@@ -399,7 +412,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <Typography>Related Terms</Typography>
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
-              {processed.related.map(term => termListItem(term, dict, editDictionary))}
+              {processed.related.map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}
             </List>
           </Box>
         </Stack>
