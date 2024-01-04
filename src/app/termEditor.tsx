@@ -14,20 +14,20 @@ import {
 import {Close} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {TERM_EDITOR_WIDTH} from './settingsMenu'
-import {type KeyboardEvent, useState, useContext} from 'react'
+import {type KeyboardEvent, useState, useContext, createContext} from 'react'
 import {DataGrid, GridCellParams, type GridColDef} from '@mui/x-data-grid'
 import {BuildContext, type DictEntry} from './building'
 import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
 
+export const EditorTerm = createContext('')
+
 export function TermEditor({
-  term,
   close,
   categories,
   editor,
   bottomMargin,
 }: {
-  term: string
   close: (term: string) => void
   categories: string[]
   editor: (value: string | number, params: GridCellParams) => void
@@ -35,6 +35,7 @@ export function TermEditor({
 }) {
   const data = useContext(ResourceContext)
   const dict = useContext(BuildContext)
+  const term = useContext(EditorTerm)
   const [showEmptyCategories, setShowEmptyCategories] = useState(false)
   if (!term || !(term in dict)) return <></>
   const processed = getProcessedTerm(term, data, dict)

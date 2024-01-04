@@ -41,7 +41,16 @@ function SynsetContent({info}: {info: Synset}) {
   )
 }
 
-export function InfoDrawer({state, edit}: {state: InfoDrawerState[]; edit: (action: InfoDrawerActions) => void}) {
+export function InfoDrawer({
+  state,
+  edit,
+  setEditorTerm,
+}: {
+  state: InfoDrawerState[]
+  edit: (action: InfoDrawerActions) => void
+  setEditorTerm: (term: string) => void
+}) {
+  const dict = useContext(BuildContext)
   if (!state.length) return
   const close = () => edit({type: 'reset'})
   const currentState = state[0]
@@ -77,7 +86,13 @@ export function InfoDrawer({state, edit}: {state: InfoDrawerState[]; edit: (acti
               ) : (
                 <></>
               )}
-              <Typography variant="h4">{currentState.value}</Typography>
+              {currentState.value in dict ? (
+                <Button sx={{textTransform: 'none', p: 0}} onClick={() => setEditorTerm(currentState.value)}>
+                  <Typography variant="h3">{currentState.value}</Typography>
+                </Button>
+              ) : (
+                <Typography variant="h3">{currentState.value}</Typography>
+              )}
             </Stack>
           }
         />

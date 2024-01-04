@@ -44,6 +44,8 @@ const commonSuffixes = [
   'age',
   'al',
   'alize',
+  'ance',
+  'ancy',
   'ant',
   'ary',
   'at',
@@ -55,6 +57,9 @@ const commonSuffixes = [
   'd',
   'dom',
   'ed',
+  'ence',
+  'ency',
+  'ent',
   'er',
   'es',
   'esque',
@@ -92,7 +97,10 @@ const commonSuffixes = [
   'ment',
   'nce',
   'ness',
+  'ng',
+  'nt',
   'or',
+  'on',
   'ous',
   'r',
   's',
@@ -109,12 +117,17 @@ const commonSuffixes = [
 ] as const
 const addableSuffixes = [
   "'",
+  'al',
+  'alize',
+  'alization',
   'ate',
   'ation',
+  'ble',
   'd',
   'ed',
   'er',
   'es',
+  'ility',
   'in',
   'ing',
   'ion',
@@ -134,19 +147,21 @@ const collapsedPrefixes = ';(?:' + commonPrefixes.join('|') + ')?-?'
 const collapsedSuffixes = '-?(?:' + commonSuffixes.join('|') + ')?(?:' + addableSuffixes.join('|') + ')?\\;'
 
 const terminalVowels = /[aeiouy]$/
+const replaceableTerminals = /[sdyz'];$/
 export function extractExpanded(term: string, collapsed: string) {
-  const forms = new Set()
+  const forms: Set<string> = new Set()
   term = term.replace(special, '\\$&')
+  const termLength = term.length
   let termPattern: RegExp | undefined
   try {
     termPattern = new RegExp(
       collapsedPrefixes +
         '(?:' +
         term +
-        (term.length > (terminalVowels.test(term) ? 3 : 2) ? '|' + term.replace(terminalVowels, '[aeiouy]') : '') +
+        (termLength > (terminalVowels.test(term) ? 3 : 2) ? '|' + term.replace(terminalVowels, '[aeiouy]') : '') +
         '|' +
         term +
-        term.substring(term.length - 1) +
+        term.substring(termLength - 1) +
         ')' +
         collapsedSuffixes,
       'g'
@@ -154,7 +169,13 @@ export function extractExpanded(term: string, collapsed: string) {
   } catch {}
   if (termPattern) {
     for (let match: RegExpExecArray | null; (match = termPattern.exec(collapsed)); ) {
-      if (match[0] && ';' + term + ';' !== match[0]) forms.add(match[0].replace(termBounds, ''))
+      const matchedTerm = match[0]
+      if (
+        matchedTerm &&
+        (matchedTerm.length - 2 > termLength || replaceableTerminals.test(matchedTerm)) &&
+        ';' + term + ';' !== matchedTerm
+      )
+        forms.add(matchedTerm.replace(termBounds, ''))
     }
   }
   return Array.from(forms) as string[]

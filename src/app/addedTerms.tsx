@@ -6,7 +6,7 @@ import {ResourceContext} from './resources'
 import {Nav} from './nav'
 import {AllCategories, BuildContext, BuildEditContext, type TermTypes, type DictEntry} from './building'
 import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams, GridToolbarQuickFilter} from '@mui/x-data-grid'
-import {TermEditor} from './termEditor'
+import {EditorTerm, TermEditor} from './termEditor'
 import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
 import {makeRows} from './processTerms'
 
@@ -33,7 +33,13 @@ function byTime(a: GridRow, b: GridRow) {
   return b.dictEntry.added - a.dictEntry.added
 }
 const categoryPrefix = /^category_/
-export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
+export default function AddedTerms({
+  drawerOpen,
+  setEditorTerm,
+}: {
+  drawerOpen: boolean
+  setEditorTerm: (term: string) => void
+}) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
   const Cats = useContext(AllCategories)
@@ -115,7 +121,7 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
           'relative frequency; 100 - index / n terms * 100; terms are loosely sorted by frequency and space coverage',
       },
       {field: 'matches', headerName: 'Matches', description: 'number of matches found in the full term list'},
-      {field: 'senses', headerName: 'Senses', description: 'number of directly associated sense'},
+      {field: 'senses', headerName: 'Senses', description: 'number of directly associated senses'},
       {
         field: 'related',
         headerName: 'Related',
@@ -152,8 +158,8 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
     return Math.abs(rowTerms.length - dictTerms.length) < 2 ? false : rowTerms.join() !== dictTerms.join()
   }, [rows, dictTerms])
   const bottomMargin = drawerOpen ? INFO_DRAWER_HEIGHT : 0
-  const [editorTerm, setEditorTerm] = useState('')
-  if (editorTerm && !(editorTerm in Dict)) setEditorTerm('')
+  const editorTerm = useContext(EditorTerm)
+  const showTermEditor = editorTerm in Dict
   return (
     <Container>
       <Nav
@@ -163,19 +169,17 @@ export default function AddedTerms({drawerOpen}: {drawerOpen: boolean}) {
           editDictionary({type: 'add', term: term, term_type: type})
         }}
       />
-      <TermEditor
-        term={editorTerm}
-        close={setEditorTerm}
-        categories={Cats}
-        editor={editFromEvent}
-        bottomMargin={bottomMargin}
-      />
+      {showTermEditor ? (
+        <TermEditor close={setEditorTerm} categories={Cats} editor={editFromEvent} bottomMargin={bottomMargin} />
+      ) : (
+        <></>
+      )}
       <Box
         component="main"
         sx={{
           position: 'absolute',
           top: 0,
-          right: editorTerm ? TERM_EDITOR_WIDTH : 0,
+          right: showTermEditor ? TERM_EDITOR_WIDTH : 0,
           bottom: 0,
           left: 0,
           overflowY: 'auto',

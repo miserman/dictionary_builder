@@ -21,11 +21,11 @@ import {
   Typography,
 } from '@mui/material'
 import {relativeFrequency, sortByLength} from './utils'
-import {type ChangeEvent, useContext, useState, useMemo} from 'react'
+import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {BuildContext, BuildEditContext, DictionaryActions, type Dict} from './building'
 import {InfoDrawerActions, InfoDrawerContext} from './infoDrawer'
-import {SynsetLink} from './synset'
+import {SynsetLink, unpackSynsetMembers} from './synset'
 import {extractExpanded} from './wordParts'
 import {getFuzzyParent, getProcessedTerm} from './processTerms'
 import {Add, ArrowDownward, ArrowUpward, Check, LensBlur, Remove} from '@mui/icons-material'
@@ -380,11 +380,25 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
   const updateInfoDrawerState = useContext(InfoDrawerContext)
-  const {terms, collapsedTerms, sense_keys} = useContext(ResourceContext)
+  const {terms, termLookup, collapsedTerms, sense_keys, synsetInfo} = useContext(ResourceContext)
+  const byIndex = useCallback(termLookup ? (a: string, b: string) => termLookup[a] - termLookup[b] : () => 0, [
+    termLookup,
+  ])
+  const data = useContext(ResourceContext)
   if (!processed.forms) {
     processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
     processed.forms.sort(sortByLength)
   }
+  const senseRelated: Set<string> = new Set()
+  if (termLookup && terms && synsetInfo) {
+    processed.forms.sort(byIndex)
+    processed.synsets.forEach(synset => {
+      unpackSynsetMembers(synset, terms, synsetInfo).forEach(member => {
+        if (member !== processed.term) senseRelated.add(member)
+      })
+    })
+  }
+  const senseRelatedTerms = Array.from(senseRelated).sort(byIndex)
   return (
     <Stack direction="row" spacing={4} sx={{height: '100%'}}>
       <Stack>
@@ -420,18 +434,32 @@ function TermFixed({processed}: {processed: FixedTerm}) {
         <></>
       )}
       {sense_keys && processed.synsets.length ? (
-        <Stack>
-          <Typography>Senses</Typography>
-          <Box sx={containerStyle}>
-            <List sx={{p: 0}}>
-              {processed.synsets.map(info => (
-                <ListItem key={info.index} disablePadding>
-                  <SynsetLink senseKey={sense_keys[info.index]} info={info} />
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        </Stack>
+        <>
+          <Stack>
+            <Typography>Senses</Typography>
+            <Box sx={containerStyle}>
+              <List sx={{p: 0}}>
+                {processed.synsets.map(info => (
+                  <ListItem key={info.index} disablePadding>
+                    <SynsetLink senseKey={sense_keys[info.index]} info={info} />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          </Stack>
+          {senseRelatedTerms ? (
+            <Stack>
+              <Typography>Extended Synset Members</Typography>
+              <Box sx={containerStyle}>
+                <List disablePadding sx={{p: 0}}>
+                  {senseRelatedTerms.map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}
+                </List>
+              </Box>
+            </Stack>
+          ) : (
+            <></>
+          )}
+        </>
       ) : (
         <></>
       )}

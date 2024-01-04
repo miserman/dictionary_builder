@@ -20,6 +20,30 @@ export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
   )
 }
 
+function retrieveTerms(indices: number | number[], terms: readonly string[]) {
+  return Array.isArray(indices) ? indices.map(i => terms[i - 1]) : [terms[indices - 1]]
+}
+function retrieveSynsets(indices: number | string | (number | string)[], synsetInfo: readonly Synset[]) {
+  return Array.isArray(indices)
+    ? 'number' === typeof indices[0]
+      ? (indices as number[]).map(i => synsetInfo[i - 1])
+      : []
+    : 'number' === typeof indices
+    ? [synsetInfo[indices - 1]]
+    : []
+}
+export function unpackSynsetMembers(synset: Synset, terms: readonly string[], synsetInfo: readonly Synset[]) {
+  const members: Set<string> = new Set(retrieveTerms(synset.members, terms))
+  Object.keys(synset).forEach(k => {
+    if (k !== 'members') {
+      retrieveSynsets(synset[k as keyof Synset], synsetInfo).forEach(s => {
+        retrieveTerms(s.members, terms).forEach(sm => members.add(sm))
+      })
+    }
+  })
+  return Array.from(members)
+}
+
 function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   const content = info[name] as string | number | number[]
   const dict = useContext(BuildContext)
