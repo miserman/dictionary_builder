@@ -109,6 +109,7 @@ export async function makeRow(rows: GridRow[], index: number, term: string, dict
           id: term,
           sense: dictEntry.sense,
           matches: processed.recognized ? 1 : 0,
+          ncats: Object.keys(dictEntry.categories).length,
           frequency: relativeFrequency(processed.index, data.terms && data.terms.length).toFixed(2),
           senses: processed.synsets.length,
           related: processed.related.length,
@@ -119,6 +120,7 @@ export async function makeRow(rows: GridRow[], index: number, term: string, dict
           id: term,
           sense: dictEntry.sense,
           matches: processed.matches.length,
+          ncats: Object.keys(dictEntry.categories).length,
         }
   if (
     processed.type === 'fixed' &&

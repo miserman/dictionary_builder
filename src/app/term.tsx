@@ -384,7 +384,6 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const byIndex = useCallback(termLookup ? (a: string, b: string) => termLookup[a] - termLookup[b] : () => 0, [
     termLookup,
   ])
-  const data = useContext(ResourceContext)
   if (!processed.forms) {
     processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
     processed.forms.sort(sortByLength)
@@ -447,7 +446,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
               </List>
             </Box>
           </Stack>
-          {senseRelatedTerms ? (
+          {senseRelatedTerms.length ? (
             <Stack>
               <Typography>Extended Synset Members</Typography>
               <Box sx={containerStyle}>

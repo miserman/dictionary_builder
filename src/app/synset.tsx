@@ -35,7 +35,7 @@ function retrieveSynsets(indices: number | string | (number | string)[], synsetI
 export function unpackSynsetMembers(synset: Synset, terms: readonly string[], synsetInfo: readonly Synset[]) {
   const members: Set<string> = new Set(retrieveTerms(synset.members, terms))
   Object.keys(synset).forEach(k => {
-    if (k !== 'members') {
+    if (k !== 'members' && k !== 'index') {
       retrieveSynsets(synset[k as keyof Synset], synsetInfo).forEach(s => {
         retrieveTerms(s.members, terms).forEach(sm => members.add(sm))
       })

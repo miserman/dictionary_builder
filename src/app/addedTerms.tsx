@@ -18,6 +18,7 @@ export type GridRow = {
   id: string
   sense: string
   matches: number
+  ncats: number
 } & (
   | {processed: FuzzyTerm}
   | {
@@ -126,6 +127,11 @@ export default function AddedTerms({
         field: 'related',
         headerName: 'Related',
         description: 'number of similar terms on record, based on agreement between embeddings spaces',
+      },
+      {
+        field: 'ncats',
+        headerName: 'Categories',
+        description: 'number of categories the term has weight in',
       },
     ]
     Cats.forEach(cat =>
