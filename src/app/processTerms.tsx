@@ -30,7 +30,7 @@ export function getFuzzyParent(term: string) {
   return term in PartialMatchMap ? PartialMatchMap[term] : ''
 }
 
-function makeFixedTerm(term: string, {terms, termLookup, termAssociations, synsetInfo}: TermResources) {
+function makeFixedTerm(term: string, {terms, lemmas, termLookup, termAssociations, synsetInfo}: TermResources) {
   const processed = {
     type: 'fixed',
     term: term,
@@ -38,18 +38,19 @@ function makeFixedTerm(term: string, {terms, termLookup, termAssociations, synse
     categories: {},
     recognized: false,
     index: terms && termLookup ? termLookup[term] || -1 : -1,
+    lemma:
+      terms && lemmas && term in lemmas
+        ? lemmas['number' === typeof lemmas[term] ? terms[lemmas[term] as number] : term]
+        : [],
     related: [],
     synsets: [],
   } as FixedTerm
   if (termAssociations && synsetInfo && terms && -1 !== processed.index) {
     processed.recognized = true
     const associated = termAssociations[processed.index]
-    if (!associated) {
-      const a = 1
-    }
     processed.related =
-      associated && associated[0]
-        ? (Array.isArray(associated[0]) ? associated[0] : [associated[0]]).map(index => terms[index - 1])
+      associated && associated[0] && Array.isArray(associated[0])
+        ? associated[0].filter((_, i) => !!i).map(index => terms[index - 1])
         : []
     processed.synsets =
       associated && associated[1]

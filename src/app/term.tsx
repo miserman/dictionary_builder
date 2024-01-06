@@ -37,6 +37,7 @@ export type FixedTerm = {
   categories: {[index: string]: number}
   recognized: boolean
   index: number
+  lemma: number[]
   forms?: string[]
   related: string[]
   synsets: Synset[]
@@ -408,9 +409,23 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <span className="number">{relativeFrequency(processed.index, terms && terms.length).toFixed(2)}</span>
         </Box>
       </Stack>
+      {terms && processed.lemma.length ? (
+        <Stack>
+          <Typography>Lemmatizer</Typography>
+          <Box sx={containerStyle}>
+            <List disablePadding sx={{p: 0}}>
+              {processed.lemma
+                .filter(index => terms[index] !== processed.term)
+                .map(index => termListItem(terms[index], dict, editDictionary, updateInfoDrawerState))}
+            </List>
+          </Box>
+        </Stack>
+      ) : (
+        <></>
+      )}
       {processed.forms.length ? (
         <Stack>
-          <Typography>Expanded Forms</Typography>
+          <Typography>Expansion</Typography>
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
               {processed.forms.map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}

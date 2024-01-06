@@ -3,7 +3,7 @@ import {CircularProgress, List, ListItem, Stack, Typography} from '@mui/material
 import {type ReactNode, createContext, useEffect, useState} from 'react'
 import {newline} from './utils'
 
-type AssociatedIndices = {[index: string]: [number | number[], (number | number[])?]}
+type AssociatedIndices = [number | number[], (number | number[])?][]
 export type Synset = {
   id: string
   index: number
@@ -29,6 +29,7 @@ export type Synset = {
 type Synsets = readonly Synset[]
 export type TermResources = {
   terms?: readonly string[]
+  lemmas?: {[index: string]: number | number[]}
   termLookup?: {[index: string]: number}
   collapsedTerms?: {[index: string]: string}
   termAssociations?: AssociatedIndices
@@ -46,6 +47,7 @@ const resources = [
 
 export function Resources({children}: {children: ReactNode}) {
   const [terms, setTerms] = useState<readonly string[]>()
+  const [lemmas, setLemmas] = useState<{[index: string]: number | number[]}>()
   const [termLookup, setTermLookup] = useState<{[index: string]: number}>()
   const [collapsedTerms, setCollapsedTerms] = useState<{[index: string]: string}>()
   const [termAssociations, setTermAssociations] = useState<AssociatedIndices>()
@@ -114,7 +116,35 @@ export function Resources({children}: {children: ReactNode}) {
       })
       .finally(() => setLoadingSynsetInfo(false))
   }, [setLoadingSynsetInfo])
-  const Data = {terms, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}
+  useEffect(() => {
+    if (terms && termAssociations) {
+      const tempLemmas: {[index: string]: number | number[]} = {}
+      termAssociations.forEach((termIndices, index) => {
+        if (termIndices.length) {
+          const associatedTerms = termIndices[0]
+          const lemmaIndex =
+            'number' === typeof associatedTerms ? associatedTerms : associatedTerms.length ? associatedTerms[0] : 0
+          if (lemmaIndex) {
+            const term = terms[index]
+            const lemma = terms[lemmaIndex - 1]
+            const existing = tempLemmas[lemma]
+            if (existing && !('function' === typeof existing)) {
+              if ('number' === typeof existing) {
+                tempLemmas[lemma] = [lemmaIndex - 1, existing, index]
+              } else {
+                existing.push(index)
+              }
+            } else {
+              tempLemmas[lemma] = [lemmaIndex - 1, index]
+            }
+            tempLemmas[term] = lemmaIndex - 1
+          }
+        }
+      })
+      setLemmas(tempLemmas)
+    }
+  }, [terms, termAssociations])
+  const Data = {terms, lemmas, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}
   const loading = {
     terms: loadingTerms,
     termAssociations: loadingTermAssociations,
@@ -123,7 +153,7 @@ export function Resources({children}: {children: ReactNode}) {
   }
   return (
     <ResourceContext.Provider value={Data}>
-      {termAssociations && synsetInfo ? (
+      {lemmas && synsetInfo ? (
         children
       ) : (
         <Stack sx={{margin: 'auto', marginTop: 10, maxWidth: 350}}>

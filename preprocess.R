@@ -2,6 +2,7 @@ library(lingmatch)
 library(jsonlite)
 library(yaml)
 library(parallel)
+library(udpipe)
 
 term_map <- select.lspace()$term_map
 terms_indices <- structure(seq_len(nrow(term_map)), names = rownames(term_map))
@@ -195,6 +196,56 @@ write_json(lapply(seq_along(by_synset), function(i) {
   d
 }), "public/data/synset_info.json", auto_unbox = TRUE)
 
+# identify term roots
+tagged_file <- paste0(baseDir, "terms_tagged.tsv")
+if (!file.exists(tagged_file)) {
+  if (!dir.exists(paste0(baseDir, "RNNTagger"))) {
+    temp <- tempfile()
+    options(timeout = 999)
+    download.file(
+      "https://www.cis.uni-muenchen.de/~schmid/tools/RNNTagger/data/RNNTagger-1.4.4.zip",
+      temp
+    )
+    unzip(temp, exdir = baseDir)
+    unlink(temp)
+    rnntagger_cmd <- paste0(baseDir, "RNNTagger/cmd/rnn-tagger-english.sh")
+    cmd_content <- readLines(rnntagger_cmd)
+    out_line <- grep("$SCRIPTS", cmd_content, fixed = TRUE)
+    cmd_content[out_line] <- sub(" $", " > $2", cmd_content[out_line])
+    writeBin(charToRaw(paste0(c(cmd_content, ""), collapse = "\n")), rnntagger_cmd)
+  }
+  # requires Docker to be running
+  system2("docker", c("compose", "up"))
+  system2("docker", c("compose", "down"))
+}
+tagged <- read.table(
+  tagged_file, sep = "\t", quote = "", col.names = c("term", "pos", "lemma")
+)
+tagged <- tagged[
+  tagged$term != tagged$lemma & tagged$lemma != "<unknown>" &
+    tagged$term %in% names(terms_indices) & tagged$lemma %in% names(terms_indices),
+]
+lemmas <- structure(numeric(length(terms_indices)), names = names(terms_indices))
+lemmas[tagged$term] <- terms_indices[tagged$lemma]
+
+# ## fill in some missed terms
+# if (!file.exists(paste0(baseDir, "english-partut-ud-2.5-191206.udpipe"))) {
+#   udpipe_download_model(
+#     language = "english-partut",
+#     model_dir = baseDir,
+#     udpipe_model_repo = "jwijffels/udpipe.models.ud.2.5"
+#   )
+# }
+# model <- udpipe_load_model(paste0(baseDir, "english-partut-ud-2.5-191206.udpipe"))
+# udpipe_tagged <- data.frame(udpipe_annotate(model, names(terms_indices), parser = "none"))
+# tagged <- udpipe_tagged[
+#   udpipe_tagged$token != udpipe_tagged$lemma &
+#     udpipe_tagged$token %in% names(terms_indices) &
+#     udpipe_tagged$lemma %in% names(terms_indices),
+# ]
+# su <- lemmas[tagged$token] == 0
+# lemmas[tagged$token[su]] <- terms_indices[tagged$lemma[su]]
+
 # write term resources
 terms_sim_exp <- term_hits_trimmed[names(terms_indices)]
 names(terms_sim_exp) <- names(terms_indices)
@@ -204,6 +255,7 @@ all_term_info <- lapply(
   function(i) {
     sinds <- terms_wn_exp[[i]]
     inds <- as.integer(terms_sim_exp[[i]])
+    if (length(inds) || lemmas[[i]]) inds <- c(lemmas[[i]], inds)
     if (length(sinds)) list(inds, sinds) else if (length(inds)) list(inds) else integer()
   }
 )

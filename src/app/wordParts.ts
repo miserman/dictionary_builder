@@ -114,6 +114,7 @@ const commonSuffixes = [
   'wise',
   'y',
   'z',
+  't',
 ] as const
 const addableSuffixes = [
   "'",
@@ -147,7 +148,7 @@ const collapsedPrefixes = ';(?:' + commonPrefixes.join('|') + ')?-?'
 const collapsedSuffixes = '-?(?:' + commonSuffixes.join('|') + ')?(?:' + addableSuffixes.join('|') + ')?\\;'
 
 const terminalVowels = /[aeiouy]$/
-const replaceableTerminals = /[sdyz'];$/
+const replaceableTerminals = /[dnrstyz]$/
 export function extractExpanded(term: string, collapsed: string) {
   const forms: Set<string> = new Set()
   term = term.replace(special, '\\$&')
@@ -157,11 +158,8 @@ export function extractExpanded(term: string, collapsed: string) {
     termPattern = new RegExp(
       collapsedPrefixes +
         '(?:' +
-        term +
-        (termLength > (terminalVowels.test(term) ? 3 : 2) ? '|' + term.replace(terminalVowels, '[aeiouy]') : '') +
-        '|' +
-        term +
-        term.substring(termLength - 1) +
+        (termLength > (terminalVowels.test(term) ? 3 : 2) ? term.replace(terminalVowels, '[aeiouy]') : term) +
+        (replaceableTerminals.test(term) ? '*' : '+') +
         ')' +
         collapsedSuffixes,
       'g'
@@ -170,12 +168,7 @@ export function extractExpanded(term: string, collapsed: string) {
   if (termPattern) {
     for (let match: RegExpExecArray | null; (match = termPattern.exec(collapsed)); ) {
       const matchedTerm = match[0]
-      if (
-        matchedTerm &&
-        (matchedTerm.length - 2 > termLength || replaceableTerminals.test(matchedTerm)) &&
-        ';' + term + ';' !== matchedTerm
-      )
-        forms.add(matchedTerm.replace(termBounds, ''))
+      if (matchedTerm && ';' + term + ';' !== matchedTerm) forms.add(matchedTerm.replace(termBounds, ''))
     }
   }
   return Array.from(forms) as string[]

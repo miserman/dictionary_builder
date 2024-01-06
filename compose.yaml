@@ -1,0 +1,19 @@
+services:
+  tagger:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    working_dir: /RNNTagger
+    # RNNTagger and terms.txt are established by preprocess.R
+    volumes:
+      - ../dictionaries/RNNTagger:/RNNTagger
+      - ./public/data:/data
+      - ../dictionaries:/parent
+    command: ./cmd/rnn-tagger-english.sh ../data/terms.txt ../parent/terms_tagged.tsv
