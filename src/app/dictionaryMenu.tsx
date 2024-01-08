@@ -131,7 +131,7 @@ export function DictionaryMenu() {
               <Card elevation={5} sx={{height: '40%', minHeight: '300px', display: 'flex', flexDirection: 'column'}}>
                 <CardHeader title={<Typography fontWeight="bold">Categories</Typography>} sx={{pb: 0}} />
                 <CardContent sx={{p: 0, mb: 'auto', overflowY: 'auto'}}>
-                  <List dense={true}>{cats}</List>
+                  <List dense>{cats}</List>
                 </CardContent>
                 <CardActions>
                   <Stack direction="row">

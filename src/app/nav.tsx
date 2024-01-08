@@ -8,6 +8,7 @@ import {SettingsMenu} from './settingsMenu'
 import {DictionaryMenu} from './dictionaryMenu'
 import {extractMatches} from './processTerms'
 import type {TermTypes} from './building'
+import {AnalyzeMenu} from './analysisMenu'
 
 export function Nav({
   terms,
@@ -131,7 +132,10 @@ export function Nav({
             Add
           </Button>
         </Stack>
-        <SettingsMenu />
+        <Stack direction="row">
+          <AnalyzeMenu />
+          <SettingsMenu />
+        </Stack>
       </Toolbar>
     </AppBar>
   )

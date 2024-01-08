@@ -1,4 +1,4 @@
-import {Backdrop, Box, CircularProgress, Container, IconButton, Stack, Typography} from '@mui/material'
+import {Backdrop, Box, Container, IconButton, LinearProgress, Stack, Typography} from '@mui/material'
 import {type KeyboardEvent, useCallback, useContext, useMemo, useState, useEffect} from 'react'
 import {RemoveCircleOutline} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
@@ -151,9 +151,10 @@ export default function AddedTerms({
     return cols
   }, [Cats, editDictionary, editFromEvent])
   const [rows, setRows] = useState<GridRow[]>([])
+  const [progress, setProgress] = useState(0)
   useEffect(() => {
     if (Data.termAssociations && Data.synsetInfo) {
-      makeRows(Dict, Data).then(res => {
+      makeRows(Dict, Data, setProgress).then(res => {
         setRows(res.sort(byTime))
       })
     }
@@ -196,12 +197,11 @@ export default function AddedTerms({
         {!dictTerms.length ? (
           <Typography align="center">Add terms, or import an existing dictionary.</Typography>
         ) : processing ? (
-          <Backdrop open={processing}>
-            <Stack direction="column">
-              <Typography variant="h4" sx={{mb: 4}}>
-                Processing Dictionary
-              </Typography>
-              <CircularProgress sx={{m: 'auto'}} />
+          <Backdrop open={true}>
+            <Stack direction="column" sx={{textAlign: 'center'}}>
+              <Typography variant="h4">Processing Dictionary</Typography>
+              <LinearProgress variant="determinate" value={progress * 100} />
+              <Typography variant="caption">{Math.round(progress * 100) + '%'}</Typography>
             </Stack>
           </Backdrop>
         ) : (

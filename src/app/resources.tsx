@@ -1,5 +1,5 @@
 import {Done, Error} from '@mui/icons-material'
-import {CircularProgress, List, ListItem, Stack, Typography} from '@mui/material'
+import {CircularProgress, List, ListItem, ListItemIcon, Stack, Typography} from '@mui/material'
 import {type ReactNode, createContext, useEffect, useState} from 'react'
 import {newline} from './utils'
 
@@ -157,11 +157,11 @@ export function Resources({children}: {children: ReactNode}) {
         children
       ) : (
         <Stack sx={{margin: 'auto', marginTop: 10, maxWidth: 350}}>
-          <Typography>Loading Resources...</Typography>
+          <Typography variant="h4">Loading Resources...</Typography>
           <List>
             {resources.map(({key, label}) => (
-              <ListItem key={key}>
-                <Typography>
+              <ListItem key={key} dense>
+                <ListItemIcon sx={{minWidth: '35px', mb: 1}}>
                   {Data[key] ? (
                     <Done color="success" />
                   ) : loading[key] ? (
@@ -169,6 +169,8 @@ export function Resources({children}: {children: ReactNode}) {
                   ) : (
                     <Error color="error" sx={{marginBottom: -0.8}} />
                   )}
+                </ListItemIcon>
+                <Typography>
                   {!Data[key] && !loading[key] ? 'Failed to load ' : ''}
                   {label}
                 </Typography>

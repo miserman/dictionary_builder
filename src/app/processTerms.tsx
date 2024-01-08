@@ -1,6 +1,7 @@
 import type {GridRow} from './addedTerms'
 import type {Dict} from './building'
 import type {TermResources} from './resources'
+import {unpackSynsetMembers} from './synset'
 import {FixedTerm, FuzzyTerm} from './term'
 import {globToRegex, prepareRegex, relativeFrequency, termBounds, wildcard} from './utils'
 
@@ -38,14 +39,17 @@ function makeFixedTerm(term: string, {terms, lemmas, termLookup, termAssociation
     categories: {},
     recognized: false,
     index: terms && termLookup ? termLookup[term] || -1 : -1,
-    lemma:
-      terms && lemmas && term in lemmas
-        ? lemmas['number' === typeof lemmas[term] ? terms[lemmas[term] as number] : term]
-        : [],
+    lemma: [],
     related: [],
     synsets: [],
+    synset_terms: [],
+    lookup: {
+      lemma: {},
+      related: {},
+      synset: {},
+    },
   } as FixedTerm
-  if (termAssociations && synsetInfo && terms && -1 !== processed.index) {
+  if (termAssociations && synsetInfo && lemmas && terms && -1 !== processed.index) {
     processed.recognized = true
     const associated = termAssociations[processed.index]
     processed.related =
@@ -56,6 +60,22 @@ function makeFixedTerm(term: string, {terms, lemmas, termLookup, termAssociation
       associated && associated[1]
         ? (Array.isArray(associated[1]) ? associated[1] : [associated[1]]).map(index => synsetInfo[index - 1])
         : []
+    const senseRelated: Set<string> = new Set()
+    processed.synsets.forEach(synset => {
+      unpackSynsetMembers(synset, terms, synsetInfo).forEach(member => {
+        if (member !== processed.term) senseRelated.add(member)
+      })
+    })
+    processed.synset_terms = Array.from(senseRelated)
+    const lemma =
+      terms && lemmas && term in lemmas
+        ? lemmas['number' === typeof lemmas[term] ? terms[lemmas[term] as number] : term]
+        : []
+    processed.lemma = 'number' === typeof lemma ? [lemma] : lemma
+
+    processed.lemma.forEach(i => (processed.lookup.lemma[terms[i]] = true))
+    processed.related.forEach(term => (processed.lookup.related[term] = true))
+    processed.synset_terms.forEach(term => (processed.lookup.synset[term] = true))
   }
   return processed
 }
@@ -141,7 +161,7 @@ export async function makeRow(rows: GridRow[], index: number, term: string, dict
   rows[index] = row
 }
 
-export async function makeRows(dict: Dict, data: TermResources) {
+export async function makeRows(dict: Dict, data: TermResources, progress: (perc: number) => void) {
   return new Promise<GridRow[]>(resolve => {
     const terms = Object.freeze(Object.keys(dict))
     const n_terms = terms.length
@@ -155,8 +175,10 @@ export async function makeRows(dict: Dict, data: TermResources) {
       }
       if (i !== n_terms) {
         batch_i = 0
+        progress(i / n_terms)
         setTimeout(runBatch, 0)
       } else {
+        progress(1)
         resolve(rows)
       }
     }

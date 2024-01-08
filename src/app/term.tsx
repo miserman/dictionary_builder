@@ -25,11 +25,12 @@ import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'reac
 import {ResourceContext, type Synset} from './resources'
 import {BuildContext, BuildEditContext, DictionaryActions, type Dict} from './building'
 import {InfoDrawerActions, InfoDrawerContext} from './infoDrawer'
-import {SynsetLink, unpackSynsetMembers} from './synset'
+import {SynsetLink} from './synset'
 import {extractExpanded} from './wordParts'
 import {getFuzzyParent, getProcessedTerm} from './processTerms'
 import {Add, ArrowDownward, ArrowUpward, Check, LensBlur, Remove} from '@mui/icons-material'
 
+type LogicalObject = {[index: string]: boolean}
 export type FixedTerm = {
   type: 'fixed'
   term_type: 'fixed'
@@ -41,8 +42,14 @@ export type FixedTerm = {
   forms?: string[]
   related: string[]
   synsets: Synset[]
+  synset_terms: string[]
   frequency?: number
   in_dict?: boolean
+  lookup: {
+    lemma: LogicalObject
+    related: LogicalObject
+    synset: LogicalObject
+  }
 }
 export type FuzzyTerm = {
   type: 'fuzzy'
@@ -381,7 +388,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
   const updateInfoDrawerState = useContext(InfoDrawerContext)
-  const {terms, termLookup, collapsedTerms, sense_keys, synsetInfo} = useContext(ResourceContext)
+  const {terms, termLookup, collapsedTerms, sense_keys} = useContext(ResourceContext)
   const byIndex = useCallback(termLookup ? (a: string, b: string) => termLookup[a] - termLookup[b] : () => 0, [
     termLookup,
   ])
@@ -389,16 +396,6 @@ function TermFixed({processed}: {processed: FixedTerm}) {
     processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
     processed.forms.sort(sortByLength)
   }
-  const senseRelated: Set<string> = new Set()
-  if (termLookup && terms && synsetInfo) {
-    processed.forms.sort(byIndex)
-    processed.synsets.forEach(synset => {
-      unpackSynsetMembers(synset, terms, synsetInfo).forEach(member => {
-        if (member !== processed.term) senseRelated.add(member)
-      })
-    })
-  }
-  const senseRelatedTerms = Array.from(senseRelated).sort(byIndex)
   return (
     <Stack direction="row" spacing={4} sx={{height: '100%'}}>
       <Stack>
@@ -461,12 +458,14 @@ function TermFixed({processed}: {processed: FixedTerm}) {
               </List>
             </Box>
           </Stack>
-          {senseRelatedTerms.length ? (
+          {processed.synset_terms.length ? (
             <Stack>
               <Typography>Extended Synset Members</Typography>
               <Box sx={containerStyle}>
                 <List disablePadding sx={{p: 0}}>
-                  {senseRelatedTerms.map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}
+                  {processed.synset_terms
+                    .sort(byIndex)
+                    .map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}
                 </List>
               </Box>
             </Stack>

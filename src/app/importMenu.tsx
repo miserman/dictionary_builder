@@ -6,9 +6,11 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  FormControlLabel,
   FormLabel,
   IconButton,
   Stack,
+  Switch,
   TextField,
   Tooltip,
   styled,
@@ -44,15 +46,15 @@ function containsRegex(term: string) {
   const close = regex_close.test(term)
   return (open && close) || (!open && !close)
 }
-function makeDictEntry(term: string, cats: NumberObject, sense?: string) {
+function makeDictEntry(term: string, cats: NumberObject, detectRegex?: boolean) {
   return {
     added: Date.now(),
-    type: (containsRegex(term) ? 'regex' : 'fixed') as 'fixed' | 'regex',
+    type: (detectRegex && containsRegex(term) ? 'regex' : 'fixed') as 'fixed' | 'regex',
     categories: cats,
-    sense: sense || '',
+    sense: '',
   }
 }
-function parseDict(raw: string) {
+function parseDict(raw: string, detectRegex: boolean) {
   let parsed: Dict = {}
   if (raw) {
     try {
@@ -81,7 +83,7 @@ function parseDict(raw: string) {
                 parts.forEach(index => {
                   if (index in categories) cats[categories[index]] = 1
                 })
-                parsed[term] = makeDictEntry(term, cats)
+                parsed[term] = makeDictEntry(term, cats, detectRegex)
               }
             }
           }
@@ -104,7 +106,7 @@ function parseDict(raw: string) {
                   if (term in parsed) {
                     parsed[term].categories[cat] = 1
                   } else {
-                    parsed[term] = makeDictEntry(term, {[cat]: 1})
+                    parsed[term] = makeDictEntry(term, {[cat]: 1}, detectRegex)
                   }
                 }
               })
@@ -115,7 +117,7 @@ function parseDict(raw: string) {
                   if (term in parsed) {
                     parsed[term].categories[cat] = terms[term]
                   } else {
-                    parsed[term] = makeDictEntry(term, {[cat]: terms[term]})
+                    parsed[term] = makeDictEntry(term, {[cat]: terms[term]}, detectRegex)
                   }
                 }
               })
@@ -139,7 +141,7 @@ function parseDict(raw: string) {
             weights.forEach((weight, index) => {
               if (weight && categories[index]) cats[categories[index]] = +weight
             })
-            parsed[term] = makeDictEntry(term, cats)
+            parsed[term] = makeDictEntry(term, cats, detectRegex)
           }
         })
       }
@@ -154,6 +156,7 @@ export function ImportMenu() {
   const [name, setName] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
+  const [detectRegex, setDetectRegex] = useState(false)
   const [rawContent, setRawContent] = useState('')
   const clear = () => {
     setName('')
@@ -161,7 +164,7 @@ export function ImportMenu() {
   }
   const addDict = () => {
     if (name) {
-      const dict = parseDict(rawContent)
+      const dict = parseDict(rawContent, detectRegex)
       manageDictionaries({type: 'add', name, dict})
       clear()
       toggleMenu()
@@ -236,6 +239,13 @@ export function ImportMenu() {
                 placeholder="drag and drop a file, or enter content directly; see export menu for format examples"
               />
             </FormControl>
+            <Tooltip title="Attempt to convert terms to regular expressions if they contain special RegEx characters.">
+              <FormControlLabel
+                label="Detect RegEx"
+                labelPlacement="start"
+                control={<Switch checked={detectRegex} onChange={() => setDetectRegex(!detectRegex)} />}
+              />
+            </Tooltip>
           </Stack>
         </DialogContent>
         <DialogActions sx={{justifyContent: 'space-between'}}>
