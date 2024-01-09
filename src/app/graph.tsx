@@ -10,17 +10,7 @@ import {PlotOptions} from './analysisMenu'
 
 use([TooltipComponent, GraphChart, GraphGLChart, CanvasRenderer, LegendComponent])
 
-export function Graph({
-  nodes,
-  edges,
-  categories,
-  options,
-}: {
-  nodes: Node[]
-  edges: Edge[]
-  categories: string[]
-  options: PlotOptions
-}) {
+export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; options: PlotOptions}) {
   const container = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const chart = container.current ? init(container.current, 'dark', {renderer: 'canvas'}) : null
@@ -30,12 +20,35 @@ export function Graph({
       chart && chart.dispose()
       window.removeEventListener('resize', resize)
     }
-  }, [options.use_gl])
+  }, [options])
   useEffect(() => {
     if (container.current) {
       const chart = getInstanceByDom(container.current)
       if (chart) {
+        if (options.hide_zeros) nodes = nodes.filter(node => !!node.value)
+        nodes = nodes.map(node => {
+          node.label = {show: node.value >= options.label_threshold}
+          return node
+        })
         if (edges.length) {
+          const presentCats: {[index: string]: boolean} = {}
+          nodes.forEach(node => {
+            if ('string' === typeof node.category) {
+              presentCats[node.category] = true
+            } else {
+              let category = ''
+              node.category.forEach(cat => {
+                presentCats[cat] = true
+                category = cat
+              })
+              node.category = category
+            }
+            node.symbolSize = options.size_by_value ? 7 + node.prop * 18 : 10
+          })
+          const categories = Object.keys(presentCats).map(cat => {
+            return {name: cat}
+          })
+          if (options.use_gl) chart.clear()
           chart.setOption({
             legend: {
               top: '80',
@@ -46,8 +59,18 @@ export function Graph({
               pageButtonGap: 10,
             },
             tooltip: {
-              transitionDuration: 0,
               confine: true,
+              formatter: (item: {marker: string; name: string; value: number; data: {host?: string}}) => {
+                return (
+                  item.marker +
+                  (item.data.host ? '<i>(' + item.data.host + ')</i> ' : '') +
+                  item.name +
+                  ': <strong>' +
+                  item.value.toFixed(2) +
+                  '</strong>'
+                )
+              },
+              valueFormatter: (value: number) => value.toFixed(2),
             },
             animationDuration: 1500,
             animationEasingUpdate: 'quinticInOut',
@@ -58,29 +81,30 @@ export function Graph({
                     type: 'graphGL',
                     nodes,
                     edges,
-                    categories: categories.map(cat => {
-                      return {
-                        name: cat,
-                      }
-                    }),
+                    categories: categories,
                     roam: true,
                     label: {
                       show: true,
                       position: 'top',
+                      color: '#fff',
+                    },
+                    lineStyle: {
+                      color: 'source',
                     },
                     emphasis: {
                       focus: 'adjacency',
                       lineStyle: {
+                        color: '#fff',
                         width: 10,
                       },
                     },
                     forceAtlas2: {
-                      steps: 10,
+                      steps: 50,
                       stopThreshold: 1,
                       repulsionByDegree: true,
-                      linLogMode: false,
+                      linLogMode: true,
                       gravity: 0.1,
-                      scaling: 1,
+                      scaling: 0.1,
                       edgeWeightInfluence: 5,
                       edgeWeight: [1, 4],
                       nodeWeight: [1, 4],
@@ -92,11 +116,7 @@ export function Graph({
                     layout: options.layout,
                     nodes,
                     edges,
-                    categories: categories.map(cat => {
-                      return {
-                        name: cat,
-                      }
-                    }),
+                    categories: categories,
                     roam: true,
                     label: {
                       show: true,
@@ -110,7 +130,17 @@ export function Graph({
                     },
                     autoCurveness: true,
                     draggable: true,
-                    scaleLimit: [0, 100],
+                    scaleLimit: [0, 10],
+                    force: {
+                      repulsion: 100,
+                      edgeLength: 35,
+                    },
+                    circular: {
+                      rotateLabel: true,
+                    },
+                    lineStyle: {
+                      color: 'source',
+                    },
                   },
             ],
           })
@@ -119,6 +149,6 @@ export function Graph({
         }
       }
     }
-  }, [nodes, edges, categories, options])
+  }, [nodes, edges, options])
   return <Box ref={container} sx={{width: '100%', height: '100%', minHeight: '10px'}} />
 }

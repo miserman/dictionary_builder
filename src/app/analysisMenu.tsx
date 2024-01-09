@@ -2,12 +2,13 @@ import {Close} from '@mui/icons-material'
 import {
   Button,
   Card,
-  CardActions,
   CardContent,
   Checkbox,
   Dialog,
+  FormControl,
   FormControlLabel,
   IconButton,
+  InputLabel,
   List,
   ListItem,
   ListItemButton,
@@ -18,14 +19,13 @@ import {
   SelectChangeEvent,
   Stack,
   Switch,
+  TextField,
   Toolbar,
   Tooltip,
   Typography,
 } from '@mui/material'
-import {useContext, useEffect, useReducer, useState} from 'react'
-import {AllCategories, BuildContext} from './building'
-import {getProcessedTerm} from './processTerms'
-import {ResourceContext} from './resources'
+import {ChangeEvent, useContext, useEffect, useReducer, useState} from 'react'
+import {AllCategories} from './building'
 import {Results} from './analysisResults'
 import type {FixedTerm} from './term'
 
@@ -37,10 +37,16 @@ export type ProcessOptions = {
 export type PlotOptions = {
   use_gl: boolean
   layout: 'none' | 'force' | 'circular'
+  size_by_value: boolean
+  hide_zeros: boolean
+  label_threshold: number
 }
 const plotOptions: PlotOptions = {
   use_gl: false,
   layout: 'force',
+  size_by_value: true,
+  hide_zeros: false,
+  label_threshold: 0,
 }
 const processOptions: ProcessOptions = {
   include_fuzzy: false,
@@ -52,8 +58,6 @@ function updateOptions<T>(state: T, action: {key: keyof T; value: boolean | stri
   return newState
 }
 export function AnalyzeMenu() {
-  const data = useContext(ResourceContext)
-  const dict = useContext(BuildContext)
   const categories = useContext(AllCategories)
 
   const [menuOpen, setMenuOpen] = useState(false)
@@ -65,8 +69,6 @@ export function AnalyzeMenu() {
   useEffect(() => {
     setSelected(selected.filter(cat => categories.includes(cat)))
   }, [categories])
-  const [presentCats, setPresentCats] = useState<string[]>([])
-  const [termEntries, setTermEntries] = useState<TermEntry[]>([])
   const nCats = categories.length
   return (
     <>
@@ -97,7 +99,7 @@ export function AnalyzeMenu() {
                 <Typography>Categories</Typography>
                 {nCats ? (
                   <>
-                    <List dense sx={{overflowY: 'auto', maxHeight: '200px'}}>
+                    <List dense sx={{overflowY: 'auto', maxHeight: '300px'}}>
                       {categories.map(cat => (
                         <ListItem key={cat} disablePadding disableGutters>
                           <ListItemButton
@@ -166,7 +168,10 @@ export function AnalyzeMenu() {
                 </Stack>
                 <Typography variant="h6">Plot Options</Typography>
                 <Stack>
-                  <Tooltip title="Use WebGL for plotting." placement="right">
+                  <Tooltip
+                    title="Use the Web Graphics Library for plotting; can better handle many terms at the cost of some functionality."
+                    placement="right"
+                  >
                     <FormControlLabel
                       label="WebGL"
                       labelPlacement="start"
@@ -178,74 +183,61 @@ export function AnalyzeMenu() {
                       }
                     />
                   </Tooltip>
+                  <FormControlLabel
+                    label="Hide Zeros"
+                    labelPlacement="start"
+                    control={
+                      <Switch
+                        checked={plotOpts.hide_zeros}
+                        onChange={() => setPlotOpts({key: 'hide_zeros', value: !plotOpts.hide_zeros})}
+                      />
+                    }
+                  />
+                  <Tooltip title="Will not show labels for nodes with values lower than this." placement="right">
+                    <TextField
+                      value={plotOpts.label_threshold}
+                      type="number"
+                      size="small"
+                      label="Label Threshold Value"
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setPlotOpts({key: 'label_threshold', value: e.target.value})
+                      }
+                    ></TextField>
+                  </Tooltip>
+                  <FormControlLabel
+                    label="Size By Value"
+                    labelPlacement="start"
+                    control={
+                      <Switch
+                        checked={plotOpts.size_by_value}
+                        onChange={() => setPlotOpts({key: 'size_by_value', value: !plotOpts.size_by_value})}
+                      />
+                    }
+                  />
                   {plotOpts.use_gl ? (
                     <></>
                   ) : (
-                    <Select
-                      value={plotOpts.layout || 'force'}
-                      onChange={(e: SelectChangeEvent) => {
-                        setPlotOpts({key: 'layout', value: e.target.value})
-                      }}
-                    >
-                      <MenuItem value="none">None</MenuItem>
-                      <MenuItem value="force">Force</MenuItem>
-                      <MenuItem value="circular">Circular</MenuItem>
-                    </Select>
+                    <FormControl fullWidth>
+                      <InputLabel id="graph_layout_select">Layout</InputLabel>
+                      <Select
+                        labelId="graph_layout_select"
+                        label="Layout"
+                        size="small"
+                        value={plotOpts.layout || 'force'}
+                        onChange={(e: SelectChangeEvent) => {
+                          setPlotOpts({key: 'layout', value: e.target.value})
+                        }}
+                      >
+                        <MenuItem value="none">Connections * Random</MenuItem>
+                        <MenuItem value="force">Force</MenuItem>
+                        <MenuItem value="circular">Circular</MenuItem>
+                      </Select>
+                    </FormControl>
                   )}
                 </Stack>
               </CardContent>
-              <CardActions sx={{justifyContent: 'space-between'}}>
-                <Button onClick={toggleMenu}>Close</Button>
-                <Button
-                  sx={{ml: 'auto'}}
-                  variant="contained"
-                  disabled={!!nCats && !selected.length}
-                  onClick={() => {
-                    const presentCategories: Set<string> = new Set()
-                    const entries: TermEntry[] = []
-                    const entered: {[index: string]: boolean} = {}
-                    Object.keys(dict).forEach(term => {
-                      let ncats = 0
-                      const categories: {[index: string]: number} = {}
-                      const fullCats = dict[term].categories
-                      Object.keys(fullCats).forEach(cat => {
-                        if (selected.includes(cat)) {
-                          categories[cat] = fullCats[cat]
-                          ncats++
-                          presentCategories.add(cat)
-                        }
-                      })
-                      if (!nCats || ncats) {
-                        const processed = getProcessedTerm(term, data, dict)
-                        if (processed.type === 'fixed') {
-                          if (!(term in entered)) {
-                            entered[term] = true
-                            entries.push({term, categories, processed})
-                          }
-                        } else if (procOpts.include_fuzzy) {
-                          processed.matches.forEach(match => {
-                            if (!(match in dict) && !(match in entered)) {
-                              entered[match] = true
-                              entries.push({
-                                host: term,
-                                term: match,
-                                categories,
-                                processed: getProcessedTerm(match, data) as FixedTerm,
-                              })
-                            }
-                          })
-                        }
-                      }
-                    })
-                    setPresentCats(Array.from(presentCategories))
-                    setTermEntries(entries)
-                  }}
-                >
-                  Process
-                </Button>
-              </CardActions>
             </Card>
-            <Results terms={termEntries} categories={presentCats} options={procOpts} plotOptions={plotOpts} />
+            <Results selectedCategories={selected} options={procOpts} plotOptions={plotOpts} />
           </Stack>
         </Dialog>
       )}

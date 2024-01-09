@@ -232,9 +232,7 @@ export function Building({children}: {children: ReactNode}) {
             let change: HistoryTermEdit | undefined
             const original = state[term]
             const newEntry = newState[term]
-            if (newEntry.type !== original.type) {
-              change = {field: 'type', new: newEntry.type, original: original.type}
-            } else if (original.sense && newEntry.sense !== original.sense) {
+            if (original.sense && newEntry.sense !== original.sense) {
               change = {field: 'sense', new: newEntry.sense, original: original.sense}
             } else {
               const catChanges: TermCategoryEdit[] = []
