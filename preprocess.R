@@ -2,7 +2,6 @@ library(lingmatch)
 library(jsonlite)
 library(yaml)
 library(parallel)
-library(udpipe)
 
 term_map <- select.lspace()$term_map
 terms_indices <- structure(seq_len(nrow(term_map)), names = rownames(term_map))
@@ -229,6 +228,7 @@ lemmas <- structure(numeric(length(terms_indices)), names = names(terms_indices)
 lemmas[tagged$term] <- terms_indices[tagged$lemma]
 
 # ## fill in some missed terms
+# library(udpipe)
 # if (!file.exists(paste0(baseDir, "english-partut-ud-2.5-191206.udpipe"))) {
 #   udpipe_download_model(
 #     language = "english-partut",

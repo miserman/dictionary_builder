@@ -24,10 +24,11 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {ChangeEvent, useContext, useEffect, useReducer, useState} from 'react'
-import {AllCategories} from './building'
+import {ChangeEvent, useContext, useEffect, useMemo, useReducer, useState} from 'react'
+import {AllCategories, BuildContext, NumberObject} from './building'
 import {Results} from './analysisResults'
 import type {FixedTerm} from './term'
+import {timers} from './addedTerms'
 
 export type TermEntry = {host?: string; term: string; categories: {[index: string]: number}; processed: FixedTerm}
 
@@ -58,10 +59,14 @@ function updateOptions<T>(state: T, action: {key: keyof T; value: boolean | stri
   return newState
 }
 export function AnalyzeMenu() {
+  const dict = useContext(BuildContext)
   const categories = useContext(AllCategories)
 
   const [menuOpen, setMenuOpen] = useState(false)
-  const toggleMenu = () => setMenuOpen(!menuOpen)
+  const toggleMenu = () => {
+    clearTimeout(timers.comparisons)
+    setMenuOpen(!menuOpen)
+  }
   const [plotOpts, setPlotOpts] = useReducer(updateOptions<PlotOptions>, plotOptions)
   const [procOpts, setProcOpts] = useReducer(updateOptions<ProcessOptions>, processOptions)
 
@@ -70,6 +75,19 @@ export function AnalyzeMenu() {
     setSelected(selected.filter(cat => categories.includes(cat)))
   }, [categories])
   const nCats = categories.length
+  const catCount = useMemo(() => {
+    const counts: NumberObject = {}
+    Object.values(dict).forEach(entry => {
+      Object.keys(entry.categories).forEach(cat => {
+        if (cat in counts) {
+          counts[cat]++
+        } else {
+          counts[cat] = 1
+        }
+      })
+    })
+    return counts
+  }, [dict])
   return (
     <>
       <Button variant="outlined" onClick={toggleMenu}>
@@ -103,7 +121,7 @@ export function AnalyzeMenu() {
                       {categories.map(cat => (
                         <ListItem key={cat} disablePadding disableGutters>
                           <ListItemButton
-                            aria-label="delete category"
+                            aria-label="toggle category"
                             onClick={() => {
                               const newSelection = [...selected]
                               const index = newSelection.indexOf(cat)
@@ -118,7 +136,7 @@ export function AnalyzeMenu() {
                             <ListItemIcon sx={{minWidth: '35px'}}>
                               <Checkbox sx={{p: 0}} checked={selected.includes(cat)} />
                             </ListItemIcon>
-                            <ListItemText primary={cat}></ListItemText>
+                            <ListItemText primary={cat} secondary={catCount[cat] + ' terms'}></ListItemText>
                           </ListItemButton>
                         </ListItem>
                       ))}

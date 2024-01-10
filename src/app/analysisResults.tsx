@@ -6,8 +6,25 @@ import {getProcessedTerm} from './processTerms'
 import {FixedTerm} from './term'
 import {ResourceContext} from './resources'
 import {BuildContext} from './building'
+import {timers} from './addedTerms'
 
-const comparisons: {[index: string]: {[index: string]: {lemma: number; related: number; synset: number}}} = {}
+const comparisons: {
+  [index: string]: {
+    [index: string]: {
+      lemma: number
+      lemma_related: number
+      lemma_synset: number
+      related: number
+      related_lemma: number
+      related_related: number
+      related_synset: number
+      synset: number
+      synset_lemma: number
+      synset_related: number
+      synset_synset: number
+    }
+  }
+} = {}
 function getSimilarity(a: TermEntry, b: TermEntry) {
   const term = a.term
   if (!(term in comparisons)) comparisons[term] = {}
@@ -15,12 +32,32 @@ function getSimilarity(a: TermEntry, b: TermEntry) {
   if (!(b.term in comp)) {
     comp[b.term] = {
       lemma: +(term in b.processed.lookup.lemma),
+      lemma_related: +(term in b.processed.lookup.lemma_related),
+      lemma_synset: +(term in b.processed.lookup.lemma_synset),
       related: +(term in b.processed.lookup.related),
+      related_lemma: +(term in b.processed.lookup.related_lemma),
+      related_related: +(term in b.processed.lookup.related_related),
+      related_synset: +(term in b.processed.lookup.related_synset),
       synset: +(term in b.processed.lookup.synset),
+      synset_lemma: +(term in b.processed.lookup.synset_lemma),
+      synset_related: +(term in b.processed.lookup.synset_related),
+      synset_synset: +(term in b.processed.lookup.synset_synset),
     }
   }
   const sim = comp[b.term]
-  return sim.lemma + 0.4 * sim.related + 0.3 * sim.synset
+  return (
+    0.1 * sim.lemma +
+    0.01 * sim.lemma_related +
+    0.01 * sim.lemma_synset +
+    0.7 * sim.related +
+    0.4 * sim.related_lemma +
+    0.05 * sim.related_related +
+    0.05 * sim.related_synset +
+    0.7 * sim.synset +
+    0.4 * sim.synset_lemma +
+    0.05 * sim.synset_related +
+    0.05 * sim.synset_synset
+  )
 }
 export type Edge = {
   source: string
@@ -48,17 +85,22 @@ export type Node = {
 }
 async function processComparisons(
   i: number,
+  a: number,
+  b: number,
   terms: TermEntry[],
   edges: Edge[],
   progress: (perc: number) => void,
   finish: (data: {edges: Edge[]; nodes: Node[]}) => void,
   options: ProcessOptions
 ) {
+  clearTimeout(timers.comparisons)
   const n = terms.length
-  const nComps = (n / 2) * (n - 1)
-  for (let step = 0, b = Math.trunc(i / n) + 1; i < nComps && step < 10000; step++, i++, b++) {
-    const a = Math.trunc(i / n)
-    if (b >= n) b = a + 1
+  const nComps = ((n - 1) / 2) * n
+  for (let step = 0; i < nComps && step < 10000; step++, i++, b++) {
+    if (b >= n) {
+      if (++a >= n) a = Math.trunc(i / (n - 1))
+      b = a + 1
+    }
     const value = getSimilarity(terms[a], terms[b])
     if (value)
       edges.push({
@@ -70,9 +112,8 @@ async function processComparisons(
         lineStyle: {width: 0.3 + value * 2, opacity: 0.35},
       })
   }
-  const completed = i / nComps
-  if (completed < 1) {
-    setTimeout(() => processComparisons(i, terms, edges, progress, finish, options), 0)
+  if (i < nComps) {
+    timers.comparisons = setTimeout(() => processComparisons(i, a, b, terms, edges, progress, finish, options), 0)
   } else {
     const nodes: Node[] = terms.map(term => {
       return {
@@ -111,7 +152,7 @@ async function processComparisons(
       }),
     })
   }
-  progress(completed)
+  progress(i / nComps)
 }
 
 export function Results({
@@ -130,7 +171,7 @@ export function Results({
     const entered: {[index: string]: boolean} = {}
     const out: TermEntry[] = []
     Object.keys(dict).forEach(term => {
-      const processed = getProcessedTerm(term, data, dict)
+      const processed = getProcessedTerm(term, data, dict, true)
       if (processed.type === 'fixed') {
         if (!(term in entered)) {
           entered[term] = true
@@ -144,7 +185,7 @@ export function Results({
               host: term,
               term: match,
               categories: dict[term].categories,
-              processed: getProcessedTerm(match, data) as FixedTerm,
+              processed: getProcessedTerm(match, data, {}, true) as FixedTerm,
             })
           }
         })
@@ -171,7 +212,7 @@ export function Results({
       if (keep) terms.push({...term, categories: cats})
     })
     const edges: Edge[] = []
-    processComparisons(0, terms, edges, setProgress, setNetwork, options)
+    processComparisons(0, 0, 1, terms, edges, setProgress, setNetwork, options)
   }, [allTerms, selectedCategories])
 
   return progress < 1 ? (

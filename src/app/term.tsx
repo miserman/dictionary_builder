@@ -38,7 +38,7 @@ export type FixedTerm = {
   categories: {[index: string]: number}
   recognized: boolean
   index: number
-  lemma: number[]
+  lemma: string[]
   forms?: string[]
   related: string[]
   synsets: Synset[]
@@ -46,9 +46,18 @@ export type FixedTerm = {
   frequency?: number
   in_dict?: boolean
   lookup: {
+    expanded: boolean
     lemma: LogicalObject
+    lemma_related: LogicalObject
+    lemma_synset: LogicalObject
     related: LogicalObject
+    related_lemma: LogicalObject
+    related_related: LogicalObject
+    related_synset: LogicalObject
     synset: LogicalObject
+    synset_lemma: LogicalObject
+    synset_related: LogicalObject
+    synset_synset: LogicalObject
   }
 }
 export type FuzzyTerm = {
@@ -412,8 +421,8 @@ function TermFixed({processed}: {processed: FixedTerm}) {
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
               {processed.lemma
-                .filter(index => terms[index] !== processed.term)
-                .map(index => termListItem(terms[index], dict, editDictionary, updateInfoDrawerState))}
+                .filter(term => term !== processed.term)
+                .map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}
             </List>
           </Box>
         </Stack>

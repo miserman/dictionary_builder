@@ -30,6 +30,10 @@ export type GridRow = {
     }
 )
 
+export const timers: {dictionary: number | NodeJS.Timeout; comparisons: number | NodeJS.Timeout} = {
+  dictionary: 0,
+  comparisons: 0,
+}
 function byTime(a: GridRow, b: GridRow) {
   return b.dictEntry.added - a.dictEntry.added
 }
@@ -156,6 +160,7 @@ export default function AddedTerms({
     if (Data.termAssociations && Data.synsetInfo) {
       makeRows(Dict, Data, setProgress).then(res => {
         setRows(res.sort(byTime))
+        setProgress(0)
       })
     }
   }, [Dict, Data])
@@ -201,7 +206,7 @@ export default function AddedTerms({
             <Stack direction="column" sx={{textAlign: 'center'}}>
               <Typography variant="h4">Processing Dictionary</Typography>
               <LinearProgress variant="determinate" value={progress * 100} />
-              <Typography variant="caption">{Math.round(progress * 100) + '%'}</Typography>
+              <Typography variant="caption">{progress ? Math.round(progress * 100) + '%' : 'preparing...'}</Typography>
             </Stack>
           </Backdrop>
         ) : (
