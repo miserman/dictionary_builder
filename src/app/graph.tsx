@@ -20,7 +20,7 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
       chart && chart.dispose()
       window.removeEventListener('resize', resize)
     }
-  }, [options])
+  }, [options.layout])
   useEffect(() => {
     if (container.current) {
       const chart = getInstanceByDom(container.current)
@@ -48,7 +48,7 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
           const categories = Object.keys(presentCats).map(cat => {
             return {name: cat}
           })
-          if (options.use_gl) chart.clear()
+          if (options.layout === 'forceAtlas2') chart.clear()
           chart.setOption({
             legend: {
               top: '80',
@@ -76,7 +76,7 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
             animationEasingUpdate: 'quinticInOut',
             backgroundColor: '#000',
             series: [
-              options.use_gl
+              options.layout === 'forceAtlas2'
                 ? {
                     type: 'graphGL',
                     nodes,
@@ -100,11 +100,10 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
                       },
                     },
                     forceAtlas2: {
-                      steps: 10,
-                      stopThreshold: 1,
+                      steps: 50,
+                      stopThreshold: 10,
                       repulsionByDegree: true,
                       linLogMode: false,
-                      gravity: 0.01,
                       scaling: 0.1,
                       edgeWeightInfluence: 50,
                       edgeWeight: [1, 4],
@@ -139,10 +138,10 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
                     },
                     autoCurveness: true,
                     draggable: true,
-                    scaleLimit: [0, 10],
                     force: {
-                      repulsion: 100,
-                      edgeLength: 35,
+                      repulsion: options.repulsion,
+                      gravity: options.gravity,
+                      edgeLength: options.edge_length,
                     },
                     circular: {
                       rotateLabel: true,

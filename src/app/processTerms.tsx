@@ -35,23 +35,26 @@ function makeLookups(processed: FixedTerm) {
   processed.related.forEach(term => (processed.lookup.related[term] = true))
   processed.synset_terms.forEach(term => (processed.lookup.synset[term] = true))
 }
+function objectAppend(to: {[index: string]: boolean}, from: {[index: string]: boolean}) {
+  Object.keys(from).forEach(k => (to[k] = true))
+}
 function makeExpandedLookups(processed: FixedTerm, data: TermResources) {
   processed.lemma.forEach(term => {
     const relatedProcessed = getProcessedTerm(term, data) as FixedTerm
-    processed.lookup.lemma_related = relatedProcessed.lookup.related
-    processed.lookup.lemma_synset = relatedProcessed.lookup.synset
+    objectAppend(processed.lookup.lemma_related, relatedProcessed.lookup.related)
+    objectAppend(processed.lookup.lemma_synset, relatedProcessed.lookup.synset)
   })
   processed.related.forEach(term => {
     const relatedProcessed = getProcessedTerm(term, data) as FixedTerm
-    processed.lookup.related_lemma = relatedProcessed.lookup.lemma
-    processed.lookup.related_related = relatedProcessed.lookup.related
-    processed.lookup.related_synset = relatedProcessed.lookup.synset
+    objectAppend(processed.lookup.related_lemma, relatedProcessed.lookup.lemma)
+    objectAppend(processed.lookup.related_related, relatedProcessed.lookup.related)
+    objectAppend(processed.lookup.related_synset, relatedProcessed.lookup.synset)
   })
   processed.synset_terms.forEach(term => {
     const relatedProcessed = getProcessedTerm(term, data) as FixedTerm
-    processed.lookup.synset_lemma = relatedProcessed.lookup.lemma
-    processed.lookup.synset_related = relatedProcessed.lookup.related
-    processed.lookup.synset_synset = relatedProcessed.lookup.synset
+    objectAppend(processed.lookup.synset_lemma, relatedProcessed.lookup.lemma)
+    objectAppend(processed.lookup.synset_related, relatedProcessed.lookup.related)
+    objectAppend(processed.lookup.synset_synset, relatedProcessed.lookup.synset)
   })
   processed.lookup.expanded = true
 }

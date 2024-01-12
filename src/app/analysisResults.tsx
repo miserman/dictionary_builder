@@ -8,56 +8,35 @@ import {ResourceContext} from './resources'
 import {BuildContext} from './building'
 import {timers} from './addedTerms'
 
-const comparisons: {
-  [index: string]: {
-    [index: string]: {
-      lemma: number
-      lemma_related: number
-      lemma_synset: number
-      related: number
-      related_lemma: number
-      related_related: number
-      related_synset: number
-      synset: number
-      synset_lemma: number
-      synset_related: number
-      synset_synset: number
-    }
-  }
-} = {}
-function getSimilarity(a: TermEntry, b: TermEntry) {
+function getSimilarity(a: TermEntry, b: TermEntry, options: ProcessOptions) {
   const term = a.term
-  if (!(term in comparisons)) comparisons[term] = {}
-  const comp = comparisons[term]
-  if (!(b.term in comp)) {
-    comp[b.term] = {
-      lemma: +(term in b.processed.lookup.lemma),
-      lemma_related: +(term in b.processed.lookup.lemma_related),
-      lemma_synset: +(term in b.processed.lookup.lemma_synset),
-      related: +(term in b.processed.lookup.related),
-      related_lemma: +(term in b.processed.lookup.related_lemma),
-      related_related: +(term in b.processed.lookup.related_related),
-      related_synset: +(term in b.processed.lookup.related_synset),
-      synset: +(term in b.processed.lookup.synset),
-      synset_lemma: +(term in b.processed.lookup.synset_lemma),
-      synset_related: +(term in b.processed.lookup.synset_related),
-      synset_synset: +(term in b.processed.lookup.synset_synset),
-    }
+  const sim = {
+    lemma: +(term in b.processed.lookup.lemma),
+    lemma_related: +(term in b.processed.lookup.lemma_related),
+    lemma_synset: +(term in b.processed.lookup.lemma_synset),
+    related: +(term in b.processed.lookup.related),
+    related_lemma: +(term in b.processed.lookup.related_lemma),
+    related_related: +(term in b.processed.lookup.related_related),
+    related_synset: +(term in b.processed.lookup.related_synset),
+    synset: +(term in b.processed.lookup.synset),
+    synset_lemma: +(term in b.processed.lookup.synset_lemma),
+    synset_related: +(term in b.processed.lookup.synset_related),
+    synset_synset: +(term in b.processed.lookup.synset_synset),
   }
-  const sim = comp[b.term]
-  return (
-    0.1 * sim.lemma +
-    0.01 * sim.lemma_related +
-    0.01 * sim.lemma_synset +
-    0.7 * sim.related +
-    0.4 * sim.related_lemma +
-    0.05 * sim.related_related +
-    0.05 * sim.related_synset +
-    0.7 * sim.synset +
-    0.4 * sim.synset_lemma +
-    0.05 * sim.synset_related +
-    0.05 * sim.synset_synset
-  )
+  const weighted = options.dense
+    ? 0.7 * sim.lemma +
+      0.001 * sim.lemma_related +
+      0.5 * sim.lemma_synset +
+      0.5 * sim.related +
+      0.01 * sim.related_lemma +
+      0.001 * sim.related_related +
+      0.1 * sim.related_synset +
+      0.7 * sim.synset +
+      0.5 * sim.synset_lemma +
+      0.001 * sim.synset_related +
+      0.4 * sim.synset_synset
+    : 1 * sim.lemma + 0.1 * sim.related + 1 * sim.synset
+  return weighted > options.min_sim ? weighted : 0
 }
 export type Edge = {
   source: string
@@ -101,7 +80,7 @@ async function processComparisons(
       if (++a >= n) a = Math.trunc(i / (n - 1))
       b = a + 1
     }
-    const value = getSimilarity(terms[a], terms[b])
+    const value = getSimilarity(terms[a], terms[b], options)
     if (value)
       edges.push({
         source: terms[a].term,
@@ -192,7 +171,7 @@ export function Results({
       }
     })
     return out
-  }, [dict, data, options.include_fuzzy])
+  }, [dict, data, options])
 
   const [network, setNetwork] = useState<{edges: Edge[]; nodes: Node[]}>({edges: [], nodes: []})
   const [progress, setProgress] = useState(0)
@@ -214,7 +193,6 @@ export function Results({
     const edges: Edge[] = []
     processComparisons(0, 0, 1, terms, edges, setProgress, setNetwork, options)
   }, [allTerms, selectedCategories])
-
   return progress < 1 ? (
     <Box sx={{position: 'relative', width: '100%', height: '100%'}}>
       <Box

@@ -14,6 +14,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  ListSubheader,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -34,23 +35,33 @@ export type TermEntry = {host?: string; term: string; categories: {[index: strin
 
 export type ProcessOptions = {
   include_fuzzy: boolean
+  dense: boolean
+  min_sim: number
 }
 export type PlotOptions = {
-  use_gl: boolean
-  layout: 'none' | 'force' | 'circular'
+  graph: boolean
+  layout: 'none' | 'force' | 'forceAtlas2' | 'circular'
   size_by_value: boolean
   hide_zeros: boolean
   label_threshold: number
+  repulsion: number
+  gravity: number
+  edge_length: number
 }
 const plotOptions: PlotOptions = {
-  use_gl: false,
+  graph: true,
   layout: 'force',
   size_by_value: true,
   hide_zeros: false,
   label_threshold: 0,
+  repulsion: 100,
+  gravity: 0.1,
+  edge_length: 40,
 }
 const processOptions: ProcessOptions = {
   include_fuzzy: false,
+  dense: false,
+  min_sim: 0.001,
 }
 function updateOptions<T>(state: T, action: {key: keyof T; value: boolean | string | number}) {
   const newState = {...state}
@@ -170,44 +181,74 @@ export function AnalyzeMenu() {
                 ) : (
                   <Typography textAlign="center">None</Typography>
                 )}
-                <Stack>
+                <Stack spacing={2}>
                   <Tooltip title="Include all matches to fuzzy terms in the comparison." placement="right">
                     <FormControlLabel
                       label="Fuzzy Matches"
                       labelPlacement="start"
                       control={
                         <Switch
+                          size="small"
                           checked={procOpts.include_fuzzy}
                           onChange={() => setProcOpts({key: 'include_fuzzy', value: !procOpts.include_fuzzy})}
                         />
                       }
                     />
                   </Tooltip>
-                </Stack>
-                <Typography variant="h6">Plot Options</Typography>
-                <Stack>
                   <Tooltip
-                    title="Use the Web Graphics Library for plotting; can better handle many terms at the cost of some functionality."
+                    title="Include second-order term relationships in similarity calculations, resulting in a denser network."
                     placement="right"
                   >
                     <FormControlLabel
-                      label="WebGL"
+                      label="Include Secondary"
                       labelPlacement="start"
                       control={
                         <Switch
-                          checked={plotOpts.use_gl}
-                          onChange={() => setPlotOpts({key: 'use_gl', value: !plotOpts.use_gl})}
+                          size="small"
+                          checked={procOpts.dense}
+                          onChange={() => setProcOpts({key: 'dense', value: !procOpts.dense})}
                         />
                       }
                     />
                   </Tooltip>
+                  <Tooltip
+                    title="Will consider nodes with similarity equal to or less than this as unconnected."
+                    placement="right"
+                  >
+                    <TextField
+                      value={procOpts.min_sim}
+                      type="number"
+                      size="small"
+                      label="Similarity Threshold"
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setProcOpts({key: 'min_sim', value: e.target.value})
+                      }
+                    ></TextField>
+                  </Tooltip>
+                </Stack>
+                <Typography variant="h6" sx={{mt: 2}}>
+                  Plot Options
+                </Typography>
+                <Stack spacing={2}>
                   <FormControlLabel
                     label="Hide Zeros"
                     labelPlacement="start"
                     control={
                       <Switch
+                        size="small"
                         checked={plotOpts.hide_zeros}
                         onChange={() => setPlotOpts({key: 'hide_zeros', value: !plotOpts.hide_zeros})}
+                      />
+                    }
+                  />
+                  <FormControlLabel
+                    label="Size By Value"
+                    labelPlacement="start"
+                    control={
+                      <Switch
+                        size="small"
+                        checked={plotOpts.size_by_value}
+                        onChange={() => setPlotOpts({key: 'size_by_value', value: !plotOpts.size_by_value})}
                       />
                     }
                   />
@@ -216,41 +257,88 @@ export function AnalyzeMenu() {
                       value={plotOpts.label_threshold}
                       type="number"
                       size="small"
-                      label="Label Threshold Value"
+                      label="Label Threshold"
                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setPlotOpts({key: 'label_threshold', value: e.target.value})
                       }
                     ></TextField>
                   </Tooltip>
-                  <FormControlLabel
-                    label="Size By Value"
-                    labelPlacement="start"
-                    control={
-                      <Switch
-                        checked={plotOpts.size_by_value}
-                        onChange={() => setPlotOpts({key: 'size_by_value', value: !plotOpts.size_by_value})}
-                      />
-                    }
-                  />
-                  {plotOpts.use_gl ? (
-                    <></>
+                  {/* <Tooltip title="Visualize as a connected graph, rather than a scatter plot." placement="right">
+                    <FormControlLabel
+                      label="As Graph"
+                      labelPlacement="start"
+                      control={
+                        <Switch
+                          size="small"
+                          checked={plotOpts.graph}
+                          onChange={() => setPlotOpts({key: 'graph', value: !plotOpts.graph})}
+                        />
+                      }
+                    />
+                  </Tooltip> */}
+                  {plotOpts.graph ? (
+                    <>
+                      <FormControl fullWidth>
+                        <InputLabel id="graph_layout_select">Layout</InputLabel>
+                        <Select
+                          labelId="graph_layout_select"
+                          label="Layout"
+                          size="small"
+                          value={plotOpts.layout || 'force'}
+                          onChange={(e: SelectChangeEvent) => {
+                            setPlotOpts({key: 'layout', value: e.target.value})
+                          }}
+                        >
+                          <ListSubheader>Canvas</ListSubheader>
+                          <MenuItem value="none">Connections * Random</MenuItem>
+                          <MenuItem value="circular">Circular</MenuItem>
+                          <MenuItem value="force">Force</MenuItem>
+                          <ListSubheader>WebGL</ListSubheader>
+                          <MenuItem value="forceAtlas2">ForceAtlas2</MenuItem>
+                        </Select>
+                      </FormControl>
+                      {plotOpts.layout === 'force' ? (
+                        <>
+                          <Tooltip title="Repulsion factor between nodes." placement="right">
+                            <TextField
+                              value={plotOpts.repulsion}
+                              type="number"
+                              size="small"
+                              label="Repulsion"
+                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setPlotOpts({key: 'repulsion', value: e.target.value})
+                              }
+                            ></TextField>
+                          </Tooltip>
+                          <Tooltip title="Nodes' strength of attraction to the center." placement="right">
+                            <TextField
+                              value={plotOpts.gravity}
+                              type="number"
+                              size="small"
+                              label="Gravity"
+                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setPlotOpts({key: 'gravity', value: e.target.value})
+                              }
+                            ></TextField>
+                          </Tooltip>
+                          <Tooltip title="Base distance between nodes." placement="right">
+                            <TextField
+                              value={plotOpts.edge_length}
+                              type="number"
+                              size="small"
+                              label="Edge Length"
+                              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setPlotOpts({key: 'edge_length', value: e.target.value})
+                              }
+                            ></TextField>
+                          </Tooltip>
+                        </>
+                      ) : (
+                        <></>
+                      )}
+                    </>
                   ) : (
-                    <FormControl fullWidth>
-                      <InputLabel id="graph_layout_select">Layout</InputLabel>
-                      <Select
-                        labelId="graph_layout_select"
-                        label="Layout"
-                        size="small"
-                        value={plotOpts.layout || 'force'}
-                        onChange={(e: SelectChangeEvent) => {
-                          setPlotOpts({key: 'layout', value: e.target.value})
-                        }}
-                      >
-                        <MenuItem value="none">Connections * Random</MenuItem>
-                        <MenuItem value="force">Force</MenuItem>
-                        <MenuItem value="circular">Circular</MenuItem>
-                      </Select>
-                    </FormControl>
+                    <></>
                   )}
                 </Stack>
               </CardContent>
