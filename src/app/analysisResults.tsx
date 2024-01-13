@@ -8,7 +8,7 @@ import {ResourceContext} from './resources'
 import {BuildContext} from './building'
 import {timers} from './addedTerms'
 
-function getSimilarity(a: TermEntry, b: TermEntry, options: ProcessOptions) {
+function getSimilarity(a: TermEntry, b: TermEntry, dense: boolean) {
   const term = a.term
   const sim = {
     lemma: +(term in b.processed.lookup.lemma),
@@ -23,20 +23,19 @@ function getSimilarity(a: TermEntry, b: TermEntry, options: ProcessOptions) {
     synset_related: +(term in b.processed.lookup.synset_related),
     synset_synset: +(term in b.processed.lookup.synset_synset),
   }
-  const weighted = options.dense
-    ? 0.7 * sim.lemma +
-      0.001 * sim.lemma_related +
-      0.5 * sim.lemma_synset +
-      0.5 * sim.related +
-      0.01 * sim.related_lemma +
-      0.001 * sim.related_related +
-      0.1 * sim.related_synset +
-      0.7 * sim.synset +
-      0.5 * sim.synset_lemma +
-      0.001 * sim.synset_related +
-      0.4 * sim.synset_synset
+  return dense
+    ? 0.35 * sim.lemma +
+        0.001 * sim.lemma_related +
+        0.2 * sim.lemma_synset +
+        0.25 * sim.related +
+        0.01 * sim.related_lemma +
+        0.001 * sim.related_related +
+        0.1 * sim.related_synset +
+        0.3 * sim.synset +
+        0.2 * sim.synset_lemma +
+        0.001 * sim.synset_related +
+        0.1 * sim.synset_synset
     : 1 * sim.lemma + 0.1 * sim.related + 1 * sim.synset
-  return weighted > options.min_sim ? weighted : 0
 }
 export type Edge = {
   source: string
@@ -68,7 +67,7 @@ async function processComparisons(
   b: number,
   terms: TermEntry[],
   edges: Edge[],
-  progress: (perc: number) => void,
+  progress: (progress: number[]) => void,
   finish: (data: {edges: Edge[]; nodes: Node[]}) => void,
   options: ProcessOptions
 ) {
@@ -80,14 +79,14 @@ async function processComparisons(
       if (++a >= n) a = Math.trunc(i / (n - 1))
       b = a + 1
     }
-    const value = getSimilarity(terms[a], terms[b], options)
-    if (value)
+    const value = getSimilarity(terms[a], terms[b], options.dense)
+    if (value > options.min_sim)
       edges.push({
         source: terms[a].term,
         source_index: a,
         target: terms[b].term,
         target_index: b,
-        value,
+        value: value,
         lineStyle: {width: 0.3 + value * 2, opacity: 0.35},
       })
   }
@@ -131,7 +130,7 @@ async function processComparisons(
       }),
     })
   }
-  progress(i / nComps)
+  progress([i, nComps])
 }
 
 export function Results({
@@ -174,7 +173,7 @@ export function Results({
   }, [dict, data, options])
 
   const [network, setNetwork] = useState<{edges: Edge[]; nodes: Node[]}>({edges: [], nodes: []})
-  const [progress, setProgress] = useState(0)
+  const [progress, setProgress] = useState([0, 0])
 
   useEffect(() => {
     const selectedMap = new Map(selectedCategories.map((cat, index) => [index, cat]))
@@ -193,7 +192,7 @@ export function Results({
     const edges: Edge[] = []
     processComparisons(0, 0, 1, terms, edges, setProgress, setNetwork, options)
   }, [allTerms, selectedCategories])
-  return progress < 1 ? (
+  return progress[0] < progress[1] ? (
     <Box sx={{position: 'relative', width: '100%', height: '100%'}}>
       <Box
         sx={{
@@ -210,8 +209,8 @@ export function Results({
       >
         <Stack>
           <Typography variant="h5">Calculating Pairwise Similarities</Typography>
-          <LinearProgress variant="determinate" value={progress * 100}></LinearProgress>
-          <Typography variant="caption">{Math.round(progress * 100) + '%'}</Typography>
+          <LinearProgress variant="determinate" value={(progress[0] / progress[1]) * 100}></LinearProgress>
+          <Typography variant="caption">{progress[0] + ' / ' + progress[1]}</Typography>
         </Stack>
       </Box>
     </Box>

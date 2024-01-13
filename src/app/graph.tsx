@@ -17,10 +17,20 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
     const resize = () => chart && chart.resize()
     window.addEventListener('resize', resize)
     return () => {
-      chart && chart.dispose()
+      if (chart) {
+        const views = (chart as any)._chartsViews as {_layouting: boolean; _layoutTimeout: number}[]
+        views &&
+          views.forEach(view => {
+            if (view._layouting) {
+              view._layouting = false
+              clearTimeout(view._layoutTimeout)
+            }
+          })
+        chart.dispose()
+      }
       window.removeEventListener('resize', resize)
     }
-  }, [options.layout])
+  }, [options.layout === 'forceAtlas2' ? options : options.layout])
   useEffect(() => {
     if (container.current) {
       const chart = getInstanceByDom(container.current)
