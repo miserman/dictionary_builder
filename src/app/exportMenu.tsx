@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  FormControlLabel,
   FormLabel,
   IconButton,
   InputLabel,
@@ -13,7 +14,9 @@ import {
   Select,
   SelectChangeEvent,
   Stack,
+  Switch,
   TextField,
+  Typography,
   useTheme,
 } from '@mui/material'
 import {type ChangeEvent, useContext, useMemo, useState} from 'react'
@@ -29,10 +32,10 @@ function getSepChar(type: DelTypes) {
     case 'tsv':
       return '\t'
     default:
-      return ' '
+      return '  '
   }
 }
-function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JSONTypes) {
+function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JSONTypes, includeSenses: boolean) {
   switch (format) {
     case 'tabular':
       const sep = getSepChar(delType)
@@ -48,12 +51,14 @@ function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JS
         '"term"' +
         sep +
         '"' +
+        (includeSenses ? 'term_sense"' + sep + '"' : '') +
         catArray.join('"' + sep + '"') +
         '"\n' +
         terms
           .map(term => {
             const cats = dict[term].categories
             let row = '"' + term + '"'
+            if (includeSenses) row += sep + dict[term].sense
             catMap.forEach(cat => {
               row += sep + (cat in cats ? cats[cat] : '')
             })
@@ -69,6 +74,7 @@ function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JS
         const cats = dict[term].categories
         if (cats) {
           const line: (string | number)[] = [term]
+          if (includeSenses && dict[term].sense) line[0] += '@' + dict[term].sense
           Object.keys(cats).forEach(cat => {
             if (!(cat in allCats)) allCats[cat] = ++nCats
             line.push(allCats[cat])
@@ -90,6 +96,7 @@ function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JS
       Object.keys(dict).forEach(term => {
         const cats = dict[term].categories
         if (cats) {
+          if (includeSenses && dict[term].sense) term += '@' + dict[term].sense
           Object.keys(cats).forEach(cat => {
             if (!(cat in temp)) temp[cat] = {}
             temp[cat][term] = cats[cat]
@@ -120,13 +127,14 @@ export function ExportMenu() {
   const [delType, setDelType] = useState<DelTypes>('csv')
   const [name, setName] = useState(currentDictionary)
   const [jsonType, setJsonType] = useState<JSONTypes>('unweighted')
+  const [includeSenses, setIncludeSenses] = useState(false)
   const content = useMemo(
-    () => (menuOpen ? exportDict(dict, format, delType, jsonType) : ''),
-    [menuOpen, dict, format, delType, jsonType]
+    () => (menuOpen ? exportDict(dict, format, delType, jsonType, includeSenses) : ''),
+    [menuOpen, dict, format, delType, jsonType, includeSenses]
   )
   return (
     <>
-      <Button variant="contained" onClick={toggleMenu}>
+      <Button variant="outlined" onClick={toggleMenu}>
         Export
       </Button>
       {menuOpen && (
@@ -164,7 +172,7 @@ export function ExportMenu() {
                     backgroundColor: theme.palette.background.default,
                     color: theme.palette.text.primary,
                     whiteSpace: 'pre',
-                    minWidth: '30em',
+                    minWidth: '35em',
                     minHeight: '20em',
                   }}
                   value={content}
@@ -175,6 +183,22 @@ export function ExportMenu() {
           </DialogContent>
           <DialogActions sx={{justifyContent: 'space-between'}}>
             <Stack direction="row" spacing={1}>
+              {format !== 'json' || jsonType !== 'full' ? (
+                <FormControlLabel
+                  sx={{transform: 'translate(0, -10px)'}}
+                  control={
+                    <Switch
+                      size="small"
+                      checked={includeSenses}
+                      onChange={() => setIncludeSenses(!includeSenses)}
+                    ></Switch>
+                  }
+                  label={<Typography variant="caption">Senses</Typography>}
+                  labelPlacement="top"
+                />
+              ) : (
+                <></>
+              )}
               <FormControl>
                 <InputLabel id="export_format">Format</InputLabel>
                 <Select

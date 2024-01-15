@@ -34,24 +34,26 @@ const HiddenInput = styled('input')({
 })
 
 const tab = /\t/
+const dat = /\s\s/
 const padding = /^\s+|\s+$/g
 const quote_padding = /^["\s]+|["\s]+$/g
 const dic_seps = /\s{2,}|\t+/g
 const regex_open = /[[({]/
 const regex_close = /[\])}]/
 const regex_special = /([\[\]\(\)?^$.+])/
+const senseSep = '@'
 function containsRegex(term: string) {
   if (!regex_special.test(term)) return false
   const open = regex_open.test(term)
   const close = regex_close.test(term)
   return (open && close) || (!open && !close)
 }
-function makeDictEntry(term: string, cats: NumberObject, detectRegex?: boolean) {
+function makeDictEntry(term: string, cats: NumberObject, sense: string, detectRegex?: boolean) {
   return {
     added: Date.now(),
     type: (detectRegex && containsRegex(term) ? 'regex' : 'fixed') as 'fixed' | 'regex',
     categories: cats,
-    sense: '',
+    sense: sense || '',
   }
 }
 function parseDict(raw: string, detectRegex: boolean) {
@@ -77,13 +79,14 @@ function parseDict(raw: string, detectRegex: boolean) {
             const line = lines[i].replace(padding, '')
             const parts = line.split(dic_seps)
             if (parts.length > 1) {
-              const term = parts.splice(0, 1)[0].toLowerCase()
-              if (term) {
+              const fullterm = parts.splice(0, 1)[0].toLowerCase()
+              if (fullterm) {
                 const cats: NumberObject = {}
                 parts.forEach(index => {
                   if (index in categories) cats[categories[index]] = 1
                 })
-                parsed[term] = makeDictEntry(term, cats, detectRegex)
+                const [term, sense] = fullterm.split(senseSep)
+                parsed[term] = makeDictEntry(term, cats, sense, detectRegex)
               }
             }
           }
@@ -100,24 +103,24 @@ function parseDict(raw: string, detectRegex: boolean) {
           if (cat) {
             const terms = initial[cat]
             if (Array.isArray(terms)) {
-              terms.forEach(term => {
-                term = term.toLowerCase()
-                if (term) {
-                  if (term in parsed) {
-                    parsed[term].categories[cat] = 1
+              terms.forEach(fullterm => {
+                if (fullterm) {
+                  if (fullterm in parsed) {
+                    parsed[fullterm].categories[cat] = 1
                   } else {
-                    parsed[term] = makeDictEntry(term, {[cat]: 1}, detectRegex)
+                    const [term, sense] = fullterm.toLowerCase().split(senseSep)
+                    parsed[fullterm] = makeDictEntry(term, {[cat]: 1}, sense, detectRegex)
                   }
                 }
               })
             } else {
-              Object.keys(terms).forEach(term => {
-                term = term.toLowerCase()
-                if (term) {
-                  if (term in parsed) {
-                    parsed[term].categories[cat] = terms[term]
+              Object.keys(terms).forEach(fullterm => {
+                if (fullterm) {
+                  if (fullterm in parsed) {
+                    parsed[fullterm].categories[cat] = terms[fullterm]
                   } else {
-                    parsed[term] = makeDictEntry(term, {[cat]: terms[term]}, detectRegex)
+                    const [term, sense] = fullterm.toLowerCase().split(senseSep)
+                    parsed[fullterm] = makeDictEntry(term, {[cat]: terms[term]}, sense, detectRegex)
                   }
                 }
               })
@@ -127,21 +130,30 @@ function parseDict(raw: string, detectRegex: boolean) {
       } else {
         // assumed to be some sort of tabular format
         const lines = raw.split(newline)
-        const sep = tab.test(lines[0]) ? '\t' : ','
+        const sep = tab.test(lines[0]) ? '\t' : dat.test(lines[0]) ? '  ' : ','
         const categories = lines
           .splice(0, 1)[0]
           .split(sep)
           .map(cat => cat.replace(quote_padding, ''))
         categories.splice(0, 1)
+        const has_sense = categories[0] === 'term_sense'
         lines.forEach(l => {
           const weights = l.split(sep)
           const term = weights.splice(0, 1)[0].toLowerCase().replace(quote_padding, '')
           if (term) {
+            let sense = ''
             const cats: NumberObject = {}
             weights.forEach((weight, index) => {
-              if (weight && categories[index]) cats[categories[index]] = +weight
+              if (weight && categories[index]) {
+                const value = +weight
+                if (!sense && ((has_sense && index === 0) || isNaN(value))) {
+                  sense = weight
+                } else {
+                  cats[categories[index]] = +weight
+                }
+              }
             })
-            parsed[term] = makeDictEntry(term, cats, detectRegex)
+            parsed[term] = makeDictEntry(term, cats, sense, detectRegex)
           }
         })
       }
@@ -172,7 +184,7 @@ export function ImportMenu() {
   }
   return (
     <>
-      <Button variant="contained" onClick={toggleMenu}>
+      <Button variant="outlined" onClick={toggleMenu}>
         New
       </Button>
       <Dialog
