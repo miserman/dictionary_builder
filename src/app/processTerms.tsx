@@ -31,32 +31,48 @@ export function getFuzzyParent(term: string) {
   return term in PartialMatchMap ? PartialMatchMap[term] : ''
 }
 function makeLookups(processed: FixedTerm) {
-  processed.lemma.forEach(term => (processed.lookup.lemma[term] = true))
-  processed.related.forEach(term => (processed.lookup.related[term] = true))
-  processed.synset_terms.forEach(term => (processed.lookup.synset[term] = true))
-}
-function objectAppend(to: {[index: string]: boolean}, from: {[index: string]: boolean}) {
-  Object.keys(from).forEach(k => (to[k] = true))
-}
-function makeExpandedLookups(processed: FixedTerm, data: TermResources) {
   processed.lemma.forEach(term => {
-    const relatedProcessed = getProcessedTerm(term, data) as FixedTerm
-    objectAppend(processed.lookup.lemma_related, relatedProcessed.lookup.related)
-    objectAppend(processed.lookup.lemma_synset, relatedProcessed.lookup.synset)
+    processed.lookup.any[term] = true
+    processed.lookup.lemma[term] = true
   })
   processed.related.forEach(term => {
-    const relatedProcessed = getProcessedTerm(term, data) as FixedTerm
-    objectAppend(processed.lookup.related_lemma, relatedProcessed.lookup.lemma)
-    objectAppend(processed.lookup.related_related, relatedProcessed.lookup.related)
-    objectAppend(processed.lookup.related_synset, relatedProcessed.lookup.synset)
+    processed.lookup.any[term] = true
+    processed.lookup.related[term] = true
   })
   processed.synset_terms.forEach(term => {
-    const relatedProcessed = getProcessedTerm(term, data) as FixedTerm
-    objectAppend(processed.lookup.synset_lemma, relatedProcessed.lookup.lemma)
-    objectAppend(processed.lookup.synset_related, relatedProcessed.lookup.related)
-    objectAppend(processed.lookup.synset_synset, relatedProcessed.lookup.synset)
+    processed.lookup.any[term] = true
+    processed.lookup.synset[term] = true
   })
-  processed.lookup.expanded = true
+}
+type LogicalObject = {[index: string]: boolean}
+function objectAppend(any: LogicalObject, to: LogicalObject, from: LogicalObject) {
+  Object.keys(from).forEach(k => {
+    any[k] = true
+    to[k] = true
+  })
+}
+function makeExpandedLookups(processed: FixedTerm, data: TermResources) {
+  const lookup = processed.lookup
+  const any = lookup.any
+  processed.lemma.forEach(term => {
+    const relatedLookup = (getProcessedTerm(term, data) as FixedTerm).lookup
+    objectAppend(any, lookup.lemma_related, relatedLookup.related)
+    objectAppend(any, lookup.lemma_synset, relatedLookup.synset)
+  })
+  processed.related.forEach(term => {
+    const relatedLookup = (getProcessedTerm(term, data) as FixedTerm).lookup
+    objectAppend(any, lookup.related_lemma, relatedLookup.lemma)
+    objectAppend(any, lookup.related_related, relatedLookup.related)
+    objectAppend(any, lookup.related_synset, relatedLookup.synset)
+  })
+  processed.synset_terms.forEach(term => {
+    const relatedLookup = (getProcessedTerm(term, data) as FixedTerm).lookup
+    objectAppend(any, lookup.synset_lemma, relatedLookup.lemma)
+    objectAppend(any, lookup.synset_related, relatedLookup.related)
+    objectAppend(any, lookup.synset_synset, relatedLookup.synset)
+  })
+  lookup.expanded = true
+  lookup.map = new Map(Object.keys(any).map(term => [term, true]))
 }
 
 function makeFixedTerm(term: string, data: TermResources) {
@@ -74,6 +90,8 @@ function makeFixedTerm(term: string, data: TermResources) {
     synset_terms: [],
     lookup: {
       expanded: false,
+      map: new Map(),
+      any: {},
       lemma: {},
       lemma_related: {},
       lemma_synset: {},

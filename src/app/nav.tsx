@@ -1,29 +1,32 @@
 import {SavedSearch, SearchOff} from '@mui/icons-material'
 import {AppBar, Autocomplete, Button, IconButton, ListItem, Stack, TextField, Toolbar, Tooltip} from '@mui/material'
 import {type KeyboardEvent, type SyntheticEvent, useContext, useState} from 'react'
-import {InfoDrawerContext} from './infoDrawer'
+import {InfoDrawerSetter} from './infoDrawer'
 import {globToRegex, prepareRegex, special, wildcards} from './utils'
 import {ResourceContext} from './resources'
 import {SettingsMenu} from './settingsMenu'
 import {DictionaryMenu} from './dictionaryMenu'
 import {extractMatches} from './processTerms'
 import type {TermTypes} from './building'
-import {AnalyzeMenu} from './analysisMenu'
 
 export function Nav({
   terms,
   exists,
+  asTable,
+  setAsTable,
   add,
 }: {
   terms?: readonly string[]
   exists: (term: string) => boolean
+  asTable: boolean
+  setAsTable: (asTable: boolean) => void
   add: (term: string | RegExp, type: TermTypes) => void
 }) {
   const [inputTerm, setInputTerm] = useState('')
   const [alreadyAdded, setAlreadyAdded] = useState(false)
   const [termSuggestions, setTermSuggestions] = useState<string[]>([])
   const [asRegEx, setAsRegEx] = useState(false)
-  const updateInfoDrawerState = useContext(InfoDrawerContext)
+  const updateInfoDrawerState = useContext(InfoDrawerSetter)
   const {collapsedTerms} = useContext(ResourceContext)
 
   const addTerm = (newTerm?: SyntheticEvent | string) => {
@@ -133,7 +136,9 @@ export function Nav({
           </Button>
         </Stack>
         <Stack direction="row">
-          <AnalyzeMenu />
+          <Button variant="outlined" sx={{width: 100}} onClick={() => setAsTable(!asTable)}>
+            {asTable ? 'Analyze' : 'Edit'}
+          </Button>
           <SettingsMenu />
         </Stack>
       </Toolbar>

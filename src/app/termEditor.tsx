@@ -14,49 +14,50 @@ import {
 import {Close} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {TERM_EDITOR_WIDTH} from './settingsMenu'
-import {type KeyboardEvent, useState, useContext, createContext} from 'react'
+import {type KeyboardEvent, useState, useContext, createContext, useMemo} from 'react'
 import {DataGrid, GridCellParams, type GridColDef} from '@mui/x-data-grid'
 import {BuildContext, type DictEntry} from './building'
 import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
 
 export const EditorTerm = createContext('')
+export const EditorTermSetter = createContext((term: string, fromGraph?: boolean) => {})
 
 export function TermEditor({
-  close,
   categories,
   editor,
-  bottomMargin,
 }: {
-  close: (term: string) => void
   categories: string[]
   editor: (value: string | number, params: GridCellParams) => void
-  bottomMargin: number | string
 }) {
   const data = useContext(ResourceContext)
   const dict = useContext(BuildContext)
   const term = useContext(EditorTerm)
+  const setTerm = useContext(EditorTermSetter)
   const [showEmptyCategories, setShowEmptyCategories] = useState(false)
   if (!term || !(term in dict)) return <></>
   const processed = getProcessedTerm(term, data, dict)
   const dictEntry = dict[term]
-  const cols: GridColDef[] = [
-    {field: 'id', headerName: 'Name', width: 110},
-    {
-      field: 'from_term_editor',
-      headerName: 'Weight',
-      width: 65,
-      editable: true,
-      hideable: false,
-      valueParser: (value: any, params?: GridCellParams) => {
-        const parsed = +value || ''
-        if (params) {
-          editor(parsed, params)
-        }
-        return parsed
+  const cols: GridColDef[] = useMemo(
+    () => [
+      {field: 'id', headerName: 'Name', width: 110},
+      {
+        field: 'from_term_editor',
+        headerName: 'Weight',
+        width: 65,
+        editable: true,
+        hideable: false,
+        valueParser: (value: any, params?: GridCellParams) => {
+          const parsed = +value || ''
+          if (params) {
+            editor(parsed, params)
+          }
+          return parsed
+        },
       },
-    },
-  ]
+    ],
+    []
+  )
   const weights = dictEntry.categories
   const rows: {
     id: string
@@ -73,17 +74,15 @@ export function TermEditor({
       sx={{
         position: 'absolute',
         top: 0,
-        bottom: 0,
-        right: 0,
+        right: '-' + TERM_EDITOR_WIDTH,
+        height: '100%',
         width: TERM_EDITOR_WIDTH,
-        mt: '3em',
-        mb: bottomMargin,
       }}
     >
       <Card sx={{height: '100%', pb: '2.5em'}} elevation={1}>
         <CardHeader
           action={
-            <IconButton aria-label="Close term editor" onClick={() => close('')} className="close-button">
+            <IconButton aria-label="Close term editor" onClick={() => setTerm('')} className="close-button">
               <Close />
             </IconButton>
           }

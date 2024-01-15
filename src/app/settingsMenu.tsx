@@ -14,7 +14,7 @@ import {type ChangeEvent, useCallback, useContext, useEffect, useMemo, useState}
 import {HistoryStepper} from './building'
 import {Confirm} from './confirmDialog'
 
-export const INFO_DRAWER_HEIGHT = '41vh'
+export const INFO_DRAWER_HEIGHT = '30vh'
 export const TERM_EDITOR_WIDTH = '200px'
 
 export type Settings = {

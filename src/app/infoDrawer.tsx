@@ -6,10 +6,12 @@ import {Close} from '@mui/icons-material'
 import type {Synset} from './resources'
 import {SynsetDisplay} from './synset'
 import {INFO_DRAWER_HEIGHT} from './settingsMenu'
+import {EditorTermSetter} from './termEditor'
 
 export type InfoDrawerState = {type: 'term'; value: string} | {type: 'synset'; value: string; info: Synset}
 export type InfoDrawerActions = {type: 'add'; state: InfoDrawerState} | {type: 'back' | 'reset'}
-export const InfoDrawerContext = createContext((action: InfoDrawerActions) => {})
+export const InfoDrawerContext = createContext<InfoDrawerState[]>([])
+export const InfoDrawerSetter = createContext((action: InfoDrawerActions) => {})
 
 function TermContent({term}: {term: string}) {
   const Dict = useContext(BuildContext)
@@ -41,18 +43,15 @@ function SynsetContent({info}: {info: Synset}) {
   )
 }
 
-export function InfoDrawer({
-  state,
-  edit,
-  setEditorTerm,
-}: {
-  state: InfoDrawerState[]
-  edit: (action: InfoDrawerActions) => void
-  setEditorTerm: (term: string) => void
-}) {
+export function InfoDrawer() {
   const dict = useContext(BuildContext)
+  const edit = useContext(InfoDrawerSetter)
+  const setEditorTerm = useContext(EditorTermSetter)
+  const state = useContext(InfoDrawerContext)
   if (!state.length) return
-  const close = () => edit({type: 'reset'})
+  const close = () => {
+    edit({type: 'reset'})
+  }
   const currentState = state[0]
   return (
     <Drawer

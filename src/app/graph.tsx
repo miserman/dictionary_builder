@@ -4,17 +4,28 @@ import {GraphChart} from 'echarts/charts'
 import {CanvasRenderer} from 'echarts/renderers'
 import {GraphGLChart} from 'echarts-gl/charts'
 import {Edge, Node} from './analysisResults'
-import {useEffect, useRef} from 'react'
+import {useContext, useEffect, useRef} from 'react'
 import {Box} from '@mui/material'
 import {PlotOptions} from './analysisMenu'
+import {EditorTermSetter} from './termEditor'
+import {InfoDrawerSetter} from './infoDrawer'
 
 use([TooltipComponent, GraphChart, GraphGLChart, CanvasRenderer, LegendComponent])
 
 export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; options: PlotOptions}) {
+  const termEditor = useContext(EditorTermSetter)
+  const updateInfoDrawerState = useContext(InfoDrawerSetter)
   const container = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const chart = container.current ? init(container.current, 'dark', {renderer: 'canvas'}) : null
     const resize = () => chart && chart.resize()
+    if (chart)
+      chart.on('click', params => {
+        if (params.dataType === 'node' || params.componentSubType === 'graphGL') {
+          termEditor(params.name, true)
+          updateInfoDrawerState({type: 'add', state: {type: 'term', value: params.name}})
+        }
+      })
     window.addEventListener('resize', resize)
     return () => {
       if (chart) {
@@ -30,7 +41,7 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
       }
       window.removeEventListener('resize', resize)
     }
-  }, [options.layout === 'forceAtlas2' ? options : options.layout])
+  }, [options.layout])
   useEffect(() => {
     if (container.current) {
       const chart = getInstanceByDom(container.current)
@@ -58,110 +69,98 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
           const categories = Object.keys(presentCats).map(cat => {
             return {name: cat}
           })
-          if (options.layout === 'forceAtlas2') chart.clear()
-          chart.setOption({
-            legend: {
-              top: '80',
-              align: 'right',
-              right: 'right',
-              orient: 'vertical',
-              type: 'plain',
-              pageButtonGap: 10,
-            },
-            tooltip: {
-              confine: true,
-              formatter: (item: {marker: string; name: string; value: number; data: {host?: string}}) => {
-                return (
-                  item.marker +
-                  (item.data.host ? '<i>(' + item.data.host + ')</i> ' : '') +
-                  item.name +
-                  ': <strong>' +
-                  item.value.toFixed(2) +
-                  '</strong>'
-                )
+          chart.setOption(
+            {
+              legend: {
+                align: 'right',
+                right: 'right',
+                orient: 'vertical',
+                type: 'plain',
+                pageButtonGap: 10,
               },
-              valueFormatter: (value: number) => value.toFixed(2),
-            },
-            animationDuration: 1500,
-            animationEasingUpdate: 'quinticInOut',
-            backgroundColor: '#000',
-            series: [
-              options.layout === 'forceAtlas2'
-                ? {
-                    type: 'graphGL',
-                    nodes,
-                    edges,
-                    categories: categories,
-                    roam: true,
-                    label: {
-                      show: true,
-                      position: 'top',
-                      color: '#fff',
-                    },
-                    lineStyle: {
-                      color: 'source',
-                    },
-                    emphasis: {
-                      focus: 'adjacency',
-                      lineStyle: {
+              tooltip: {
+                confine: true,
+                formatter: (item: {marker: string; name: string; value: number; data: {host?: string}}) => {
+                  return (
+                    item.marker +
+                    (item.data.host ? '<i>(' + item.data.host + ')</i> ' : '') +
+                    item.name +
+                    ': <strong>' +
+                    item.value.toFixed(3) +
+                    '</strong>'
+                  )
+                },
+              },
+              backgroundColor: '#000',
+              series: [
+                options.layout === 'forceAtlas2'
+                  ? {
+                      type: 'graphGL',
+                      nodes,
+                      edges,
+                      categories: categories,
+                      roam: true,
+                      label: {
+                        show: true,
+                        position: 'top',
                         color: '#fff',
-                        opacity: 1,
-                        width: 10,
                       },
-                    },
-                    forceAtlas2: {
-                      steps: 50,
-                      stopThreshold: 10,
-                      repulsionByDegree: true,
-                      linLogMode: false,
-                      scaling: 0.1,
-                      edgeWeightInfluence: 50,
-                      edgeWeight: [1, 4],
-                      nodeWeight: [1, 4],
-                      preventOverlap: true,
-                    },
-                  }
-                : {
-                    type: 'graph',
-                    layout: options.layout,
-                    nodes,
-                    edges,
-                    categories: categories,
-                    roam: true,
-                    label: {
-                      show: true,
-                      position: 'top',
-                    },
-                    emphasis: {
-                      focus: 'adjacency',
-                      itemStyle: {opacity: 1},
-                      label: {opacity: 1},
                       lineStyle: {
-                        width: 10,
-                        opacity: 1,
+                        color: 'source',
+                      },
+                      emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: {
+                          color: '#fff',
+                          opacity: 1,
+                          width: 10,
+                        },
+                      },
+                    }
+                  : {
+                      type: 'graph',
+                      layout: options.layout,
+                      nodes,
+                      edges,
+                      categories: categories,
+                      roam: true,
+                      label: {
+                        show: true,
+                        position: 'top',
+                      },
+                      emphasis: {
+                        focus: 'adjacency',
+                        itemStyle: {opacity: 1},
+                        label: {opacity: 1},
+                        lineStyle: {
+                          width: 10,
+                          opacity: 1,
+                        },
+                      },
+                      blur: {
+                        itemStyle: {opacity: 0.3},
+                        lineStyle: {opacity: 0.3},
+                        label: {opacity: 0.3},
+                      },
+                      autoCurveness: true,
+                      draggable: true,
+                      force: {
+                        repulsion: options.repulsion,
+                        gravity: options.gravity,
+                        edgeLength: options.edge_length,
+                      },
+                      circular: {
+                        rotateLabel: true,
+                      },
+                      lineStyle: {
+                        color: 'source',
                       },
                     },
-                    blur: {
-                      itemStyle: {opacity: 0.3},
-                      lineStyle: {opacity: 0.3},
-                      label: {opacity: 0.3},
-                    },
-                    autoCurveness: true,
-                    draggable: true,
-                    force: {
-                      repulsion: options.repulsion,
-                      gravity: options.gravity,
-                      edgeLength: options.edge_length,
-                    },
-                    circular: {
-                      rotateLabel: true,
-                    },
-                    lineStyle: {
-                      color: 'source',
-                    },
-                  },
-            ],
-          })
+              ],
+            },
+            false,
+            options.layout !== 'forceAtlas2'
+          )
         } else {
           chart.clear()
         }

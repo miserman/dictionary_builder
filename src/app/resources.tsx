@@ -1,6 +1,6 @@
 import {Done, Error} from '@mui/icons-material'
 import {CircularProgress, List, ListItem, ListItemIcon, Stack, Typography} from '@mui/material'
-import {type ReactNode, createContext, useEffect, useState} from 'react'
+import {type ReactNode, createContext, useEffect, useState, useMemo} from 'react'
 import {newline} from './utils'
 
 type AssociatedIndices = [number | number[], (number | number[])?][]
@@ -144,7 +144,9 @@ export function Resources({children}: {children: ReactNode}) {
       setLemmas(tempLemmas)
     }
   }, [terms, termAssociations])
-  const Data = {terms, lemmas, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}
+  const Data = useMemo(() => {
+    return {terms, lemmas, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}
+  }, [terms, lemmas, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo])
   const loading = {
     terms: loadingTerms,
     termAssociations: loadingTermAssociations,

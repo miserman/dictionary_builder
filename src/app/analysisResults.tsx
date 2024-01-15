@@ -9,6 +9,7 @@ import {BuildContext} from './building'
 import {timers} from './addedTerms'
 
 function getSimilarity(a: TermEntry, b: TermEntry, dense: boolean) {
+  if (!b.processed) return 0
   const term = a.term
   const sim = {
     lemma: +(term in b.processed.lookup.lemma),
@@ -25,23 +26,21 @@ function getSimilarity(a: TermEntry, b: TermEntry, dense: boolean) {
   }
   return dense
     ? 0.35 * sim.lemma +
-        0.001 * sim.lemma_related +
-        0.2 * sim.lemma_synset +
+        0.1 * sim.lemma_related +
+        0.001 * sim.lemma_synset +
         0.25 * sim.related +
-        0.01 * sim.related_lemma +
+        0.1 * sim.related_lemma +
         0.001 * sim.related_related +
-        0.1 * sim.related_synset +
-        0.3 * sim.synset +
-        0.2 * sim.synset_lemma +
+        0.001 * sim.related_synset +
+        0.001 * sim.synset +
+        0.001 * sim.synset_lemma +
         0.001 * sim.synset_related +
-        0.1 * sim.synset_synset
-    : 1 * sim.lemma + 0.1 * sim.related + 1 * sim.synset
+        0.001 * sim.synset_synset
+    : 0.35 * sim.lemma + 0.25 * sim.related + 0.001 * sim.synset
 }
 export type Edge = {
   source: string
-  source_index: number
   target: string
-  target_index: number
   value: number
   lineStyle: {width: number; opacity: number}
 }
@@ -63,74 +62,77 @@ export type Node = {
 }
 async function processComparisons(
   i: number,
-  a: number,
-  b: number,
-  terms: TermEntry[],
+  terms: {[index: string]: TermEntry},
   edges: Edge[],
+  record: {[index: string]: boolean},
   progress: (progress: number[]) => void,
   finish: (data: {edges: Edge[]; nodes: Node[]}) => void,
   options: ProcessOptions
 ) {
   clearTimeout(timers.comparisons)
-  const n = terms.length
-  const nComps = ((n - 1) / 2) * n
-  for (let step = 0; i < nComps && step < 10000; step++, i++, b++) {
-    if (b >= n) {
-      if (++a >= n) a = Math.trunc(i / (n - 1))
-      b = a + 1
-    }
-    const value = getSimilarity(terms[a], terms[b], options.dense)
-    if (value > options.min_sim)
-      edges.push({
-        source: terms[a].term,
-        source_index: a,
-        target: terms[b].term,
-        target_index: b,
-        value: value,
-        lineStyle: {width: 0.3 + value * 2, opacity: 0.35},
-      })
-  }
-  if (i < nComps) {
-    timers.comparisons = setTimeout(() => processComparisons(i, a, b, terms, edges, progress, finish, options), 0)
-  } else {
-    const nodes: Node[] = terms.map(term => {
-      return {
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        host: term.host || '',
-        category: Object.keys(term.categories),
-        name: term.term,
-        prop: 1,
-        value: 0,
-        symbolSize: 10,
-        itemStyle: {
-          opacity: 1,
-        },
-        label: {
-          show: true,
-        },
+  const termKeys = Object.keys(terms)
+  const n = termKeys.length
+  for (let step = 0; i < n && step < 100; step++, i++) {
+    const term = terms[termKeys[i]]
+    term.processed.lookup.map.forEach((_, child) => {
+      const key = term.term + '.' + child
+      const rkey = child + '.' + term.term
+      if (term.term !== child && !(key in record) && !(rkey in record) && child in terms) {
+        record[key] = record[rkey] = true
+        const value = getSimilarity(term, terms[child], options.dense)
+        if (value > options.min_sim)
+          edges.push({
+            source: term.term,
+            target: child,
+            value: value,
+            lineStyle: {width: 0.3 + value * 2, opacity: 0.35},
+          })
       }
     })
-    edges.forEach(edge => {
-      nodes[edge.source_index].value += edge.value
-      nodes[edge.target_index].value += edge.value
-    })
-    let max = 0
-    nodes.forEach(({value}) => {
-      if (value > max) max = value
-    })
-    finish({
-      edges,
-      nodes: nodes.map(node => {
-        node.prop = node.value / max
-        node.x *= 1 - node.prop
-        node.y *= 1 - node.prop
-        node.itemStyle = {opacity: 0.6 + node.prop * 0.4}
-        return node
-      }),
-    })
   }
-  progress([i, nComps])
+  progress([i, n])
+  if (i < n) {
+    timers.comparisons = setTimeout(() => processComparisons(i, terms, edges, record, progress, finish, options), 0)
+  } else {
+    setTimeout(() => {
+      const nodeIndices: {[index: string]: number} = {}
+      const nodes: Node[] = Object.values(terms).map((term, index) => {
+        nodeIndices[term.term] = index
+        return {
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          host: term.host || '',
+          category: Object.keys(term.categories),
+          name: term.term,
+          prop: 1,
+          value: 0,
+          symbolSize: 10,
+          itemStyle: {
+            opacity: 1,
+          },
+          label: {
+            show: true,
+          },
+        }
+      })
+      edges.forEach(edge => {
+        nodes[nodeIndices[edge.source]].value += edge.value
+        nodes[nodeIndices[edge.target]].value += edge.value
+      })
+      let max = 0
+      nodes.forEach(({value}) => {
+        if (value > max) max = value
+      })
+      finish({
+        edges,
+        nodes: nodes.map(node => {
+          node.prop = node.value / max
+          node.itemStyle = {opacity: 0.6 + node.prop * 0.4}
+          return node
+        }),
+      })
+    }, 0)
+  }
 }
 
 export function Results({
@@ -177,7 +179,7 @@ export function Results({
 
   useEffect(() => {
     const selectedMap = new Map(selectedCategories.map((cat, index) => [index, cat]))
-    const terms: TermEntry[] = []
+    const terms: {[index: string]: TermEntry} = {}
     allTerms.forEach(term => {
       let keep = false
       const cats: {[index: string]: number} = {}
@@ -187,10 +189,11 @@ export function Results({
           cats[cat] = term.categories[cat]
         }
       })
-      if (keep) terms.push({...term, categories: cats})
+      if (keep) terms[term.term] = {...term, categories: cats}
     })
+    const record: {[index: string]: boolean} = {}
     const edges: Edge[] = []
-    processComparisons(0, 0, 1, terms, edges, setProgress, setNetwork, options)
+    processComparisons(0, terms, edges, record, setProgress, setNetwork, options)
   }, [allTerms, selectedCategories])
   return progress[0] < progress[1] ? (
     <Box sx={{position: 'relative', width: '100%', height: '100%'}}>
@@ -209,7 +212,7 @@ export function Results({
       >
         <Stack>
           <Typography variant="h5">Calculating Pairwise Similarities</Typography>
-          <LinearProgress variant="determinate" value={(progress[0] / progress[1]) * 100}></LinearProgress>
+          <LinearProgress variant="determinate" value={(progress[0] / progress[1]) * 100} />
           <Typography variant="caption">{progress[0] + ' / ' + progress[1]}</Typography>
         </Stack>
       </Box>

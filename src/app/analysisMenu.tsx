@@ -1,14 +1,9 @@
-import {Close} from '@mui/icons-material'
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Checkbox,
-  Dialog,
   FormControl,
   FormControlLabel,
-  IconButton,
   InputLabel,
   List,
   ListItem,
@@ -30,7 +25,6 @@ import {ChangeEvent, useContext, useEffect, useMemo, useReducer, useState} from 
 import {AllCategories, BuildContext, NumberObject} from './building'
 import {Results} from './analysisResults'
 import type {FixedTerm} from './term'
-import {timers} from './addedTerms'
 
 export type TermEntry = {host?: string; term: string; categories: {[index: string]: number}; processed: FixedTerm}
 
@@ -74,11 +68,6 @@ export function AnalyzeMenu() {
   const dict = useContext(BuildContext)
   const categories = useContext(AllCategories)
 
-  const [menuOpen, setMenuOpen] = useState(false)
-  const toggleMenu = () => {
-    clearTimeout(timers.comparisons)
-    setMenuOpen(!menuOpen)
-  }
   const [plotOpts, setPlotOpts] = useReducer(updateOptions<PlotOptions>, plotOptions)
   const [procOpts, setProcOpts] = useReducer(updateOptions<ProcessOptions>, processOptions)
 
@@ -101,185 +90,158 @@ export function AnalyzeMenu() {
     return counts
   }, [dict])
   return (
-    <>
-      <Button variant="outlined" onClick={toggleMenu}>
-        Analyze
-      </Button>
-      {menuOpen && (
-        <Dialog open={menuOpen} onClose={toggleMenu} fullScreen>
-          <IconButton
-            aria-label="close analysis menu"
-            onClick={toggleMenu}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 12,
-              zIndex: 1,
-            }}
-            className="close-button"
-          >
-            <Close />
-          </IconButton>
-          <Stack direction="row" sx={{height: '100%'}}>
-            <Card
-              variant="outlined"
-              sx={{
-                p: 0,
-                minWidth: '250px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                '& .MuiCardContent-root': {pb: 0},
-              }}
-            >
-              <CardContent sx={{p: 0, pl: 1, pr: 1, height: '100%'}}>
-                <Box sx={{maxHeight: '60%', overflowY: 'auto'}}>
-                  <Typography variant="h6">Terms</Typography>
-                  {nCats ? (
-                    <>
-                      <List dense sx={{overflowY: 'auto', maxHeight: '300px', p: 0}}>
-                        {categories.map(cat => (
-                          <ListItem key={cat} disablePadding disableGutters>
-                            <ListItemButton
-                              disableGutters
-                              aria-label="toggle category"
-                              onClick={() => {
-                                const newSelection = [...selected]
-                                const index = newSelection.indexOf(cat)
-                                if (index === -1) {
-                                  newSelection.push(cat)
-                                } else {
-                                  newSelection.splice(index, 1)
-                                }
-                                setSelected(newSelection)
-                              }}
-                            >
-                              <ListItemIcon sx={{minWidth: '35px'}}>
-                                <Checkbox sx={{p: 0}} checked={selected.includes(cat)} />
-                              </ListItemIcon>
-                              <ListItemText
-                                sx={{m: 0}}
-                                primary={cat}
-                                secondary={catCount[cat] + ' terms'}
-                              ></ListItemText>
-                            </ListItemButton>
-                          </ListItem>
-                        ))}
-                      </List>
-                      <Toolbar sx={{justifyContent: 'space-between'}} variant="dense" disableGutters>
-                        <Stack direction="row">
-                          <Button
-                            size="small"
-                            sx={{minWidth: '1px'}}
-                            onClick={() => {
-                              setSelected([...categories])
-                            }}
-                          >
-                            All
-                          </Button>
-                          <Button
-                            size="small"
-                            sx={{minWidth: '1px'}}
-                            onClick={() => {
-                              setSelected([])
-                            }}
-                          >
-                            None
-                          </Button>
-                        </Stack>
-                        <Typography sx={{pr: 1, whiteSpace: 'nowrap'}}>
-                          {selected.length + ' / ' + nCats + ' selected'}
-                        </Typography>
-                      </Toolbar>
-                    </>
-                  ) : (
-                    <Typography textAlign="center">No Categories</Typography>
-                  )}
-                  <Stack spacing={2}>
-                    <Tooltip title="Include all matches to fuzzy terms in the comparison." placement="right">
-                      <FormControlLabel
-                        label="Fuzzy Matches"
-                        labelPlacement="start"
-                        control={
-                          <Switch
-                            size="small"
-                            checked={procOpts.include_fuzzy}
-                            onChange={() => setProcOpts({key: 'include_fuzzy', value: !procOpts.include_fuzzy})}
-                          />
-                        }
-                      />
-                    </Tooltip>
-                    <Tooltip
-                      title="Include second-order term relationships in similarity calculations, resulting in a denser network."
-                      placement="right"
+    <Stack direction="row" sx={{height: '100%'}}>
+      <Box
+        sx={{
+          height: '100%',
+          minWidth: '250px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box sx={{pl: 1, pr: 1, height: '100%'}}>
+          <Box sx={{maxHeight: '60%', overflowY: 'auto'}}>
+            <Typography variant="h6">Terms</Typography>
+            {nCats ? (
+              <>
+                <List dense sx={{overflowY: 'auto', maxHeight: '300px', p: 0}}>
+                  {categories.map(cat => (
+                    <ListItem key={cat} disablePadding disableGutters>
+                      <ListItemButton
+                        disableGutters
+                        aria-label="toggle category"
+                        onClick={() => {
+                          const newSelection = [...selected]
+                          const index = newSelection.indexOf(cat)
+                          if (index === -1) {
+                            newSelection.push(cat)
+                          } else {
+                            newSelection.splice(index, 1)
+                          }
+                          setSelected(newSelection)
+                        }}
+                      >
+                        <ListItemIcon sx={{minWidth: '35px'}}>
+                          <Checkbox sx={{p: 0}} checked={selected.includes(cat)} />
+                        </ListItemIcon>
+                        <ListItemText sx={{m: 0}} primary={cat} secondary={catCount[cat] + ' terms'}></ListItemText>
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+                <Toolbar sx={{justifyContent: 'space-between'}} variant="dense" disableGutters>
+                  <Stack direction="row">
+                    <Button
+                      size="small"
+                      sx={{minWidth: '1px'}}
+                      onClick={() => {
+                        setSelected([...categories])
+                      }}
                     >
-                      <FormControlLabel
-                        label="Secondary Connections"
-                        labelPlacement="start"
-                        control={
-                          <Switch
-                            size="small"
-                            checked={procOpts.dense}
-                            onChange={() => setProcOpts({key: 'dense', value: !procOpts.dense})}
-                          />
-                        }
-                      />
-                    </Tooltip>
-                    <Tooltip
-                      title="Will consider nodes with similarity equal to or less than this as unconnected."
-                      placement="right"
+                      All
+                    </Button>
+                    <Button
+                      size="small"
+                      sx={{minWidth: '1px'}}
+                      onClick={() => {
+                        setSelected([])
+                      }}
                     >
-                      <TextField
-                        value={procOpts.min_sim}
-                        type="number"
-                        size="small"
-                        label="Similarity Threshold"
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          setProcOpts({key: 'min_sim', value: e.target.value})
-                        }
-                      ></TextField>
-                    </Tooltip>
+                      None
+                    </Button>
                   </Stack>
-                </Box>
-                <Box sx={{maxHeight: '40%', overflowY: 'auto'}}>
-                  <Typography variant="h6" sx={{mt: 2}}>
-                    Plot Options
+                  <Typography sx={{pr: 1, whiteSpace: 'nowrap'}}>
+                    {selected.length + ' / ' + nCats + ' selected'}
                   </Typography>
-                  <Stack spacing={2}>
-                    <FormControlLabel
-                      label="Hide Zeros"
-                      labelPlacement="start"
-                      control={
-                        <Switch
-                          size="small"
-                          checked={plotOpts.hide_zeros}
-                          onChange={() => setPlotOpts({key: 'hide_zeros', value: !plotOpts.hide_zeros})}
-                        />
-                      }
+                </Toolbar>
+              </>
+            ) : (
+              <Typography textAlign="center">No Categories</Typography>
+            )}
+            <Stack spacing={2}>
+              <Tooltip title="Include all matches to fuzzy terms in the comparison." placement="right">
+                <FormControlLabel
+                  label="Fuzzy Matches"
+                  labelPlacement="start"
+                  control={
+                    <Switch
+                      size="small"
+                      checked={procOpts.include_fuzzy}
+                      onChange={() => setProcOpts({key: 'include_fuzzy', value: !procOpts.include_fuzzy})}
                     />
-                    <FormControlLabel
-                      label="Size By Value"
-                      labelPlacement="start"
-                      control={
-                        <Switch
-                          size="small"
-                          checked={plotOpts.size_by_value}
-                          onChange={() => setPlotOpts({key: 'size_by_value', value: !plotOpts.size_by_value})}
-                        />
-                      }
+                  }
+                />
+              </Tooltip>
+              <Tooltip
+                title="Include second-order term relationships in similarity calculations, resulting in a denser network."
+                placement="right"
+              >
+                <FormControlLabel
+                  label="Secondary Connections"
+                  labelPlacement="start"
+                  control={
+                    <Switch
+                      size="small"
+                      checked={procOpts.dense}
+                      onChange={() => setProcOpts({key: 'dense', value: !procOpts.dense})}
                     />
-                    <Tooltip title="Will not show labels for nodes with values lower than this." placement="right">
-                      <TextField
-                        value={plotOpts.label_threshold}
-                        type="number"
-                        size="small"
-                        label="Label Threshold"
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          setPlotOpts({key: 'label_threshold', value: e.target.value})
-                        }
-                      ></TextField>
-                    </Tooltip>
-                    {/* <FormControl fullWidth>
+                  }
+                />
+              </Tooltip>
+              <Tooltip
+                title="Will consider nodes with similarity equal to or less than this as unconnected."
+                placement="right"
+              >
+                <TextField
+                  value={procOpts.min_sim}
+                  type="number"
+                  size="small"
+                  label="Similarity Threshold"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setProcOpts({key: 'min_sim', value: e.target.value})}
+                ></TextField>
+              </Tooltip>
+            </Stack>
+          </Box>
+          <Box sx={{maxHeight: '40%', overflowY: 'auto'}}>
+            <Typography variant="h6" sx={{mt: 2}}>
+              Plot Options
+            </Typography>
+            <Stack spacing={2}>
+              <FormControlLabel
+                label="Hide Zeros"
+                labelPlacement="start"
+                control={
+                  <Switch
+                    size="small"
+                    checked={plotOpts.hide_zeros}
+                    onChange={() => setPlotOpts({key: 'hide_zeros', value: !plotOpts.hide_zeros})}
+                  />
+                }
+              />
+              <FormControlLabel
+                label="Size By Value"
+                labelPlacement="start"
+                control={
+                  <Switch
+                    size="small"
+                    checked={plotOpts.size_by_value}
+                    onChange={() => setPlotOpts({key: 'size_by_value', value: !plotOpts.size_by_value})}
+                  />
+                }
+              />
+              <Tooltip title="Will not show labels for nodes with values lower than this." placement="right">
+                <TextField
+                  value={plotOpts.label_threshold}
+                  type="number"
+                  size="small"
+                  label="Label Threshold"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setPlotOpts({key: 'label_threshold', value: e.target.value})
+                  }
+                ></TextField>
+              </Tooltip>
+              {/* <FormControl fullWidth>
                       <InputLabel id="plot_type_select">Type</InputLabel>
                       <Select
                         labelId="plot_type_select"
@@ -294,78 +256,75 @@ export function AnalyzeMenu() {
                         <MenuItem value="distribution">Distribution</MenuItem>
                       </Select>
                     </FormControl> */}
-                    {plotOpts.type === 'graph' ? (
-                      <>
-                        <FormControl fullWidth>
-                          <InputLabel id="graph_layout_select">Layout</InputLabel>
-                          <Select
-                            labelId="graph_layout_select"
-                            label="Layout"
-                            size="small"
-                            value={plotOpts.layout || 'force'}
-                            onChange={(e: SelectChangeEvent) => {
-                              setPlotOpts({key: 'layout', value: e.target.value})
-                            }}
-                          >
-                            <ListSubheader>Canvas</ListSubheader>
-                            <MenuItem value="none">Connections * Random</MenuItem>
-                            <MenuItem value="circular">Circular</MenuItem>
-                            <MenuItem value="force">Force</MenuItem>
-                            <ListSubheader>WebGL</ListSubheader>
-                            <MenuItem value="forceAtlas2">ForceAtlas2</MenuItem>
-                          </Select>
-                        </FormControl>
-                        {plotOpts.layout === 'force' ? (
-                          <>
-                            <Tooltip title="Repulsion factor between nodes." placement="right">
-                              <TextField
-                                value={plotOpts.repulsion}
-                                type="number"
-                                size="small"
-                                label="Repulsion"
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                  setPlotOpts({key: 'repulsion', value: e.target.value})
-                                }
-                              ></TextField>
-                            </Tooltip>
-                            <Tooltip title="Nodes' strength of attraction to the center." placement="right">
-                              <TextField
-                                value={plotOpts.gravity}
-                                type="number"
-                                size="small"
-                                label="Gravity"
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                  setPlotOpts({key: 'gravity', value: e.target.value})
-                                }
-                              ></TextField>
-                            </Tooltip>
-                            <Tooltip title="Base distance between nodes." placement="right">
-                              <TextField
-                                value={plotOpts.edge_length}
-                                type="number"
-                                size="small"
-                                label="Edge Length"
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                  setPlotOpts({key: 'edge_length', value: e.target.value})
-                                }
-                              ></TextField>
-                            </Tooltip>
-                          </>
-                        ) : (
-                          <></>
-                        )}
-                      </>
-                    ) : (
-                      <></>
-                    )}
-                  </Stack>
-                </Box>
-              </CardContent>
-            </Card>
-            <Results selectedCategories={selected} options={procOpts} plotOptions={plotOpts} />
-          </Stack>
-        </Dialog>
-      )}
-    </>
+              {plotOpts.type === 'graph' ? (
+                <>
+                  <FormControl fullWidth>
+                    <InputLabel id="graph_layout_select">Layout</InputLabel>
+                    <Select
+                      labelId="graph_layout_select"
+                      label="Layout"
+                      size="small"
+                      value={plotOpts.layout || 'force'}
+                      onChange={(e: SelectChangeEvent) => {
+                        setPlotOpts({key: 'layout', value: e.target.value})
+                      }}
+                    >
+                      <ListSubheader>Canvas</ListSubheader>
+                      <MenuItem value="none">Random</MenuItem>
+                      <MenuItem value="circular">Circular</MenuItem>
+                      <MenuItem value="force">Force</MenuItem>
+                      <ListSubheader>WebGL</ListSubheader>
+                      <MenuItem value="forceAtlas2">ForceAtlas2</MenuItem>
+                    </Select>
+                  </FormControl>
+                  {plotOpts.layout === 'force' ? (
+                    <>
+                      <Tooltip title="Repulsion factor between nodes." placement="right">
+                        <TextField
+                          value={plotOpts.repulsion}
+                          type="number"
+                          size="small"
+                          label="Repulsion"
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setPlotOpts({key: 'repulsion', value: e.target.value})
+                          }
+                        ></TextField>
+                      </Tooltip>
+                      <Tooltip title="Nodes' strength of attraction to the center." placement="right">
+                        <TextField
+                          value={plotOpts.gravity}
+                          type="number"
+                          size="small"
+                          label="Gravity"
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setPlotOpts({key: 'gravity', value: e.target.value})
+                          }
+                        ></TextField>
+                      </Tooltip>
+                      <Tooltip title="Base distance between nodes." placement="right">
+                        <TextField
+                          value={plotOpts.edge_length}
+                          type="number"
+                          size="small"
+                          label="Edge Length"
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setPlotOpts({key: 'edge_length', value: e.target.value})
+                          }
+                        ></TextField>
+                      </Tooltip>
+                    </>
+                  ) : (
+                    <></>
+                  )}
+                </>
+              ) : (
+                <></>
+              )}
+            </Stack>
+          </Box>
+        </Box>
+      </Box>
+      <Results selectedCategories={selected} options={procOpts} plotOptions={plotOpts} />
+    </Stack>
   )
 }

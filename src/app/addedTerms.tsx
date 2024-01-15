@@ -1,13 +1,11 @@
-import {Backdrop, Box, Container, IconButton, LinearProgress, Stack, Typography} from '@mui/material'
-import {type KeyboardEvent, useCallback, useContext, useMemo, useState, useEffect} from 'react'
+import {Backdrop, Box, IconButton, LinearProgress, Stack, Typography} from '@mui/material'
+import {type KeyboardEvent, useContext, useMemo, useState, useEffect} from 'react'
 import {RemoveCircleOutline} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
-import {Nav} from './nav'
-import {AllCategories, BuildContext, BuildEditContext, type TermTypes, type DictEntry} from './building'
+import {AllCategories, BuildContext, BuildEditContext, type DictEntry} from './building'
 import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams, GridToolbarQuickFilter} from '@mui/x-data-grid'
-import {EditorTerm, TermEditor} from './termEditor'
-import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
+import {EditorTermSetter} from './termEditor'
 import {makeRows} from './processTerms'
 
 export type SortOptions = 'term' | 'time'
@@ -37,42 +35,16 @@ export const timers: {dictionary: number | NodeJS.Timeout; comparisons: number |
 function byTime(a: GridRow, b: GridRow) {
   return b.dictEntry.added - a.dictEntry.added
 }
-const categoryPrefix = /^category_/
 export default function AddedTerms({
-  drawerOpen,
-  setEditorTerm,
+  editFromEvent,
 }: {
-  drawerOpen: boolean
-  setEditorTerm: (term: string) => void
+  editFromEvent: (value: number | string, params: GridCellParams) => void
 }) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
   const Cats = useContext(AllCategories)
   const editDictionary = useContext(BuildEditContext)
-  const isInDict = (term: string) => term in Dict
   const dictTerms = useMemo(() => Object.freeze(Object.keys(Dict).sort()), [Dict])
-  const editFromEvent = useCallback(
-    (value: string | number, params: GridCellParams) => {
-      const {field, row} = params
-      const {processed, dictEntry} = row
-      if (field && (field === 'from_term_editor' || field.startsWith('category_'))) {
-        const cats = {...dictEntry.categories}
-        const cat = field === 'from_term_editor' ? row.id : field.replace(categoryPrefix, '')
-        if (cat in cats && !value) {
-          delete cats[cat]
-        } else if (value) {
-          cats[cat] = value
-        }
-        editDictionary({
-          type: 'update',
-          term: processed.term,
-          term_type: processed.term_type,
-          categories: cats,
-        })
-      }
-    },
-    [editDictionary]
-  )
   const cols: GridColDef[] = useMemo(() => {
     const cols: GridColDef[] = [
       {
@@ -153,7 +125,7 @@ export default function AddedTerms({
       })
     )
     return cols
-  }, [Cats, editDictionary, editFromEvent])
+  }, [Cats, editFromEvent])
   const [rows, setRows] = useState<GridRow[]>([])
   const [progress, setProgress] = useState(0)
   useEffect(() => {
@@ -169,73 +141,45 @@ export default function AddedTerms({
     const rowTerms = rows.map(({id}) => id).sort()
     return Math.abs(rowTerms.length - dictTerms.length) < 2 ? false : rowTerms.join() !== dictTerms.join()
   }, [rows, dictTerms])
-  const bottomMargin = drawerOpen ? INFO_DRAWER_HEIGHT : 0
-  const editorTerm = useContext(EditorTerm)
-  const showTermEditor = editorTerm in Dict
+  const setEditorTerm = useContext(EditorTermSetter)
   return (
-    <Container>
-      <Nav
-        terms={Data.terms}
-        exists={isInDict}
-        add={(term: string | RegExp, type: TermTypes) => {
-          editDictionary({type: 'add', term: term, term_type: type})
-        }}
-      />
-      {showTermEditor ? (
-        <TermEditor close={setEditorTerm} categories={Cats} editor={editFromEvent} bottomMargin={bottomMargin} />
+    <Box component="main" sx={{height: '100%'}}>
+      {!dictTerms.length ? (
+        <Typography align="center">Add terms, or import an existing dictionary.</Typography>
+      ) : processing ? (
+        <Backdrop open={true}>
+          <Stack direction="column" sx={{textAlign: 'center'}}>
+            <Typography variant="h4">Processing Dictionary</Typography>
+            <LinearProgress variant="determinate" value={progress * 100} />
+            <Typography variant="caption">{progress ? Math.round(progress * 100) + '%' : 'preparing...'}</Typography>
+          </Stack>
+        </Backdrop>
       ) : (
-        <></>
+        <DataGrid
+          sx={{
+            '& .MuiFormControl-root': {
+              position: 'absolute',
+              bottom: '4px',
+              left: '12px',
+            },
+          }}
+          rows={rows}
+          columns={cols}
+          showCellVerticalBorder
+          disableDensitySelector
+          pageSizeOptions={[100]}
+          density="compact"
+          slots={{toolbar: GridToolbarQuickFilter}}
+          onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+              editFromEvent(0, params)
+            }
+          }}
+          onRowClick={({row}: {row: GridRow}) => {
+            setEditorTerm(row.id)
+          }}
+        />
       )}
-      <Box
-        component="main"
-        sx={{
-          position: 'absolute',
-          top: 0,
-          right: showTermEditor ? TERM_EDITOR_WIDTH : 0,
-          bottom: 0,
-          left: 0,
-          overflowY: 'auto',
-          mt: '3em',
-          mb: bottomMargin,
-        }}
-      >
-        {!dictTerms.length ? (
-          <Typography align="center">Add terms, or import an existing dictionary.</Typography>
-        ) : processing ? (
-          <Backdrop open={true}>
-            <Stack direction="column" sx={{textAlign: 'center'}}>
-              <Typography variant="h4">Processing Dictionary</Typography>
-              <LinearProgress variant="determinate" value={progress * 100} />
-              <Typography variant="caption">{progress ? Math.round(progress * 100) + '%' : 'preparing...'}</Typography>
-            </Stack>
-          </Backdrop>
-        ) : (
-          <DataGrid
-            sx={{
-              '& .MuiFormControl-root': {
-                position: 'absolute',
-                bottom: '4px',
-                left: '12px',
-              },
-            }}
-            rows={rows}
-            columns={cols}
-            showCellVerticalBorder
-            disableDensitySelector
-            pageSizeOptions={[100]}
-            density="compact"
-            slots={{toolbar: GridToolbarQuickFilter}}
-            onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
-              if (e.key === 'Delete' || e.key === 'Backspace') {
-                editFromEvent(0, params)
-              }
-            }}
-            onRowClick={({row}: {row: GridRow}) => {
-              setEditorTerm(row.id)
-            }}
-          />
-        )}
-      </Box>
-    </Container>
+    </Box>
   )
 }

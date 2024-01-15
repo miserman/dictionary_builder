@@ -24,7 +24,7 @@ import {relativeFrequency, sortByLength} from './utils'
 import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {BuildContext, BuildEditContext, DictionaryActions, type Dict} from './building'
-import {InfoDrawerActions, InfoDrawerContext} from './infoDrawer'
+import {InfoDrawerActions, InfoDrawerSetter} from './infoDrawer'
 import {SynsetLink} from './synset'
 import {extractExpanded} from './wordParts'
 import {getFuzzyParent, getProcessedTerm} from './processTerms'
@@ -47,6 +47,8 @@ export type FixedTerm = {
   in_dict?: boolean
   lookup: {
     expanded: boolean
+    map: Map<string, boolean>
+    any: LogicalObject
     lemma: LogicalObject
     lemma_related: LogicalObject
     lemma_synset: LogicalObject
@@ -396,7 +398,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const containerStyle = {p: 1, pl: 0, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}
   const dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
-  const updateInfoDrawerState = useContext(InfoDrawerContext)
+  const updateInfoDrawerState = useContext(InfoDrawerSetter)
   const {terms, termLookup, collapsedTerms, sense_keys} = useContext(ResourceContext)
   const byIndex = useCallback(termLookup ? (a: string, b: string) => termLookup[a] - termLookup[b] : () => 0, [
     termLookup,
@@ -490,7 +492,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
 }
 
 export function TermLink({term}: {term: string}) {
-  const updateInfoDrawerState = useContext(InfoDrawerContext)
+  const updateInfoDrawerState = useContext(InfoDrawerSetter)
   return (
     <Button
       fullWidth

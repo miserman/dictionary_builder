@@ -1,12 +1,12 @@
 import {Box, Link, List, Stack, Tooltip, Typography} from '@mui/material'
 import {useContext} from 'react'
 import {ResourceContext, type Synset} from './resources'
-import {InfoDrawerContext} from './infoDrawer'
+import {InfoDrawerSetter} from './infoDrawer'
 import {termListItem} from './term'
 import {BuildContext, BuildEditContext} from './building'
 
 export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
-  const updateInfoDrawerState = useContext(InfoDrawerContext)
+  const updateInfoDrawerState = useContext(InfoDrawerSetter)
   return (
     <Tooltip title={info.definition} placement="right">
       <Link
@@ -48,7 +48,7 @@ function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   const content = info[name] as string | number | number[]
   const dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
-  const updateInfoDrawerState = useContext(InfoDrawerContext)
+  const updateInfoDrawerState = useContext(InfoDrawerSetter)
   const {terms, sense_keys, synsetInfo} = useContext(ResourceContext)
   if (!terms || !sense_keys || !synsetInfo) return <></>
   const linkTerms = (index: number | number[]) => {
