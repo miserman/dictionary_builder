@@ -63,7 +63,11 @@ if (file.exists(paste0(baseDir, "term_hits_trimmed.json"))) {
       l <- term_hits[[i]]
       if (length(l)) {
         su <- l / term_spaces[[i]] > .6
-        l <- if (any(su)) sort(l[su], TRUE) else sort(term_hits[[i]], TRUE)[1]
+        l <- if (any(su)) {
+          sort(l[su], TRUE)
+        } else if (max(term_hits[[i]]) > 1) {
+          term_hits[[i]][which.max(term_hits[[i]])]
+        }
         as.integer(names(l))
       }
     }

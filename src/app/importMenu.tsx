@@ -138,8 +138,8 @@ function parseDict(raw: string, detectRegex: boolean) {
         categories.splice(0, 1)
         const has_sense = categories[0] === 'term_sense'
         lines.forEach(l => {
-          const weights = l.split(sep)
-          const term = weights.splice(0, 1)[0].toLowerCase().replace(quote_padding, '')
+          const weights = l.split(sep).map(entry => entry.replace(quote_padding, ''))
+          const term = weights.splice(0, 1)[0].toLowerCase()
           if (term) {
             let sense = ''
             const cats: NumberObject = {}
