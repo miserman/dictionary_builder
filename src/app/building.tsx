@@ -57,6 +57,17 @@ export const EditHistory = createContext<HistoryContainer>({edits: [], position:
 export const EditHistoryEditor = createContext((action: EditeditHistory) => {})
 export const HistoryStepper = createContext((direction: number) => {})
 
+export function termsByCategory(categories: string[], dict: Dict) {
+  const terms: {[index: string]: DictEntry} = {}
+  Object.keys(dict).forEach(term => {
+    const entry = dict[term]
+    categories.forEach(category => {
+      if (category in entry.categories) terms[term] = entry
+    })
+  })
+  return terms
+}
+
 function byLowerAlphabet(a: string, b: string) {
   return a.toLowerCase() > b.toLowerCase() ? 1 : -1
 }

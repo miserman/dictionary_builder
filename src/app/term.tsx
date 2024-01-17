@@ -23,9 +23,9 @@ import {
 import {relativeFrequency, sortByLength} from './utils'
 import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'react'
 import {ResourceContext, type Synset} from './resources'
-import {BuildContext, BuildEditContext, DictionaryActions, type Dict} from './building'
+import {BuildContext, BuildEditContext, DictionaryActions, type Dict, termsByCategory} from './building'
 import {InfoDrawerActions, InfoDrawerSetter} from './infoDrawer'
-import {SynsetLink} from './synset'
+import {SynsetLink, unpackSynsetMembers} from './synset'
 import {extractExpanded} from './wordParts'
 import {getFuzzyParent, getProcessedTerm} from './processTerms'
 import {Add, ArrowDownward, ArrowUpward, Check, LensBlur, Remove} from '@mui/icons-material'
@@ -35,7 +35,6 @@ export type FixedTerm = {
   type: 'fixed'
   term_type: 'fixed'
   term: string
-  categories: {[index: string]: number}
   recognized: boolean
   index: number
   lemma: string[]
@@ -50,13 +49,16 @@ export type FixedTerm = {
     map: Map<string, boolean>
     any: LogicalObject
     lemma: LogicalObject
+    lemma_map: Map<string, boolean>
     lemma_related: LogicalObject
     lemma_synset: LogicalObject
     related: LogicalObject
+    related_map: Map<string, boolean>
     related_lemma: LogicalObject
     related_related: LogicalObject
     related_synset: LogicalObject
     synset: LogicalObject
+    synset_map: Map<string, boolean>
     synset_lemma: LogicalObject
     synset_related: LogicalObject
     synset_synset: LogicalObject
@@ -73,6 +75,9 @@ export type FuzzyTerm = {
   common_matches?: string[]
 }
 
+function byRank(a: {score: number; synset: Synset}, b: {score: number; synset: Synset}) {
+  return b.score - a.score
+}
 export function TermSenseEdit({
   id,
   field,
@@ -90,44 +95,73 @@ export function TermSenseEdit({
 }) {
   const Dict = useContext(BuildContext)
   const edit = useContext(BuildEditContext)
-  const currentSense = Dict[processed.term].sense
-  const {sense_keys} = useContext(ResourceContext)
-  return processed.type === 'fixed' && processed.synsets.length ? (
-    <Select
-      fullWidth
-      size="small"
-      aria-label="assign synset"
-      value={currentSense}
-      onChange={(e: SelectChangeEvent) => {
-        editCell && editCell({id, field, value: e.target.value})
-        edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
-      }}
-      label={label}
-      labelId={labelId}
-    >
-      {sense_keys &&
-        processed.synsets.map(synset => {
+  const dictEntry = Dict[processed.term]
+  const data = useContext(ResourceContext)
+  const {terms, sense_keys, synsetInfo} = data
+
+  const rankedSynsets = useMemo(() => {
+    if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
+      const siblings = termsByCategory(Object.keys(dictEntry.categories), Dict)
+      const siblingsExtended: {[index: string]: boolean} = {}
+      Object.keys(siblings).forEach(term => {
+        const processed = getProcessedTerm(term, data, Dict, true) as FixedTerm
+        if (processed.lookup) processed.lookup.map.forEach((_, ext) => (siblingsExtended[ext] = true))
+      })
+      const out = processed.synsets.map(synset => {
+        let score = 0
+        unpackSynsetMembers(synset, terms, synsetInfo).forEach(term => {
+          if (term in siblings) score++
+          if (term in siblingsExtended) score += 0.01
+        })
+        return {score, synset}
+      })
+      return out.sort(byRank)
+    } else {
+      return []
+    }
+  }, [terms, sense_keys, synsetInfo, processed, Dict, data, dictEntry])
+  if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
+    return (
+      <Select
+        fullWidth
+        size="small"
+        aria-label="assign synset"
+        value={dictEntry.sense}
+        onChange={(e: SelectChangeEvent) => {
+          editCell && editCell({id, field, value: e.target.value})
+          edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
+        }}
+        label={label}
+        labelId={labelId}
+      >
+        {rankedSynsets.map(({score, synset}) => {
           const {index} = synset
           return (
             <MenuItem key={index} value={sense_keys[index]}>
               <Tooltip title={synset.definition} placement="right">
-                <Typography sx={{width: '100%'}}>{sense_keys[index]}</Typography>
+                <Typography sx={{width: '100%'}}>
+                  <span className="number-annotation">{'(' + score.toFixed(2) + ') '}</span>
+                  {sense_keys[index]}
+                </Typography>
               </Tooltip>
             </MenuItem>
           )
         })}
-    </Select>
-  ) : (
-    <TextField
-      size="small"
-      value={currentSense}
-      onChange={(e: ChangeEvent<HTMLInputElement>) => {
-        editCell && editCell({id, field, value: e.target.value})
-        edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
-      }}
-      label={label}
-    ></TextField>
-  )
+      </Select>
+    )
+  } else {
+    return (
+      <TextField
+        size="small"
+        value={dictEntry.sense}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          editCell && editCell({id, field, value: e.target.value})
+          edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
+        }}
+        label={label}
+      ></TextField>
+    )
+  }
 }
 
 const columns = ['Match', 'Frequency', 'Senses', 'Related', 'In Dictionary'] as const

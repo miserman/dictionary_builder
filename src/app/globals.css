@@ -1,5 +1,9 @@
-.number {
+.number,
+.number-annotation {
   color: #a1d9ee;
+}
+.number-annotation {
+  font-size: 0.8em;
 }
 p.code {
   font-size: 0.7em;
