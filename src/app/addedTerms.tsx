@@ -1,6 +1,16 @@
-import {Backdrop, Box, IconButton, LinearProgress, Stack, Typography} from '@mui/material'
+import {
+  Backdrop,
+  Box,
+  IconButton,
+  LinearProgress,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  Stack,
+  Typography,
+} from '@mui/material'
 import {type KeyboardEvent, useContext, useMemo, useState, useEffect} from 'react'
-import {RemoveCircleOutline} from '@mui/icons-material'
+import {Edit, RemoveCircleOutline} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
 import {AllCategories, BuildContext, BuildEditContext, type DictEntry} from './building'
@@ -10,9 +20,11 @@ import {
   type GridRenderEditCellParams,
   type GridCellParams,
   GridToolbarQuickFilter,
+  GridColumnMenu,
 } from '@mui/x-data-grid'
 import {EditorTermSetter} from './termEditor'
 import {makeRows} from './processTerms'
+import {CategoryEditor} from './categoryEditor'
 
 export type SortOptions = 'term' | 'time'
 
@@ -148,6 +160,7 @@ export default function AddedTerms({
     return Math.abs(rowTerms.length - dictTerms.length) < 2 ? false : rowTerms.join() !== dictTerms.join()
   }, [rows, dictTerms])
   const setEditorTerm = useContext(EditorTermSetter)
+  const [editCategory, setEditCategory] = useState('')
   return (
     <Box component="main" sx={{height: '100%'}}>
       {!dictTerms.length ? (
@@ -175,7 +188,40 @@ export default function AddedTerms({
           disableDensitySelector
           pageSizeOptions={[100]}
           density="compact"
-          slots={{toolbar: GridToolbarQuickFilter}}
+          slots={{
+            toolbar: GridToolbarQuickFilter,
+            columnMenu: props => {
+              const name = props.colDef.headerName
+              return Cats.includes(name) ? (
+                <GridColumnMenu
+                  {...props}
+                  slots={{
+                    columnMenuUserItem: () => {
+                      return (
+                        <MenuItem
+                          onClick={() => {
+                            setEditCategory(name)
+                          }}
+                        >
+                          <ListItemIcon>
+                            <Edit fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText>Edit category</ListItemText>
+                        </MenuItem>
+                      )
+                    },
+                  }}
+                  slotProps={{
+                    columnMenuIserItem: {
+                      displayOrder: 15,
+                    },
+                  }}
+                />
+              ) : (
+                <GridColumnMenu {...props} />
+              )
+            },
+          }}
           onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
             if (e.key === 'Delete' || e.key === 'Backspace') {
               editFromEvent(0, params)
@@ -186,6 +232,7 @@ export default function AddedTerms({
           }}
         />
       )}
+      <CategoryEditor category={editCategory} onClose={() => setEditCategory('')} />
     </Box>
   )
 }
