@@ -18,6 +18,7 @@ export type DictionaryActions =
   | {type: 'remove_category'; name: string}
   | {type: 'rename_category'; name: string; newName: string}
   | {type: 'add_category'; name: string; weights: NumberObject}
+  | {type: 'reweight_category'; name: string; weights: NumberObject}
   | {type: 'add' | 'update'; term: string | RegExp; term_type: TermTypes; categories?: NumberObject; sense?: string}
   | {
       type: 'replace'
@@ -33,14 +34,15 @@ type HistoryTermEdit =
   | {field: 'type' | 'sense'; new: string; original: string}
   | {field: 'categories'; edits: TermCategoryEdit[]}
 export type HistoryEntry = {time?: number; name: string} & (
-  | {type: 'add_category' | 'remove_category'; value: NumberObject}
+  | {type: 'add_category' | 'remove_category'; weights: NumberObject}
+  | {type: 'reweight_category'; weights: NumberObject; originalWeights: NumberObject}
   | {type: 'rename_category'; originalName: string}
   | {type: 'add_term' | 'remove_term'; value: DictEntry}
   | {type: 'replace_term'; value: DictEntry; originalName: string; originalValue: DictEntry}
   | {type: 'edit_term'; value: HistoryTermEdit}
 )
 export type HistoryContainer = {edits: HistoryEntry[]; position: number}
-export type EditeditHistory =
+export type EditHistoryAction =
   | {type: 'add' | 'remove'; entry: HistoryEntry}
   | {type: 'replace'; history: HistoryContainer}
   | {type: 'clear'}
@@ -54,7 +56,7 @@ export const BuildEditContext = createContext((action: DictionaryActions) => {})
 export const AllCategories = createContext<string[]>([])
 export const CategoryEditContext = createContext((action: CategoryActions) => {})
 export const EditHistory = createContext<HistoryContainer>({edits: [], position: -1})
-export const EditHistoryEditor = createContext((action: EditeditHistory) => {})
+export const EditHistoryEditor = createContext((action: EditHistoryAction) => {})
 export const HistoryStepper = createContext((direction: number) => {})
 
 export function termsByCategory(categories: string[], dict: Dict) {
@@ -93,7 +95,7 @@ export function Building({children}: {children: ReactNode}) {
         ) as HistoryContainer)
   }
 
-  const editHistory = (action: EditeditHistory) => {
+  const editHistory = (action: EditHistoryAction) => {
     if (action.type === 'replace') {
       setHistory(action.history)
       return
@@ -198,14 +200,36 @@ export function Building({children}: {children: ReactNode}) {
       if (nTerms) {
         editHistory({
           type: 'add',
-          entry: {type: 'remove_category', name: action.name, value: edited_terms},
+          entry: {type: 'remove_category', name: action.name, weights: edited_terms},
         })
       }
     } else if (action.type === 'add_category') {
       Object.keys(action.weights).forEach(term => {
-        if (term in newState) newState[term].categories[action.name] = action.weights[term]
+        if (term in newState) {
+          if (action.weights[term]) {
+            newState[term].categories[action.name] = action.weights[term]
+          } else {
+            delete newState[term].categories[action.name]
+          }
+        }
       })
-      editHistory({type: 'add', entry: {type: 'add_category', name: action.name, value: action.weights}})
+      editHistory({type: 'add', entry: action})
+    } else if (action.type === 'reweight_category') {
+      const originalWeights: NumberObject = {}
+      let nChanged = 0
+      Object.keys(newState).forEach(term => {
+        const entry = newState[term]
+        if (entry.categories[action.name] !== action.weights[term]) {
+          nChanged++
+          originalWeights[term] = entry.categories[action.name] || 0
+          if (action.weights[term]) {
+            entry.categories[action.name] = action.weights[term]
+          } else {
+            delete entry.categories[action.name]
+          }
+        }
+      })
+      if (nChanged) editHistory({type: 'add', entry: {...action, originalWeights}})
     } else {
       const term = 'string' === typeof action.term ? action.term : action.term.source
       if (action.type === 'remove') {

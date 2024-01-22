@@ -1,7 +1,7 @@
 import {Box, Container} from '@mui/material'
 import {useCallback, useContext, useState} from 'react'
 import {ResourceContext} from './resources'
-import {AllCategories, BuildContext, BuildEditContext, TermTypes} from './building'
+import {AllCategories, BuildContext, BuildEditContext, type TermTypes} from './building'
 import {InfoDrawer, InfoDrawerContext} from './infoDrawer'
 import AddedTerms from './addedTerms'
 import {EditorTerm, TermEditor} from './termEditor'

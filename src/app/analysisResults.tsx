@@ -1,29 +1,31 @@
 import {Box, LinearProgress, Stack, Typography} from '@mui/material'
-import {PlotOptions, ProcessOptions, TermEntry} from './analysisMenu'
+import type {PlotOptions, ProcessOptions, TermEntry} from './analysisMenu'
 import {useContext, useEffect, useMemo, useState} from 'react'
 import {Graph} from './graph'
 import {getProcessedTerm} from './processTerms'
-import {FixedTerm} from './term'
+import type {FixedTerm, NetworkLookup} from './term'
 import {ResourceContext} from './resources'
 import {BuildContext} from './building'
 import {timers} from './addedTerms'
 
+export function getIntersects(a: string, b: NetworkLookup) {
+  return {
+    lemma: +(a in b.lemma),
+    lemma_related: +(a in b.lemma_related),
+    lemma_synset: +(a in b.lemma_synset),
+    related: +(a in b.related),
+    related_lemma: +(a in b.related_lemma),
+    related_related: +(a in b.related_related),
+    related_synset: +(a in b.related_synset),
+    synset: +(a in b.synset),
+    synset_lemma: +(a in b.synset_lemma),
+    synset_related: +(a in b.synset_related),
+    synset_synset: +(a in b.synset_synset),
+  }
+}
 function getSimilarity(a: TermEntry, b: TermEntry, dense: boolean) {
   if (!b.processed) return 0
-  const term = a.term
-  const sim = {
-    lemma: +(term in b.processed.lookup.lemma),
-    lemma_related: +(term in b.processed.lookup.lemma_related),
-    lemma_synset: +(term in b.processed.lookup.lemma_synset),
-    related: +(term in b.processed.lookup.related),
-    related_lemma: +(term in b.processed.lookup.related_lemma),
-    related_related: +(term in b.processed.lookup.related_related),
-    related_synset: +(term in b.processed.lookup.related_synset),
-    synset: +(term in b.processed.lookup.synset),
-    synset_lemma: +(term in b.processed.lookup.synset_lemma),
-    synset_related: +(term in b.processed.lookup.synset_related),
-    synset_synset: +(term in b.processed.lookup.synset_synset),
-  }
+  const sim = getIntersects(a.term, b.processed.lookup)
   return dense
     ? 0.35 * sim.lemma +
         0.1 * sim.lemma_related +

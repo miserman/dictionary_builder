@@ -53,13 +53,22 @@ function undoChange(change: HistoryEntry, dict: Dict) {
       Object.keys(dict).forEach(term => {
         const e = dict[term]
         Object.keys(e.categories).forEach(cat => {
-          if (cat in change.value) delete e.categories[cat]
+          if (cat in change.weights) delete e.categories[cat]
         })
       })
       return
     case 'remove_category':
       Object.keys(dict).forEach(term => {
-        if (term in change.value) dict[term].categories[change.name] = change.value[term]
+        if (term in change.weights) dict[term].categories[change.name] = change.weights[term]
+      })
+      return
+    case 'reweight_category':
+      Object.keys(dict).forEach(term => {
+        if (change.originalWeights[term]) {
+          dict[term].categories[change.name] = change.originalWeights[term]
+        } else {
+          delete dict[term].categories[change.name]
+        }
       })
       return
     case 'rename_category':
@@ -101,13 +110,22 @@ function redoChange(change: HistoryEntry, dict: Dict) {
       return
     case 'add_category':
       Object.keys(dict).forEach(term => {
-        if (term in change.value) dict[term].categories[change.name] = change.value[term]
+        if (term in change.weights) dict[term].categories[change.name] = change.weights[term]
       })
       return
     case 'remove_category':
-      Object.keys(change.value).forEach(term => {
+      Object.keys(dict).forEach(term => {
         const e = dict[term]
         if (e && e.categories && change.name in e.categories) delete e.categories[change.name]
+      })
+      return
+    case 'reweight_category':
+      Object.keys(dict).forEach(term => {
+        if (change.weights[term]) {
+          dict[term].categories[change.name] = change.weights[term]
+        } else {
+          delete dict[term].categories[change.name]
+        }
       })
       return
     case 'rename_category':

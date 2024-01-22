@@ -3,7 +3,7 @@ import {CssBaseline, ThemeProvider, createTheme} from '@mui/material'
 import {StrictMode, useReducer, useState} from 'react'
 import {Resources} from './resources'
 import {Building} from './building'
-import {InfoDrawerActions, InfoDrawerContext, InfoDrawerSetter, InfoDrawerState} from './infoDrawer'
+import {type InfoDrawerActions, InfoDrawerContext, InfoDrawerSetter, InfoDrawerState} from './infoDrawer'
 import {EditorTerm, EditorTermSetter} from './termEditor'
 import {Content} from './content'
 

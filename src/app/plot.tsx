@@ -3,11 +3,11 @@ import {LegendComponent, TooltipComponent, VisualMapComponent} from 'echarts/com
 import {CanvasRenderer} from 'echarts/renderers'
 import {Bar3DChart} from 'echarts-gl/charts'
 import {Grid3DComponent} from 'echarts-gl/components'
-import {Edge, Node} from './analysisResults'
+import type {Edge, Node} from './analysisResults'
 import {useEffect, useRef} from 'react'
 import {Box} from '@mui/material'
-import {PlotOptions} from './analysisMenu'
-import {NumberObject} from './building'
+import type {PlotOptions} from './analysisMenu'
+import type {NumberObject} from './building'
 
 use([TooltipComponent, VisualMapComponent, Grid3DComponent, Bar3DChart, CanvasRenderer, LegendComponent])
 

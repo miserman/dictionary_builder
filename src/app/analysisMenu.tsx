@@ -21,8 +21,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {ChangeEvent, useContext, useEffect, useMemo, useReducer, useState} from 'react'
-import {AllCategories, BuildContext, NumberObject} from './building'
+import {type ChangeEvent, useContext, useEffect, useMemo, useReducer, useState} from 'react'
+import {AllCategories, BuildContext, type NumberObject} from './building'
 import {Results} from './analysisResults'
 import type {FixedTerm} from './term'
 

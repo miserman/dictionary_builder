@@ -23,7 +23,7 @@ import {
 import {relativeFrequency, sortByLength} from './utils'
 import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'react'
 import {ResourceContext, type Synset} from './resources'
-import {BuildContext, BuildEditContext, DictionaryActions, type Dict, termsByCategory} from './building'
+import {BuildContext, BuildEditContext, type DictionaryActions, type Dict, termsByCategory} from './building'
 import {InfoDrawerActions, InfoDrawerSetter} from './infoDrawer'
 import {SynsetLink, unpackSynsetMembers} from './synset'
 import {extractExpanded} from './wordParts'
@@ -31,6 +31,25 @@ import {getFuzzyParent, getProcessedTerm} from './processTerms'
 import {Add, ArrowDownward, ArrowUpward, Check, LensBlur, Remove} from '@mui/icons-material'
 
 type LogicalObject = {[index: string]: boolean}
+export type NetworkLookup = {
+  expanded: boolean
+  map: Map<string, boolean>
+  any: LogicalObject
+  lemma: LogicalObject
+  lemma_map: Map<string, boolean>
+  lemma_related: LogicalObject
+  lemma_synset: LogicalObject
+  related: LogicalObject
+  related_map: Map<string, boolean>
+  related_lemma: LogicalObject
+  related_related: LogicalObject
+  related_synset: LogicalObject
+  synset: LogicalObject
+  synset_map: Map<string, boolean>
+  synset_lemma: LogicalObject
+  synset_related: LogicalObject
+  synset_synset: LogicalObject
+}
 export type FixedTerm = {
   type: 'fixed'
   term_type: 'fixed'
@@ -44,25 +63,7 @@ export type FixedTerm = {
   synset_terms: string[]
   frequency?: number
   in_dict?: boolean
-  lookup: {
-    expanded: boolean
-    map: Map<string, boolean>
-    any: LogicalObject
-    lemma: LogicalObject
-    lemma_map: Map<string, boolean>
-    lemma_related: LogicalObject
-    lemma_synset: LogicalObject
-    related: LogicalObject
-    related_map: Map<string, boolean>
-    related_lemma: LogicalObject
-    related_related: LogicalObject
-    related_synset: LogicalObject
-    synset: LogicalObject
-    synset_map: Map<string, boolean>
-    synset_lemma: LogicalObject
-    synset_related: LogicalObject
-    synset_synset: LogicalObject
-  }
+  lookup: NetworkLookup
 }
 export type FuzzyTerm = {
   type: 'fuzzy'

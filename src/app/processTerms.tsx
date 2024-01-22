@@ -2,7 +2,7 @@ import {timers, type GridRow} from './addedTerms'
 import type {Dict} from './building'
 import type {TermResources} from './resources'
 import {unpackSynsetMembers} from './synset'
-import {FixedTerm, FuzzyTerm} from './term'
+import type {FixedTerm, FuzzyTerm} from './term'
 import {globToRegex, prepareRegex, relativeFrequency, termBounds, wildcard} from './utils'
 
 const Processed: {[index: string]: FuzzyTerm | FixedTerm} = {}

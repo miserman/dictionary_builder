@@ -4,7 +4,13 @@ import {RemoveCircleOutline} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
 import {AllCategories, BuildContext, BuildEditContext, type DictEntry} from './building'
-import {DataGrid, GridColDef, GridRenderEditCellParams, GridCellParams, GridToolbarQuickFilter} from '@mui/x-data-grid'
+import {
+  DataGrid,
+  type GridColDef,
+  type GridRenderEditCellParams,
+  type GridCellParams,
+  GridToolbarQuickFilter,
+} from '@mui/x-data-grid'
 import {EditorTermSetter} from './termEditor'
 import {makeRows} from './processTerms'
 

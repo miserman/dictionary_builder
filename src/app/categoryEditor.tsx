@@ -2,6 +2,7 @@ import {Close} from '@mui/icons-material'
 import {
   Button,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   FormControlLabel,
@@ -11,12 +12,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import {DataGrid, GridCellParams, GridColDef, GridToolbarQuickFilter} from '@mui/x-data-grid'
-import {ChangeEvent, KeyboardEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
-import {AllCategories, BuildContext, BuildEditContext, DictEntry, NumberObject} from './building'
-import {FixedTerm, FuzzyTerm} from './term'
+import {DataGrid, type GridCellParams, type GridColDef, GridToolbarQuickFilter} from '@mui/x-data-grid'
+import {type ChangeEvent, type KeyboardEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
+import {AllCategories, BuildContext, BuildEditContext, DictEntry, type NumberObject} from './building'
+import type {FixedTerm, FuzzyTerm} from './term'
 import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
+import {CategoryWeights} from './categoryWeights'
 
 export function CategoryEditor({category, onClose}: {category: string; onClose: () => void}) {
   const [showEmptyTerms, setShowEmptyTerms] = useState(false)
@@ -170,6 +172,9 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
           </Stack>
         </Stack>
       </DialogContent>
+      <DialogActions>
+        <CategoryWeights name={category} current={catWeights} edit={editDictionary} />
+      </DialogActions>
     </Dialog>
   )
 }
