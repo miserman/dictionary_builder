@@ -17,9 +17,10 @@ import {
   useTheme,
 } from '@mui/material'
 import {type ChangeEvent, type DragEvent, type KeyboardEvent, useContext, useState} from 'react'
-import {type Dict, ManageDictionaries, type NumberObject} from './building'
+import {ManageDictionaries, type NumberObject} from './building'
 import {fileBaseName, newline} from './utils'
 import {CopyDictionary} from './copyDictionary'
+import type {Dict} from './storage'
 
 const HiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -169,17 +170,20 @@ export function ImportMenu() {
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const [detectRegex, setDetectRegex] = useState(false)
+  const [encrypt, setEncrypt] = useState(false)
   const [rawContent, setRawContent] = useState('')
+  const [password, setPassword] = useState('')
   const clear = () => {
     setName('')
     setRawContent('')
+    setPassword('')
   }
   const addDict = () => {
     if (name) {
-      const dict = parseDict(rawContent, detectRegex)
-      manageDictionaries({type: 'add', name, dict})
       clear()
-      toggleMenu()
+      setMenuOpen(false)
+      const dict = parseDict(rawContent, detectRegex)
+      manageDictionaries({type: 'add', name, dict, password: encrypt ? password : ''})
     }
   }
   return (
@@ -196,7 +200,7 @@ export function ImportMenu() {
             const file = e.dataTransfer.files[0]
             const reader = new FileReader()
             reader.onload = () => {
-              if (!name) setName(fileBaseName(file.name))
+              setName(fileBaseName(file.name))
               setRawContent(reader.result as string)
             }
             reader.readAsText(file)
@@ -251,13 +255,34 @@ export function ImportMenu() {
                 placeholder="drag and drop a file, or enter content directly; see export menu for format examples"
               />
             </FormControl>
-            <Tooltip title="Attempt to convert terms to regular expressions if they contain special RegEx characters.">
+            <Tooltip
+              title="Attempt to convert terms to regular expressions if they contain special RegEx characters."
+              placement="top"
+            >
               <FormControlLabel
                 label="Detect RegEx"
                 labelPlacement="start"
                 control={<Switch checked={detectRegex} onChange={() => setDetectRegex(!detectRegex)} />}
               />
             </Tooltip>
+            <Tooltip title="Encrypt dictionary and history when being stored." placement="right">
+              <FormControlLabel
+                label="Encrypt"
+                labelPlacement="start"
+                control={<Switch checked={encrypt} onChange={() => setEncrypt(!encrypt)} />}
+              />
+            </Tooltip>
+            {encrypt ? (
+              <TextField
+                size="small"
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              />
+            ) : (
+              <></>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions sx={{justifyContent: 'space-between'}}>
@@ -273,7 +298,7 @@ export function ImportMenu() {
                       const file = e.target.files[0]
                       const reader = new FileReader()
                       reader.onload = () => {
-                        if (!name) setName(fileBaseName(file.name))
+                        setName(fileBaseName(file.name))
                         setRawContent(reader.result as string)
                       }
                       reader.readAsText(file)
@@ -286,7 +311,7 @@ export function ImportMenu() {
               <Button onClick={clear}>clear</Button>
             </Tooltip>
           </Stack>
-          <Button variant="contained" onClick={addDict}>
+          <Button variant="contained" disabled={encrypt ? !password : false} onClick={addDict}>
             Add
           </Button>
         </DialogActions>

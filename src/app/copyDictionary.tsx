@@ -11,7 +11,8 @@ import {
   Tooltip,
 } from '@mui/material'
 import {useContext, useState} from 'react'
-import {Dictionaries} from './building'
+import {PasswordPrompter, SettingsContext} from './building'
+import {loadDictionary} from './storage'
 
 export function CopyDictionary({
   setName,
@@ -20,8 +21,8 @@ export function CopyDictionary({
   setName: (name: string) => void
   setContent: (content: string) => void
 }) {
-  const dictionaries = useContext(Dictionaries)
-  const names = Object.keys(useContext(Dictionaries))
+  const requestPass = useContext(PasswordPrompter)
+  const settings = useContext(SettingsContext)
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   return (
@@ -48,16 +49,25 @@ export function CopyDictionary({
           </IconButton>
           <DialogContent sx={{p: 0}}>
             <List sx={{p: 0, pb: 2}}>
-              {names.map(name => (
+              {settings.dictionary_names.map(name => (
                 <ListItem sx={{p: 0}} key={name}>
                   <ListItemButton
-                    onClick={() => {
-                      setName(
-                        name + ' Copy' in dictionaries ? name + ' Copy' + ((Math.random() * 1e4) >> 0) : name + ' Copy'
+                    onClick={() =>
+                      loadDictionary(
+                        name,
+                        dict => {
+                          setName(
+                            settings.dictionary_names.includes(name + ' Copy')
+                              ? name + ' Copy' + ((Math.random() * 1e4) >> 0)
+                              : name + ' Copy'
+                          )
+                          setContent(JSON.stringify(dict, void 0, 2))
+                          toggleMenu()
+                        },
+                        requestPass,
+                        !!settings.use_db
                       )
-                      setContent(JSON.stringify(dictionaries[name], void 0, 2))
-                      toggleMenu()
-                    }}
+                    }
                   >
                     {name}
                   </ListItemButton>

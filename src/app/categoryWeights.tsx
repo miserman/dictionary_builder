@@ -295,9 +295,13 @@ export function CategoryWeights({
                       term => (reWeighted[term] = (reWeighted[term] - range[0]) / (range[1] - range[0]))
                     )
                 } else {
-                  Object.keys(toAllTerms ? dict : current).forEach(term => {
-                    if (current[term]) reWeighted[term] = value
-                  })
+                  if (toAllTerms) {
+                    Object.keys(dict).forEach(term => (reWeighted[term] = value))
+                  } else {
+                    Object.keys(current).forEach(term => {
+                      if (current[term]) reWeighted[term] = value
+                    })
+                  }
                 }
                 edit({type: 'reweight_category', name, weights: reWeighted})
                 toggleMenu()

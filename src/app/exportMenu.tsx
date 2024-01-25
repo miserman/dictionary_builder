@@ -20,7 +20,8 @@ import {
   useTheme,
 } from '@mui/material'
 import {type ChangeEvent, useContext, useMemo, useState} from 'react'
-import {type Dict, Dictionaries, DictionaryName, type NumberObject} from './building'
+import {BuildContext, SettingsContext, type NumberObject} from './building'
+import {Dict} from './storage'
 
 type Formats = 'tabular' | 'json' | 'dic'
 type DelTypes = 'csv' | 'tsv' | 'dat'
@@ -119,13 +120,13 @@ function exportName(name: string, format: string, delType: string) {
 }
 export function ExportMenu() {
   const theme = useTheme()
-  const currentDictionary = useContext(DictionaryName)
-  const dict = useContext(Dictionaries)[currentDictionary]
+  const settings = useContext(SettingsContext)
+  const dict = useContext(BuildContext)
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const [format, setFormat] = useState<Formats>('dic')
   const [delType, setDelType] = useState<DelTypes>('csv')
-  const [name, setName] = useState(currentDictionary)
+  const [name, setName] = useState(settings.selected)
   const [jsonType, setJsonType] = useState<JSONTypes>('unweighted')
   const [includeSenses, setIncludeSenses] = useState(false)
   const content = useMemo(

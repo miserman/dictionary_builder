@@ -13,7 +13,7 @@ import {type KeyboardEvent, useContext, useMemo, useState, useEffect} from 'reac
 import {Edit, RemoveCircleOutline} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
-import {AllCategories, BuildContext, BuildEditContext, type DictEntry} from './building'
+import {AllCategories, BuildContext, BuildEditContext} from './building'
 import {
   DataGrid,
   type GridColDef,
@@ -25,6 +25,7 @@ import {
 import {EditorTermSetter} from './termEditor'
 import {makeRows} from './processTerms'
 import {CategoryEditor} from './categoryEditor'
+import type {DictEntry} from './storage'
 
 export type SortOptions = 'term' | 'time'
 

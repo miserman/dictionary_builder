@@ -23,12 +23,13 @@ import {
 import {relativeFrequency, sortByLength} from './utils'
 import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'react'
 import {ResourceContext, type Synset} from './resources'
-import {BuildContext, BuildEditContext, type DictionaryActions, type Dict, termsByCategory} from './building'
+import {BuildContext, BuildEditContext, type DictionaryActions, termsByCategory} from './building'
 import {InfoDrawerActions, InfoDrawerSetter} from './infoDrawer'
 import {SynsetLink, unpackSynsetMembers} from './synset'
 import {extractExpanded} from './wordParts'
 import {getFuzzyParent, getProcessedTerm} from './processTerms'
 import {Add, ArrowDownward, ArrowUpward, Check, LensBlur, Remove} from '@mui/icons-material'
+import type {Dict} from './storage'
 
 type LogicalObject = {[index: string]: boolean}
 export type NetworkLookup = {

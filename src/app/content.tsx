@@ -9,6 +9,7 @@ import {AnalyzeMenu} from './analysisMenu'
 import {Nav} from './nav'
 import type {GridCellParams} from '@mui/x-data-grid'
 import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
+import {PasswordPrompt} from './passwordPrompt'
 
 const categoryPrefix = /^category_/
 export function Content() {
@@ -69,6 +70,7 @@ export function Content() {
         {showTermEditor ? <TermEditor categories={Cats} editor={editFromEvent} /> : <></>}
         <InfoDrawer />
       </Box>
+      <PasswordPrompt />
     </Container>
   )
 }

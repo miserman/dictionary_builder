@@ -14,11 +14,12 @@ import {
 } from '@mui/material'
 import {DataGrid, type GridCellParams, type GridColDef, GridToolbarQuickFilter} from '@mui/x-data-grid'
 import {type ChangeEvent, type KeyboardEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
-import {AllCategories, BuildContext, BuildEditContext, DictEntry, type NumberObject} from './building'
+import {AllCategories, BuildContext, BuildEditContext, type NumberObject} from './building'
 import type {FixedTerm, FuzzyTerm} from './term'
 import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
 import {CategoryWeights} from './categoryWeights'
+import type {DictEntry} from './storage'
 
 export function CategoryEditor({category, onClose}: {category: string; onClose: () => void}) {
   const [showEmptyTerms, setShowEmptyTerms] = useState(false)

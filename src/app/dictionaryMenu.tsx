@@ -21,14 +21,7 @@ import {
   Typography,
 } from '@mui/material'
 import {type ChangeEvent, type KeyboardEvent, useContext, useMemo, useState} from 'react'
-import {
-  AllCategories,
-  BuildEditContext,
-  CategoryEditContext,
-  Dictionaries,
-  DictionaryName,
-  ManageDictionaries,
-} from './building'
+import {AllCategories, BuildEditContext, CategoryEditContext, ManageDictionaries, SettingsContext} from './building'
 import {ImportMenu} from './importMenu'
 import {ExportMenu} from './exportMenu'
 import {History} from './history'
@@ -36,14 +29,12 @@ import {Confirm} from './confirmDialog'
 import {CategoryEditor} from './categoryEditor'
 
 export function DictionaryMenu() {
+  const settings = useContext(SettingsContext)
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const [editingCategory, setEditingCategory] = useState('')
 
-  const dictionaries = useContext(Dictionaries)
   const manageDictionaries = useContext(ManageDictionaries)
-  const currentDictionary = useContext(DictionaryName)
-  const storedDictionaries = Object.keys(dictionaries)
 
   const categories = useContext(AllCategories)
   const editCategories = useContext(CategoryEditContext)
@@ -85,7 +76,7 @@ export function DictionaryMenu() {
   return (
     <>
       <Button variant="text" sx={{fontWeight: 'bold'}} onClick={toggleMenu}>
-        {currentDictionary}
+        {settings.selected}
       </Button>
       <Drawer anchor="left" open={menuOpen} onClose={toggleMenu}>
         <Card
@@ -112,12 +103,12 @@ export function DictionaryMenu() {
                 labelId="dictionary_select"
                 label="Current"
                 size="small"
-                value={currentDictionary}
+                value={settings.selected}
                 onChange={(e: SelectChangeEvent<string>) => {
-                  manageDictionaries({type: 'set', name: e.target.value, dict: dictionaries[e.target.value]})
+                  manageDictionaries({type: 'set', name: e.target.value})
                 }}
               >
-                {storedDictionaries.map(name => (
+                {settings.dictionary_names.map(name => (
                   <MenuItem key={name} value={name}>
                     {name}
                   </MenuItem>
@@ -160,9 +151,9 @@ export function DictionaryMenu() {
               <ExportMenu />
               <Confirm
                 label="Delete"
-                message={'Delete the ' + currentDictionary + ' dictionary?'}
+                message={'Delete the ' + settings.selected + ' dictionary?'}
                 onConfirm={() => {
-                  manageDictionaries({type: 'delete', name: currentDictionary})
+                  manageDictionaries({type: 'delete', name: settings.selected})
                 }}
               />
             </Stack>

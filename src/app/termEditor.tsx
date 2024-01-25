@@ -16,9 +16,10 @@ import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {TERM_EDITOR_WIDTH} from './settingsMenu'
 import {type KeyboardEvent, useState, useContext, createContext, useMemo} from 'react'
 import {DataGrid, type GridCellParams, type GridColDef} from '@mui/x-data-grid'
-import {BuildContext, type DictEntry} from './building'
+import {BuildContext} from './building'
 import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
+import type {DictEntry} from './storage'
 
 export const EditorTerm = createContext('')
 export const EditorTermSetter = createContext((term: string, fromGraph?: boolean) => {})

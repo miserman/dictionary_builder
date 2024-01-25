@@ -13,15 +13,9 @@ import {
   Typography,
 } from '@mui/material'
 import {useContext, useMemo} from 'react'
-import {
-  type Dict,
-  EditHistory,
-  EditHistoryEditor,
-  type HistoryContainer,
-  type HistoryEntry,
-  HistoryStepper,
-} from './building'
+import {EditHistory, EditHistoryEditor, type HistoryContainer, type HistoryEntry, HistoryStepper} from './building'
 import {ChevronLeft, ChevronRight, LastPage} from '@mui/icons-material'
+import type {Dict} from './storage'
 
 function undoChange(change: HistoryEntry, dict: Dict) {
   switch (change.type) {

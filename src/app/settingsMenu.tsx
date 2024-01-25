@@ -5,38 +5,47 @@ import {
   CardContent,
   CardHeader,
   Drawer,
+  FormControlLabel,
   IconButton,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material'
-import {type ChangeEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
-import {HistoryStepper} from './building'
+import {type ChangeEvent, useCallback, useContext, useEffect, useState} from 'react'
+import {HistoryStepper, SettingEditor, SettingsContext} from './building'
 import {Confirm} from './confirmDialog'
+import {removeStorage} from './storage'
 
 export const INFO_DRAWER_HEIGHT = '30vh'
 export const TERM_EDITOR_WIDTH = '200px'
 
 export type Settings = {
-  selected?: string
-  dictionary_names?: string[]
+  selected: string
+  dictionary_names: string[]
   undo?: string
   redo?: string
+  disable_storage?: boolean
+  use_db?: boolean
 }
 
 export function loadSettings() {
-  return (
+  const raw =
     'undefined' === typeof window ? {} : JSON.parse(localStorage.getItem('dictionary_builder_settings') || '{}')
-  ) as Settings
+  if (!raw.dictionary_names) raw.dictionary_names = ['default']
+  if (!raw.selected || !raw.dictionary_names.includes(raw.selected)) raw.selected = 'default'
+  return raw as Settings
 }
 
 export function SettingsMenu() {
+  const updateSettings = useContext(SettingEditor)
+  const settings = useContext(SettingsContext)
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
-  const settings = useMemo(loadSettings, [])
   const historyStep = useContext(HistoryStepper)
   const [undo, setUndo] = useState(settings.undo || 'z')
   const [redo, setRedo] = useState(settings.redo || 'x')
+  const [disableStore, setDisableStore] = useState(!!settings.disable_storage)
   const listener = useCallback(
     (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && (!e.target || !('tagName' in e.target) || e.target.tagName !== 'INPUT')) {
@@ -79,31 +88,52 @@ export function SettingsMenu() {
             }
           />
           <CardContent sx={{alignContent: 'left', mb: 'auto'}}>
-            <Typography fontWeight="bold">Keybinds</Typography>
-            <Typography variant="caption">CTRL + </Typography>
-            <Stack spacing={2} sx={{mt: 1}}>
-              <TextField
-                size="small"
-                label="undo"
-                value={undo}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  window.removeEventListener('keydown', listener)
-                  settings.undo = e.target.value
-                  localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-                  setUndo(e.target.value)
-                }}
-              ></TextField>
-              <TextField
-                size="small"
-                label="redo"
-                value={redo}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  window.removeEventListener('keydown', listener)
-                  settings.redo = e.target.value
-                  localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-                  setRedo(e.target.value)
-                }}
-              ></TextField>
+            <Stack spacing={2}>
+              <FormControlLabel
+                label="Disable Storage"
+                labelPlacement="start"
+                sx={{justifyContent: 'space-between'}}
+                control={
+                  <Switch
+                    checked={disableStore}
+                    size="small"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      settings.disable_storage = !disableStore
+                      updateSettings({...settings})
+                      localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+                      setDisableStore(!disableStore)
+                    }}
+                  />
+                }
+              />
+              <Typography fontWeight="bold">Keybinds</Typography>
+              <Typography variant="caption">CTRL + </Typography>
+              <Stack spacing={2} sx={{mt: 1}}>
+                <TextField
+                  size="small"
+                  label="undo"
+                  value={undo}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    window.removeEventListener('keydown', listener)
+                    settings.undo = e.target.value
+                    updateSettings({...settings})
+                    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+                    setUndo(e.target.value)
+                  }}
+                ></TextField>
+                <TextField
+                  size="small"
+                  label="redo"
+                  value={redo}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    window.removeEventListener('keydown', listener)
+                    settings.redo = e.target.value
+                    updateSettings({...settings})
+                    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+                    setRedo(e.target.value)
+                  }}
+                ></TextField>
+              </Stack>
             </Stack>
           </CardContent>
           <CardActions>
@@ -111,11 +141,10 @@ export function SettingsMenu() {
               label="Clear Storage"
               message="Clearing storage will delete all settings, dictionaries, and edit history."
               onConfirm={() => {
-                const settings = loadSettings()
                 if (settings.dictionary_names) {
                   settings.dictionary_names.forEach(name => {
-                    localStorage.removeItem('dict_' + name)
-                    localStorage.removeItem('dict_history_' + name)
+                    removeStorage('dict_' + name, !!settings.use_db)
+                    removeStorage('dict_history_' + name, !!settings.use_db)
                   })
                 }
                 localStorage.removeItem('dictionary_builder_settings')

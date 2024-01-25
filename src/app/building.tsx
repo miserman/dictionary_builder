@@ -1,18 +1,16 @@
-import {type ReactNode, createContext, useContext, useEffect, useMemo, useReducer, useState} from 'react'
-import {ResourceContext} from './resources'
-import {loadSettings} from './settingsMenu'
+import {type ReactNode, createContext, useEffect, useReducer, useState} from 'react'
+import {Settings, loadSettings} from './settingsMenu'
 import {moveInHistory} from './history'
-import {getProcessedTerm} from './processTerms'
+import {Dict, DictEntry, loadDictionary, loadHistory, removeStorage, setStorage} from './storage'
 
 export type NumberObject = {[index: string]: number}
 export type TermTypes = 'fixed' | 'glob' | 'regex'
-export type DictEntry = {added: number; type: TermTypes; categories: NumberObject; sense: string}
-export type Dict = {[index: string]: DictEntry}
 export type DictionaryStorageAction =
-  | {type: 'set' | 'add' | 'save'; name: string; dict: Dict}
+  | {type: 'set'; name: string}
+  | {type: 'add' | 'save'; name: string; dict: Dict; password?: string}
   | {type: 'delete'; name: string}
 export type DictionaryActions =
-  | {type: 'change_dict'; dict: Dict}
+  | {type: 'change_dict'; name: string; dict: Dict}
   | {type: 'history_bulk'; dict: Dict}
   | {type: 'remove'; term: string | RegExp}
   | {type: 'remove_category'; name: string}
@@ -47,9 +45,8 @@ export type EditHistoryAction =
   | {type: 'replace'; history: HistoryContainer}
   | {type: 'clear'}
 export type DictionaryEditor = (action: DictionaryActions) => void
-export const DictionaryName = createContext('default')
-export const DictionaryNameSetter = createContext((name: string) => {})
-export const Dictionaries = createContext<{[index: string]: Dict}>({})
+export const SettingsContext = createContext<Settings>({selected: 'default', dictionary_names: ['default']})
+export const SettingEditor = createContext((settings: Settings) => {})
 export const ManageDictionaries = createContext((action: DictionaryStorageAction) => {})
 export const BuildContext = createContext<Dict>({})
 export const BuildEditContext = createContext((action: DictionaryActions) => {})
@@ -58,6 +55,17 @@ export const CategoryEditContext = createContext((action: CategoryActions) => {}
 export const EditHistory = createContext<HistoryContainer>({edits: [], position: -1})
 export const EditHistoryEditor = createContext((action: EditHistoryAction) => {})
 export const HistoryStepper = createContext((direction: number) => {})
+export const PasswordEnterer = createContext('')
+const defaultRequester = () => async (password: string) => {
+  return
+}
+export type PasswordRequestCallback = typeof defaultRequester
+export const PasswordPrompter = createContext((name: string, resolve?: PasswordRequestCallback) => {
+  return
+})
+export const PasswordResolve = createContext(async (password: string) => {
+  return
+})
 
 export function termsByCategory(categories: string[], dict: Dict) {
   const terms: {[index: string]: DictEntry} = {}
@@ -74,27 +82,29 @@ function byLowerAlphabet(a: string, b: string) {
   return a.toLowerCase() > b.toLowerCase() ? 1 : -1
 }
 export function Building({children}: {children: ReactNode}) {
-  const data = useContext(ResourceContext)
-  const settings = useMemo(loadSettings, [])
-  const dictionaries = useMemo(() => {
-    const stored = {default: {}} as {[index: string]: Dict}
-    if ('undefined' !== typeof window) {
-      const names = settings.dictionary_names || []
-      names.forEach(name => {
-        stored[name] = JSON.parse(localStorage.getItem('dict_' + name) || '{}') as Dict
-      })
+  const [promptPassword, setPromptPassword] = useState('')
+  const [requester, setRequester] = useState(defaultRequester)
+  const passwordRequester = (name: string, resolve?: PasswordRequestCallback) => {
+    if (resolve) {
+      setPromptPassword(name)
+      setRequester(resolve)
+    } else {
+      setPromptPassword('')
+      setRequester(defaultRequester)
     }
-    return stored
-  }, [settings])
-  const [name, setName] = useState(settings.selected || 'default')
-  const loadHistory = () => {
-    return 'undefined' === typeof window
-      ? {edits: [], position: -1}
-      : (JSON.parse(
-          localStorage.getItem('dict_history_' + name) || '{"edits": [], "position": -1}'
-        ) as HistoryContainer)
   }
-
+  const [settings, updateSettings] = useState(loadSettings())
+  const use_db = !!settings.use_db
+  const changeDictionary = (name: string) => {
+    loadDictionary(
+      name,
+      dict => {
+        dictionaryAction({type: 'change_dict', name, dict})
+      },
+      passwordRequester,
+      use_db
+    )
+  }
   const editHistory = (action: EditHistoryAction) => {
     if (action.type === 'replace') {
       setHistory(action.history)
@@ -113,32 +123,33 @@ export function Building({children}: {children: ReactNode}) {
       newHistory.splice(0, 0, action.entry)
     }
     if (newHistory.length > 1000) newHistory.splice(1000, newHistory.length - 999)
-    localStorage.setItem('dict_history_' + name, JSON.stringify({edits: newHistory, position: position}))
+    if (!settings.disable_storage)
+      setStorage(settings.selected, 'dict_history_', {edits: newHistory, position: position}, use_db)
     setHistory({edits: newHistory, position: position})
   }
-  const [history, setHistory] = useState<{edits: HistoryEntry[]; position: number}>(loadHistory())
+  const [history, setHistory] = useState<{edits: HistoryEntry[]; position: number}>({edits: [], position: -1})
 
   const manageDictionaries = (action: DictionaryStorageAction) => {
     if (action.type === 'delete') {
-      delete dictionaries[action.name]
-      localStorage.removeItem('dict_' + action.name)
-      localStorage.removeItem('dict_history_' + action.name)
-      if (action.name === 'default') dictionaries.default = {}
-      if (name === action.name) {
-        setCurrent('default')
-        dictionaryAction({type: 'change_dict', dict: dictionaries.default})
-      }
+      settings.dictionary_names.splice(settings.dictionary_names.indexOf(action.name), 1)
+      settings.selected = 'default'
+      updateSettings({...settings})
+      removeStorage('dict_' + action.name, use_db)
+      removeStorage('dict_history_' + action.name, use_db)
+      changeDictionary('default')
     } else {
-      if (action.type !== 'set') dictionaries[action.name] = action.dict
-      if (name) localStorage.setItem('dict_' + action.name, JSON.stringify(dictionaries[name]))
-      if (action.type !== 'save') {
-        setCurrent(action.name)
-        dictionaryAction({type: 'change_dict', dict: dictionaries[action.name]})
+      if (!settings.dictionary_names.includes(action.name)) settings.dictionary_names.push(action.name)
+      settings.selected = action.name
+      if (action.type === 'set') {
+        changeDictionary(action.name)
+      } else {
+        if (!settings.disable_storage) setStorage(action.name, 'dict_', action.dict, use_db, action.password)
+        if (action.type === 'add') {
+          dictionaryAction({type: 'change_dict', name: action.name, dict: action.dict})
+        }
       }
-      localStorage.setItem('dict_' + action.name, JSON.stringify(dictionaries[action.name]))
     }
-    settings.dictionary_names = Object.keys(dictionaries)
-    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+    setStorage('dictionary_builder_settings', '', settings, use_db)
   }
   const editCategories = (state: string[], action: CategoryActions) => {
     switch (action.type) {
@@ -159,11 +170,11 @@ export function Building({children}: {children: ReactNode}) {
   const editDictionary = (state: Dict, action: DictionaryActions) => {
     if (action.type === 'history_bulk') {
       categoryAction({type: 'collect', dictionary: action.dict, reset: true})
-      manageDictionaries({type: 'save', name, dict: action.dict})
+      manageDictionaries({type: 'save', name: settings.selected, dict: action.dict})
       return action.dict
     }
     if (action.type === 'change_dict') {
-      editHistory({type: 'replace', history: loadHistory()})
+      loadHistory(action.name, history => editHistory({type: 'replace', history}), passwordRequester, use_db)
       categoryAction({type: 'collect', dictionary: action.dict, reset: true})
       return action.dict
     }
@@ -243,12 +254,6 @@ export function Building({children}: {children: ReactNode}) {
           categories: {...(action.categories || existing.categories || {})},
           sense: 'sense' in action ? action.sense || '' : existing.sense || '',
         }
-        const processed = getProcessedTerm(term, data, newState)
-        if (!action.sense) {
-          if (processed.type === 'fixed' && processed.synsets.length === 1 && data.sense_keys) {
-            action.sense = data.sense_keys[processed.synsets[0].index]
-          }
-        }
         if (action.type === 'replace') {
           const original = 'string' === typeof action.originalTerm ? action.originalTerm : action.originalTerm.source
           delete newState[original]
@@ -308,57 +313,48 @@ export function Building({children}: {children: ReactNode}) {
       }
       categoryAction({type: 'collect', dictionary: newState})
     }
-    manageDictionaries({type: 'save', name, dict: newState})
+    manageDictionaries({type: 'save', name: settings.selected, dict: newState})
     return newState
   }
-  const setCurrent = (name: string) => {
-    const current = name in dictionaries ? name : 'default'
-    setName(current)
-    settings.selected = current
-    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-  }
-  const [dictionary, dictionaryAction] = useReducer(editDictionary, dictionaries.default)
+  const [dictionary, dictionaryAction] = useReducer(editDictionary, {})
   useEffect(() => {
-    if (!settings.selected || !(settings.selected in dictionaries)) settings.selected = 'default'
-    dictionaryAction({
-      type: 'change_dict',
-      dict: dictionaries[settings.selected],
-    })
-  }, [settings, dictionaries])
+    if (!settings.dictionary_names.includes(settings.selected)) settings.selected = 'default'
+    changeDictionary(settings.selected)
+  }, [])
   const historyStep = (direction: number) => {
     const newDict = {...dictionary}
-    const newHistory = loadHistory()
+    const newHistory = {...history}
     const to = Math.min(Math.max(-1, newHistory.position + direction), newHistory.edits.length - 1)
     moveInHistory(to, newHistory, newDict)
     editHistory({type: 'replace', history: newHistory})
-    localStorage.setItem('dict_history_' + name, JSON.stringify(newHistory))
+    setStorage(settings.selected, 'dict_history_', newHistory, use_db)
     dictionaryAction({type: 'history_bulk', dict: newDict})
   }
   return (
-    <EditHistory.Provider value={history}>
-      <EditHistoryEditor.Provider value={editHistory}>
-        <Dictionaries.Provider value={dictionaries}>
-          <ManageDictionaries.Provider value={manageDictionaries}>
-            <DictionaryName.Provider value={name}>
-              <BuildContext.Provider value={dictionary}>
-                <AllCategories.Provider value={categories}>
-                  <DictionaryNameSetter.Provider
-                    value={(name: string) => {
-                      setCurrent(name)
-                    }}
-                  >
-                    <BuildEditContext.Provider value={dictionaryAction}>
-                      <CategoryEditContext.Provider value={categoryAction}>
-                        <HistoryStepper.Provider value={historyStep}>{children}</HistoryStepper.Provider>
-                      </CategoryEditContext.Provider>
-                    </BuildEditContext.Provider>
-                  </DictionaryNameSetter.Provider>
-                </AllCategories.Provider>
-              </BuildContext.Provider>
-            </DictionaryName.Provider>
-          </ManageDictionaries.Provider>
-        </Dictionaries.Provider>
-      </EditHistoryEditor.Provider>
-    </EditHistory.Provider>
+    <SettingsContext.Provider value={settings}>
+      <SettingEditor.Provider value={updateSettings}>
+        <PasswordEnterer.Provider value={promptPassword}>
+          <PasswordPrompter.Provider value={passwordRequester}>
+            <PasswordResolve.Provider value={requester}>
+              <EditHistory.Provider value={history}>
+                <EditHistoryEditor.Provider value={editHistory}>
+                  <ManageDictionaries.Provider value={manageDictionaries}>
+                    <BuildContext.Provider value={dictionary}>
+                      <AllCategories.Provider value={categories}>
+                        <BuildEditContext.Provider value={dictionaryAction}>
+                          <CategoryEditContext.Provider value={categoryAction}>
+                            <HistoryStepper.Provider value={historyStep}>{children}</HistoryStepper.Provider>
+                          </CategoryEditContext.Provider>
+                        </BuildEditContext.Provider>
+                      </AllCategories.Provider>
+                    </BuildContext.Provider>
+                  </ManageDictionaries.Provider>
+                </EditHistoryEditor.Provider>
+              </EditHistory.Provider>
+            </PasswordResolve.Provider>
+          </PasswordPrompter.Provider>
+        </PasswordEnterer.Provider>
+      </SettingEditor.Provider>
+    </SettingsContext.Provider>
   )
 }

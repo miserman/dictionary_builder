@@ -1,5 +1,5 @@
 import {timers, type GridRow} from './addedTerms'
-import type {Dict} from './building'
+import type {Dict} from './storage'
 import type {TermResources} from './resources'
 import {unpackSynsetMembers} from './synset'
 import type {FixedTerm, FuzzyTerm} from './term'
@@ -206,15 +206,6 @@ export async function makeRow(rows: GridRow[], index: number, term: string, dict
           matches: processed.matches.length,
           ncats: Object.keys(dictEntry.categories).length,
         }
-  if (
-    processed.type === 'fixed' &&
-    !row.sense &&
-    processed.synsets.length === 1 &&
-    data.sense_keys &&
-    data.synsetInfo
-  ) {
-    row.sense = data.sense_keys[processed.synsets[0].index]
-  }
   if (dictEntry.categories) {
     const cats = dictEntry.categories
     Object.keys(cats).forEach(cat => {
