@@ -9,7 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import {type ChangeEvent, useState, useContext} from 'react'
+import {type ChangeEvent, useState, useContext, type KeyboardEvent} from 'react'
 import {ManageDictionaries, PasswordEnterer, PasswordPrompter, PasswordResolve} from './building'
 
 export function PasswordPrompt() {
@@ -24,6 +24,20 @@ export function PasswordPrompt() {
     close('')
   }
   const [password, setPassword] = useState('')
+  const submit = () => {
+    if (password) {
+      setFailed(false)
+      reply(password)
+        .then(() => {
+          close('')
+          setPassword('')
+        })
+        .catch(() => {
+          setPassword('')
+          setFailed(true)
+        })
+    }
+  }
   return (
     <Dialog open={!!dictName} onClose={bail}>
       <DialogTitle>Decrypt Dictionary</DialogTitle>
@@ -47,6 +61,11 @@ export function PasswordPrompt() {
           type="password"
           value={password}
           error={failed}
+          onKeyDown={(e: KeyboardEvent) => {
+            if (e.code === 'Enter') {
+              submit()
+            }
+          }}
           onChange={(e: ChangeEvent<HTMLInputElement>) => {
             setPassword(e.target.value)
           }}
@@ -54,21 +73,7 @@ export function PasswordPrompt() {
       </DialogContent>
       <DialogActions sx={{justifyContent: 'space-between'}}>
         <Button onClick={bail}>Cancel</Button>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setFailed(false)
-            reply(password)
-              .then(() => {
-                close('')
-                setPassword('')
-              })
-              .catch(() => {
-                setPassword('')
-                setFailed(true)
-              })
-          }}
-        >
+        <Button variant="contained" onClick={submit}>
           Decrypt
         </Button>
       </DialogActions>

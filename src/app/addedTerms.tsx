@@ -1,51 +1,13 @@
-import {
-  Backdrop,
-  Box,
-  IconButton,
-  LinearProgress,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-  Stack,
-  Typography,
-} from '@mui/material'
-import {type KeyboardEvent, useContext, useMemo, useState, useEffect} from 'react'
-import {Edit, RemoveCircleOutline} from '@mui/icons-material'
-import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
+import {Backdrop, Box, IconButton, LinearProgress, Stack, Typography} from '@mui/material'
+import {useContext, useMemo, useState, useEffect, useCallback} from 'react'
+import {RemoveCircleOutline} from '@mui/icons-material'
+import {TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
 import {AllCategories, BuildContext, BuildEditContext} from './building'
-import {
-  DataGrid,
-  type GridColDef,
-  type GridRenderEditCellParams,
-  type GridCellParams,
-  GridToolbarQuickFilter,
-  GridColumnMenu,
-} from '@mui/x-data-grid'
-import {EditorTermSetter} from './termEditor'
+import type {GridColDef, GridRenderEditCellParams, GridCellParams} from '@mui/x-data-grid'
 import {makeRows} from './processTerms'
 import {CategoryEditor} from './categoryEditor'
-import type {DictEntry} from './storage'
-
-export type SortOptions = 'term' | 'time'
-
-export type GridRow = {
-  [index: string]: number | string | FixedTerm | FuzzyTerm | DictEntry
-  dictEntry: DictEntry
-  id: string
-  sense: string
-  matches: number
-  ncats: number
-} & (
-  | {processed: FuzzyTerm}
-  | {
-      processed: FixedTerm
-      sense: string
-      frequency: string
-      senses: number
-      related: number
-    }
-)
+import {type GridRow, Table} from './table'
 
 export const timers: {dictionary: number | NodeJS.Timeout; comparisons: number | NodeJS.Timeout} = {
   dictionary: 0,
@@ -62,6 +24,7 @@ export default function AddedTerms({
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
   const Cats = useContext(AllCategories)
+  const isCategory = useCallback((name: string) => Cats.includes(name), [Cats])
   const editDictionary = useContext(BuildEditContext)
   const dictTerms = useMemo(() => Object.freeze(Object.keys(Dict).sort()), [Dict])
   const cols: GridColDef[] = useMemo(() => {
@@ -147,20 +110,19 @@ export default function AddedTerms({
   }, [Cats, editFromEvent])
   const [rows, setRows] = useState<GridRow[]>([])
   const [progress, setProgress] = useState(0)
-  useEffect(() => {
-    if (Data.termAssociations && Data.synsetInfo) {
-      makeRows(Dict, Data, setProgress).then(res => {
-        setRows(res.sort(byTime))
-        setProgress(0)
-      })
-    }
-  }, [Dict, Data])
   const processing = useMemo(() => {
     if (dictTerms.length < 1000) return false
     const rowTerms = rows.map(({id}) => id).sort()
     return Math.abs(rowTerms.length - dictTerms.length) < 2 ? false : rowTerms.join() !== dictTerms.join()
   }, [rows, dictTerms])
-  const setEditorTerm = useContext(EditorTermSetter)
+  useEffect(() => {
+    if (Data.termAssociations && Data.synsetInfo) {
+      makeRows(Dict, Data, processing ? setProgress : undefined).then(res => {
+        setRows(res.sort(byTime))
+        if (processing) setProgress(0)
+      })
+    }
+  }, [Dict, Data, processing])
   const [editCategory, setEditCategory] = useState('')
   return (
     <Box component="main" sx={{height: '100%'}}>
@@ -175,62 +137,12 @@ export default function AddedTerms({
           </Stack>
         </Backdrop>
       ) : (
-        <DataGrid
-          sx={{
-            '& .MuiFormControl-root': {
-              position: 'absolute',
-              bottom: '4px',
-              left: '12px',
-            },
-          }}
+        <Table
           rows={rows}
           columns={cols}
-          showCellVerticalBorder
-          disableDensitySelector
-          pageSizeOptions={[100]}
-          density="compact"
-          slots={{
-            toolbar: GridToolbarQuickFilter,
-            columnMenu: props => {
-              const name = props.colDef.headerName
-              return Cats.includes(name) ? (
-                <GridColumnMenu
-                  {...props}
-                  slots={{
-                    columnMenuUserItem: () => {
-                      return (
-                        <MenuItem
-                          onClick={() => {
-                            setEditCategory(name)
-                          }}
-                        >
-                          <ListItemIcon>
-                            <Edit fontSize="small" />
-                          </ListItemIcon>
-                          <ListItemText>Edit category</ListItemText>
-                        </MenuItem>
-                      )
-                    },
-                  }}
-                  slotProps={{
-                    columnMenuIserItem: {
-                      displayOrder: 15,
-                    },
-                  }}
-                />
-              ) : (
-                <GridColumnMenu {...props} />
-              )
-            },
-          }}
-          onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
-            if (e.key === 'Delete' || e.key === 'Backspace') {
-              editFromEvent(0, params)
-            }
-          }}
-          onRowClick={({row}: {row: GridRow}) => {
-            setEditorTerm(row.id)
-          }}
+          isCategory={isCategory}
+          setEditCategory={setEditCategory}
+          editFromEvent={editFromEvent}
         />
       )}
       <CategoryEditor category={editCategory} onClose={() => setEditCategory('')} />

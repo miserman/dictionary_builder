@@ -1,9 +1,10 @@
-import {timers, type GridRow} from './addedTerms'
+import {timers} from './addedTerms'
 import type {Dict} from './storage'
 import type {TermResources} from './resources'
 import {unpackSynsetMembers} from './synset'
 import type {FixedTerm, FuzzyTerm} from './term'
 import {globToRegex, prepareRegex, relativeFrequency, termBounds, wildcard} from './utils'
+import type {GridRow} from './table'
 
 const Processed: {[index: string]: FuzzyTerm | FixedTerm} = {}
 const PartialMatchMap: {[index: string]: string} = {}
@@ -215,7 +216,7 @@ export async function makeRow(rows: GridRow[], index: number, term: string, dict
   rows[index] = row
 }
 
-export async function makeRows(dict: Dict, data: TermResources, progress: (perc: number) => void) {
+export async function makeRows(dict: Dict, data: TermResources, progress?: (perc: number) => void) {
   clearTimeout(timers.dictionary)
   return new Promise<GridRow[]>(resolve => {
     const terms = Object.freeze(Object.keys(dict))
@@ -231,10 +232,10 @@ export async function makeRows(dict: Dict, data: TermResources, progress: (perc:
       }
       if (i !== n_terms) {
         batch_i = 0
-        progress(i / n_terms)
+        progress && progress(i / n_terms)
         timers.dictionary = setTimeout(runBatch, 0)
       } else {
-        progress(1)
+        progress && progress(1)
         resolve(rows)
       }
     }

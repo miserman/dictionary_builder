@@ -1,7 +1,7 @@
 import {type ReactNode, createContext, useEffect, useReducer, useState} from 'react'
-import {Settings, loadSettings} from './settingsMenu'
+import {type Settings, loadSettings} from './settingsMenu'
 import {moveInHistory} from './history'
-import {Dict, DictEntry, loadDictionary, loadHistory, removeStorage, setStorage} from './storage'
+import {type Dict, type DictEntry, loadDictionary, loadHistory, removeStorage, setStorage} from './storage'
 
 export type NumberObject = {[index: string]: number}
 export type TermTypes = 'fixed' | 'glob' | 'regex'
@@ -152,19 +152,20 @@ export function Building({children}: {children: ReactNode}) {
     setStorage('dictionary_builder_settings', '', settings, use_db)
   }
   const editCategories = (state: string[], action: CategoryActions) => {
-    switch (action.type) {
-      case 'collect':
-        const cats: Set<string> = new Set(action.reset ? [] : state)
-        Object.keys(action.dictionary).forEach(term => {
-          const entry = action.dictionary[term]
-          entry && entry.categories && Object.keys(entry.categories).forEach(cat => cats.add(cat))
-        })
-        return Array.from(cats).sort(byLowerAlphabet)
-      case 'add':
-        return state.includes(action.cat) ? [...state] : [...state, action.cat].sort(byLowerAlphabet)
-      default:
-        return state.filter(cat => cat !== action.cat)
+    let newState = state
+    if (action.type === 'collect') {
+      const cats: Set<string> = new Set(action.reset ? [] : state)
+      Object.keys(action.dictionary).forEach(term => {
+        const entry = action.dictionary[term]
+        entry && entry.categories && Object.keys(entry.categories).forEach(cat => cats.add(cat))
+      })
+      newState = Array.from(cats).sort(byLowerAlphabet)
+    } else if (action.type === 'add') {
+      if (!state.includes(action.cat)) newState = [...state, action.cat].sort(byLowerAlphabet)
+    } else {
+      newState = state.filter(cat => cat !== action.cat)
     }
+    return state.length !== newState.length || state.join('') !== newState.join('') ? newState : state
   }
   const [categories, categoryAction] = useReducer(editCategories, [])
   const editDictionary = (state: Dict, action: DictionaryActions) => {
@@ -322,13 +323,16 @@ export function Building({children}: {children: ReactNode}) {
     changeDictionary(settings.selected)
   }, [])
   const historyStep = (direction: number) => {
-    const newDict = {...dictionary}
-    const newHistory = {...history}
-    const to = Math.min(Math.max(-1, newHistory.position + direction), newHistory.edits.length - 1)
-    moveInHistory(to, newHistory, newDict)
-    editHistory({type: 'replace', history: newHistory})
-    setStorage(settings.selected, 'dict_history_', newHistory, use_db)
-    dictionaryAction({type: 'history_bulk', dict: newDict})
+    const to = Math.min(Math.max(-1, history.position + direction), history.edits.length - 1)
+
+    if (to !== history.position) {
+      const newDict = {...dictionary}
+      const newHistory = {...history}
+      moveInHistory(to, newHistory, newDict)
+      editHistory({type: 'replace', history: newHistory})
+      setStorage(settings.selected, 'dict_history_', newHistory, use_db)
+      dictionaryAction({type: 'history_bulk', dict: newDict})
+    }
   }
   return (
     <SettingsContext.Provider value={settings}>
