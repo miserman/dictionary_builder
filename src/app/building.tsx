@@ -131,11 +131,11 @@ export function Building({children}: {children: ReactNode}) {
 
   const manageDictionaries = (action: DictionaryStorageAction) => {
     if (action.type === 'delete') {
-      settings.dictionary_names.splice(settings.dictionary_names.indexOf(action.name), 1)
+      if (action.name !== 'default') settings.dictionary_names.splice(settings.dictionary_names.indexOf(action.name), 1)
       settings.selected = 'default'
       updateSettings({...settings})
-      removeStorage('dict_' + action.name, use_db)
-      removeStorage('dict_history_' + action.name, use_db)
+      removeStorage(action.name, 'dict_', use_db)
+      removeStorage(action.name, 'dict_history_', use_db)
       changeDictionary('default')
     } else {
       if (!settings.dictionary_names.includes(action.name)) settings.dictionary_names.push(action.name)

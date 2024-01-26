@@ -143,8 +143,8 @@ export function SettingsMenu() {
               onConfirm={() => {
                 if (settings.dictionary_names) {
                   settings.dictionary_names.forEach(name => {
-                    removeStorage('dict_' + name, !!settings.use_db)
-                    removeStorage('dict_history_' + name, !!settings.use_db)
+                    removeStorage(name, 'dict_', !!settings.use_db)
+                    removeStorage(name, 'dict_history_', !!settings.use_db)
                   })
                 }
                 localStorage.removeItem('dictionary_builder_settings')

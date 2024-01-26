@@ -3,25 +3,23 @@ import type {HistoryContainer, NumberObject, PasswordRequestCallback, TermTypes}
 type StoredKey = {salt: Uint8Array; key: CryptoKey}
 const keys: {[index: string]: StoredKey} = {}
 const encoder = new TextEncoder()
-const decoder = new TextDecoder()
 async function getKey(name: string, password: string, salt: Uint8Array): Promise<StoredKey | undefined> {
   if (!(name in keys)) {
-    const baseKey = await window.crypto.subtle.importKey('raw', encoder.encode(password), {name: 'PBKDF2'}, false, [
-      'deriveBits',
+    const baseKey = await crypto.subtle.importKey('raw', encoder.encode(password), {name: 'PBKDF2'}, false, [
       'deriveKey',
     ])
     keys[name] = {
       salt,
-      key: await window.crypto.subtle.deriveKey(
+      key: await crypto.subtle.deriveKey(
         {
           name: 'PBKDF2',
           salt,
-          iterations: 5e5,
+          iterations: 1e6,
           hash: 'SHA-256',
         },
         baseKey,
         {name: 'AES-GCM', length: 256},
-        true,
+        false,
         ['encrypt', 'decrypt']
       ),
     }
@@ -29,15 +27,22 @@ async function getKey(name: string, password: string, salt: Uint8Array): Promise
   return keys[name]
 }
 async function encrypt(name: string, content: any, password?: string) {
-  const key = password ? await getKey(name, password, window.crypto.getRandomValues(new Uint8Array(16))) : keys[name]
-  const iv = window.crypto.getRandomValues(new Uint8Array(12))
+  const key = password ? await getKey(name, password, crypto.getRandomValues(new Uint8Array(16))) : keys[name]
+  const iv = crypto.getRandomValues(new Uint8Array(12))
   if (key) {
     try {
-      const encrypted = await window.crypto.subtle.encrypt(
-        {name: 'AES-GCM', iv},
-        key.key,
-        encoder.encode(JSON.stringify(content))
-      )
+      const streamReader = new Blob([JSON.stringify(content)])
+        .stream()
+        .pipeThrough(new CompressionStream('gzip'))
+        .getReader()
+      const chunks = []
+      while (true) {
+        const {done, value} = await streamReader.read()
+        if (done) break
+        chunks.push(value)
+      }
+      const compressed = new Uint8Array(await new Blob(chunks).arrayBuffer())
+      const encrypted = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key.key, compressed)
       return iv.toString() + ',' + key.salt.toString() + ',' + new Uint8Array(encrypted).toString()
     } catch {
       console.error('failed to encrypt ' + name)
@@ -49,21 +54,22 @@ async function decrypt(name: string, content: string, password?: string) {
   const key = password ? await getKey(name, password, new Uint8Array(buffer, 12, 16)) : keys[name]
   if (key) {
     try {
-      const decrypted = await window.crypto.subtle.decrypt(
+      const decrypted = await crypto.subtle.decrypt(
         {name: 'AES-GCM', iv: new Uint8Array(buffer, 0, 12)},
         key.key,
         new Uint8Array(buffer, 28)
       )
-      return JSON.parse(decoder.decode(decrypted))
-    } catch {
-      console.error('failed to decrypt ' + name)
-    }
+      const blob = new Blob([decrypted])
+      const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'))
+      return new Response(stream).json()
+    } catch {}
   }
 }
 
-export async function removeStorage(name: string, use_db: boolean) {
+export async function removeStorage(name: string, prefix: string, use_db: boolean) {
+  delete keys[name]
   if (!use_db) {
-    localStorage.removeItem(name)
+    localStorage.removeItem(prefix + name)
   }
 }
 export async function setStorage(name: string, prefix: string, value: any, use_db: boolean, password?: string) {
