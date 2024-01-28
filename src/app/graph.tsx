@@ -12,6 +12,17 @@ import {InfoDrawerSetter} from './infoDrawer'
 
 use([TooltipComponent, GraphChart, GraphGLChart, CanvasRenderer, LegendComponent])
 
+type slimChartType = {_chartsViews: {_layouting: boolean; _layoutTimeout: number}[]; dispose: () => void}
+function cancelViewSteppers(chart: slimChartType | null) {
+  if (chart && chart._chartsViews) {
+    chart._chartsViews.forEach(view => {
+      if (view._layouting) {
+        view._layouting = false
+        clearTimeout(view._layoutTimeout)
+      }
+    })
+  }
+}
 export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; options: PlotOptions}) {
   const termEditor = useContext(EditorTermSetter)
   const updateInfoDrawerState = useContext(InfoDrawerSetter)
@@ -29,14 +40,7 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
     window.addEventListener('resize', resize)
     return () => {
       if (chart) {
-        const views = (chart as any)._chartsViews as {_layouting: boolean; _layoutTimeout: number}[]
-        views &&
-          views.forEach(view => {
-            if (view._layouting) {
-              view._layouting = false
-              clearTimeout(view._layoutTimeout)
-            }
-          })
+        cancelViewSteppers(chart as unknown as slimChartType)
         chart.dispose()
       }
       window.removeEventListener('resize', resize)
@@ -46,6 +50,7 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
     if (container.current) {
       const chart = getInstanceByDom(container.current)
       if (chart) {
+        cancelViewSteppers(chart as unknown as slimChartType)
         if (options.hide_zeros) nodes = nodes.filter(node => !!node.value)
         nodes = nodes.map(node => {
           node.label = {show: node.value >= options.label_threshold}

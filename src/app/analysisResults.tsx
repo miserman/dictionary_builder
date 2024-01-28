@@ -1,12 +1,13 @@
 import {Box, LinearProgress, Stack, Typography} from '@mui/material'
 import type {PlotOptions, ProcessOptions, TermEntry} from './analysisMenu'
-import {useContext, useEffect, useMemo, useState} from 'react'
+import {useContext, useEffect, useState} from 'react'
 import {Graph} from './graph'
 import {getProcessedTerm} from './processTerms'
 import type {FixedTerm, NetworkLookup} from './term'
 import {ResourceContext} from './resources'
 import {BuildContext} from './building'
 import {timers} from './addedTerms'
+import {DictEntry} from './storage'
 
 export function getIntersects(a: string, b: NetworkLookup) {
   return {
@@ -138,10 +139,12 @@ async function processComparisons(
 }
 
 export function Results({
+  allTerms,
   selectedCategories,
   options,
   plotOptions,
 }: {
+  allTerms: Map<string, DictEntry>
   selectedCategories: string[]
   options: ProcessOptions
   plotOptions: PlotOptions
@@ -149,54 +152,45 @@ export function Results({
   const data = useContext(ResourceContext)
   const dict = useContext(BuildContext)
 
-  const allTerms = useMemo(() => {
-    const entered: {[index: string]: boolean} = {}
-    const out: TermEntry[] = []
-    Object.keys(dict).forEach(term => {
-      const processed = getProcessedTerm(term, data, dict, true)
-      if (processed.type === 'fixed') {
-        if (!(term in entered)) {
-          entered[term] = true
-          out.push({term, categories: dict[term].categories, processed})
-        }
-      } else if (options.include_fuzzy) {
-        processed.matches.forEach(match => {
-          if (!(match in dict) && !(match in entered)) {
-            entered[match] = true
-            out.push({
-              host: term,
-              term: match,
-              categories: dict[term].categories,
-              processed: getProcessedTerm(match, data, {}, true) as FixedTerm,
-            })
-          }
-        })
-      }
-    })
-    return out
-  }, [dict, data, options])
-
   const [network, setNetwork] = useState<{edges: Edge[]; nodes: Node[]}>({edges: [], nodes: []})
   const [progress, setProgress] = useState([0, 0])
 
   useEffect(() => {
     const selectedMap = new Map(selectedCategories.map((cat, index) => [index, cat]))
     const terms: {[index: string]: TermEntry} = {}
-    allTerms.forEach(term => {
+    allTerms.forEach((entry, term) => {
       let keep = false
       const cats: {[index: string]: number} = {}
       selectedMap.forEach(cat => {
-        if (cat in term.categories) {
+        if (cat in entry.categories) {
           keep = true
-          cats[cat] = term.categories[cat]
+          cats[cat] = entry.categories[cat]
         }
       })
-      if (keep) terms[term.term] = {...term, categories: cats}
+      if (keep) {
+        const processed = getProcessedTerm(term, data, dict, true)
+        if (processed.type === 'fixed') {
+          if (!(term in terms)) {
+            terms[term] = {term, categories: cats, processed}
+          }
+        } else if (options.include_fuzzy) {
+          processed.matches.forEach(match => {
+            if (!(match in dict) && !(match in terms)) {
+              terms[match] = {
+                host: term,
+                term: match,
+                categories: cats,
+                processed: getProcessedTerm(match, data, {}, true) as FixedTerm,
+              }
+            }
+          })
+        }
+      }
     })
     const record: {[index: string]: boolean} = {}
     const edges: Edge[] = []
     processComparisons(0, terms, edges, record, setProgress, setNetwork, options)
-  }, [allTerms, selectedCategories])
+  }, [dict, data, options, selectedCategories])
   return progress[0] < progress[1] ? (
     <Box sx={{position: 'relative', width: '100%', height: '100%'}}>
       <Box

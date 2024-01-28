@@ -1,4 +1,4 @@
-import {Close} from '@mui/icons-material'
+import {Close, Visibility, VisibilityOff} from '@mui/icons-material'
 import {
   Button,
   Dialog,
@@ -18,10 +18,14 @@ export function PasswordPrompt() {
   const close = useContext(PasswordPrompter)
   const manageDictionaries = useContext(ManageDictionaries)
   const [failed, setFailed] = useState(false)
+  const [hide, setHide] = useState(true)
+  let succeeded = false
   const bail = () => {
     setPassword('')
-    manageDictionaries({type: 'set', name: 'default'})
     close('')
+    if (!succeeded && !!dictName) {
+      manageDictionaries({type: 'set', name: 'default'})
+    }
   }
   const [password, setPassword] = useState('')
   const submit = () => {
@@ -29,6 +33,7 @@ export function PasswordPrompt() {
       setFailed(false)
       reply(password)
         .then(() => {
+          succeeded = true
           close('')
           setPassword('')
         })
@@ -40,7 +45,7 @@ export function PasswordPrompt() {
   }
   return (
     <Dialog open={!!dictName} onClose={bail}>
-      <DialogTitle>Decrypt Dictionary</DialogTitle>
+      <DialogTitle>Encrypted Dictionary</DialogTitle>
       <IconButton
         aria-label="close export menu"
         onClick={bail}
@@ -54,11 +59,14 @@ export function PasswordPrompt() {
         <Close />
       </IconButton>
       <DialogContent sx={{p: 1}}>
-        <Typography>Enter the password for the {dictName} dictionary:</Typography>
+        <Typography sx={{mb: 2}}>
+          The <span className="number">{dictName}</span> dictionary is encrypted.
+        </Typography>
         <TextField
           fullWidth
+          label="Password"
           size="small"
-          type="password"
+          type={hide ? 'password' : 'text'}
           value={password}
           error={failed}
           onKeyDown={(e: KeyboardEvent) => {
@@ -70,10 +78,17 @@ export function PasswordPrompt() {
             setPassword(e.target.value)
           }}
         />
+        <IconButton
+          sx={{position: 'absolute', right: 15}}
+          aria-label="toggle password visibility"
+          onClick={() => setHide(!hide)}
+        >
+          {hide ? <VisibilityOff /> : <Visibility />}
+        </IconButton>
       </DialogContent>
       <DialogActions sx={{justifyContent: 'space-between'}}>
         <Button onClick={bail}>Cancel</Button>
-        <Button variant="contained" onClick={submit}>
+        <Button variant="contained" onClick={submit} disabled={!password}>
           Decrypt
         </Button>
       </DialogActions>

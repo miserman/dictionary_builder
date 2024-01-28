@@ -45,7 +45,11 @@ export type EditHistoryAction =
   | {type: 'replace'; history: HistoryContainer}
   | {type: 'clear'}
 export type DictionaryEditor = (action: DictionaryActions) => void
-export const SettingsContext = createContext<Settings>({selected: 'default', dictionary_names: ['default']})
+export const SettingsContext = createContext<Settings>({
+  selected: 'default',
+  dictionary_names: ['default'],
+  use_db: true,
+})
 export const SettingEditor = createContext((settings: Settings) => {})
 export const ManageDictionaries = createContext((action: DictionaryStorageAction) => {})
 export const BuildContext = createContext<Dict>({})
@@ -134,8 +138,8 @@ export function Building({children}: {children: ReactNode}) {
       if (action.name !== 'default') settings.dictionary_names.splice(settings.dictionary_names.indexOf(action.name), 1)
       settings.selected = 'default'
       updateSettings({...settings})
-      removeStorage(action.name, 'dict_', use_db)
-      removeStorage(action.name, 'dict_history_', use_db)
+      removeStorage(action.name, 'dict_')
+      removeStorage(action.name, 'dict_history_')
       changeDictionary('default')
     } else {
       if (!settings.dictionary_names.includes(action.name)) settings.dictionary_names.push(action.name)
@@ -149,7 +153,7 @@ export function Building({children}: {children: ReactNode}) {
         }
       }
     }
-    setStorage('dictionary_builder_settings', '', settings, use_db)
+    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
   }
   const editCategories = (state: string[], action: CategoryActions) => {
     let newState = state
@@ -330,7 +334,7 @@ export function Building({children}: {children: ReactNode}) {
       const newHistory = {...history}
       moveInHistory(to, newHistory, newDict)
       editHistory({type: 'replace', history: newHistory})
-      setStorage(settings.selected, 'dict_history_', newHistory, use_db)
+      if (!settings.disable_storage) setStorage(settings.selected, 'dict_history_', newHistory, use_db)
       dictionaryAction({type: 'history_bulk', dict: newDict})
     }
   }

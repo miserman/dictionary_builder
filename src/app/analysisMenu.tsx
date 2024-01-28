@@ -76,18 +76,21 @@ export function AnalyzeMenu() {
     setSelected(selected.filter(cat => categories.includes(cat)))
   }, [categories])
   const nCats = categories.length
-  const catCount = useMemo(() => {
-    const counts: NumberObject = {}
-    Object.values(dict).forEach(entry => {
-      Object.keys(entry.categories).forEach(cat => {
-        if (cat in counts) {
-          counts[cat]++
-        } else {
-          counts[cat] = 1
-        }
+  const {allTerms, catCount} = useMemo(() => {
+    const catCount: NumberObject = {}
+    const allTerms = new Map(
+      Object.keys(dict).map(term => {
+        Object.keys(dict[term].categories).forEach(cat => {
+          if (cat in catCount) {
+            catCount[cat]++
+          } else {
+            catCount[cat] = 1
+          }
+        })
+        return [term, dict[term]]
       })
-    })
-    return counts
+    )
+    return {catCount, allTerms}
   }, [dict])
   return (
     <Stack direction="row" sx={{height: '100%'}}>
@@ -324,7 +327,7 @@ export function AnalyzeMenu() {
           </Box>
         </Box>
       </Box>
-      <Results selectedCategories={selected} options={procOpts} plotOptions={plotOpts} />
+      <Results allTerms={allTerms} selectedCategories={selected} options={procOpts} plotOptions={plotOpts} />
     </Stack>
   )
 }

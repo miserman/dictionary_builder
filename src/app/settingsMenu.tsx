@@ -10,6 +10,7 @@ import {
   Stack,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import {type ChangeEvent, useCallback, useContext, useEffect, useState} from 'react'
@@ -30,11 +31,14 @@ export type Settings = {
 }
 
 export function loadSettings() {
-  const raw =
-    'undefined' === typeof window ? {} : JSON.parse(localStorage.getItem('dictionary_builder_settings') || '{}')
-  if (!raw.dictionary_names) raw.dictionary_names = ['default']
-  if (!raw.selected || !raw.dictionary_names.includes(raw.selected)) raw.selected = 'default'
-  return raw as Settings
+  const raw = 'undefined' === typeof window ? null : localStorage.getItem('dictionary_builder_settings')
+  const parsed = (
+    raw ? JSON.parse(raw) : {dictionary_names: ['default'], selected: 'default', use_db: true}
+  ) as Settings
+  if (!parsed.dictionary_names) parsed.dictionary_names = ['default']
+  if (!parsed.selected || !parsed.dictionary_names.includes(parsed.selected)) parsed.selected = 'default'
+  if (!('use_db' in parsed)) parsed.use_db = true
+  return parsed
 }
 
 export function SettingsMenu() {
@@ -46,6 +50,7 @@ export function SettingsMenu() {
   const [undo, setUndo] = useState(settings.undo || 'z')
   const [redo, setRedo] = useState(settings.redo || 'x')
   const [disableStore, setDisableStore] = useState(!!settings.disable_storage)
+  const [use_db, setUseDB] = useState(!!settings.use_db)
   const listener = useCallback(
     (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && (!e.target || !('tagName' in e.target) || e.target.tagName !== 'INPUT')) {
@@ -106,6 +111,29 @@ export function SettingsMenu() {
                   />
                 }
               />
+              {disableStore ? (
+                <></>
+              ) : (
+                <Tooltip title="IndexedDB can store larger dictionaries, but it may be a bit slower.">
+                  <FormControlLabel
+                    label="Use IndexedDB"
+                    labelPlacement="start"
+                    sx={{justifyContent: 'space-between'}}
+                    control={
+                      <Switch
+                        checked={use_db}
+                        size="small"
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          settings.use_db = !use_db
+                          updateSettings({...settings})
+                          localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+                          setUseDB(!use_db)
+                        }}
+                      />
+                    }
+                  />
+                </Tooltip>
+              )}
               <Typography fontWeight="bold">Keybinds</Typography>
               <Typography variant="caption">CTRL + </Typography>
               <Stack spacing={2} sx={{mt: 1}}>
@@ -143,8 +171,8 @@ export function SettingsMenu() {
               onConfirm={() => {
                 if (settings.dictionary_names) {
                   settings.dictionary_names.forEach(name => {
-                    removeStorage(name, 'dict_', !!settings.use_db)
-                    removeStorage(name, 'dict_history_', !!settings.use_db)
+                    removeStorage(name, 'dict_')
+                    removeStorage(name, 'dict_history_')
                   })
                 }
                 localStorage.removeItem('dictionary_builder_settings')

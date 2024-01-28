@@ -1,5 +1,27 @@
 import type {HistoryContainer, NumberObject, PasswordRequestCallback, TermTypes} from './building'
 
+// compression
+type storedItem = {name: string; encrypted?: boolean; content: Blob}
+async function compress(content: any) {
+  const streamReader = new Blob([JSON.stringify(content)])
+    .stream()
+    .pipeThrough(new CompressionStream('gzip'))
+    .getReader()
+  const chunks = []
+  while (true) {
+    const {done, value} = await streamReader.read()
+    if (done) break
+    chunks.push(value)
+  }
+  return new Blob(chunks)
+}
+export async function decompress(blob: Blob) {
+  const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'))
+  const json = await new Response(stream).json()
+  return json
+}
+
+// encryption
 type StoredKey = {salt: Uint8Array; key: CryptoKey}
 const keys: {[index: string]: StoredKey} = {}
 const encoder = new TextEncoder()
@@ -31,26 +53,30 @@ async function encrypt(name: string, content: any, password?: string) {
   const iv = crypto.getRandomValues(new Uint8Array(12))
   if (key) {
     try {
-      const streamReader = new Blob([JSON.stringify(content)])
-        .stream()
-        .pipeThrough(new CompressionStream('gzip'))
-        .getReader()
-      const chunks = []
-      while (true) {
-        const {done, value} = await streamReader.read()
-        if (done) break
-        chunks.push(value)
-      }
-      const compressed = new Uint8Array(await new Blob(chunks).arrayBuffer())
-      const encrypted = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key.key, compressed)
-      return iv.toString() + ',' + key.salt.toString() + ',' + new Uint8Array(encrypted).toString()
+      const encrypted = await crypto.subtle.encrypt(
+        {name: 'AES-GCM', iv},
+        key.key,
+        new Uint8Array(await (await compress(content)).arrayBuffer())
+      )
+      return new Blob([iv, key.salt, encrypted])
     } catch {
       console.error('failed to encrypt ' + name)
     }
   }
 }
-async function decrypt(name: string, content: string, password?: string) {
-  const buffer = Uint8Array.from(content.split(',').map(v => +v)).buffer
+function parseStoredString(raw: string): Promise<Blob> {
+  return new Promise(async resolve => {
+    if (raw[0] === 'e' || raw[0] === 'c') {
+      resolve(await fetch('data:application/octet-stream;base64,' + raw.substring(1)).then(res => res.blob()))
+    } else {
+      resolve(new Blob([Uint8Array.from(raw.split(',').map(v => +v))]))
+    }
+  })
+}
+async function decrypt(name: string, content: string | Blob, password?: string) {
+  const buffer = await ('string' === typeof content
+    ? (await parseStoredString(content)).arrayBuffer()
+    : content.arrayBuffer())
   const key = password ? await getKey(name, password, new Uint8Array(buffer, 12, 16)) : keys[name]
   if (key) {
     try {
@@ -59,25 +85,101 @@ async function decrypt(name: string, content: string, password?: string) {
         key.key,
         new Uint8Array(buffer, 28)
       )
-      const blob = new Blob([decrypted])
-      const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'))
-      return new Response(stream).json()
+      return decompress(new Blob([decrypted]))
     } catch {}
   }
 }
 
-export async function removeStorage(name: string, prefix: string, use_db: boolean) {
+// indexedDB
+type DBName = 'resources' | 'building'
+const DBVersions = {resources: 1, building: 1}
+function openDB(name: DBName): Promise<IDBDatabase | undefined> {
+  return new Promise(resolve => {
+    const req = indexedDB.open('dictionary_builder_' + name, DBVersions[name])
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (db.objectStoreNames.contains(name)) db.deleteObjectStore(name)
+      db.createObjectStore(name, {keyPath: 'name'})
+    }
+    req.onsuccess = () => {
+      resolve(req.result)
+    }
+  })
+}
+const IDB = {
+  setItem: async function (item: storedItem, database: DBName = 'building'): Promise<boolean> {
+    const db = await openDB(database)
+    return new Promise(resolve => {
+      if (db) {
+        const req = db.transaction([database], 'readwrite').objectStore(database).put(item)
+        req.onerror = e => {
+          throw Error('failed to store item ' + item.name)
+        }
+        req.onsuccess = () => resolve(true)
+      } else {
+        throw Error
+      }
+    })
+  },
+  getItem: async function (name: string, database: DBName = 'building'): Promise<storedItem | null> {
+    const db = await openDB(database)
+    return new Promise(resolve => {
+      if (db) {
+        const req = db.transaction([database]).objectStore(database).get(name)
+        req.onerror = () => resolve(null)
+        req.onsuccess = () => {
+          resolve(req.result)
+        }
+      } else {
+        resolve(null)
+      }
+    })
+  },
+  removeItem: async function (name: string, database: DBName = 'building'): Promise<boolean> {
+    const db = await openDB(database)
+    return new Promise(resolve => {
+      if (db) {
+        const req = db.transaction([database], 'readwrite').objectStore(database).delete(name)
+        req.onerror = () => resolve(false)
+        req.onsuccess = () => resolve(true)
+      } else {
+        resolve(false)
+      }
+    })
+  },
+}
+
+// interface
+export async function loadResource(name: string) {
+  const resource = await IDB.getItem(name, 'resources')
+  return resource
+}
+export async function saveResource(name: string, content: any) {
+  IDB.setItem({name, encrypted: false, content: await compress(content)}, 'resources')
+}
+export async function removeStorage(name: string, prefix: string) {
   delete keys[name]
-  if (!use_db) {
-    localStorage.removeItem(prefix + name)
-  }
+  IDB.removeItem(prefix + name)
+  localStorage.removeItem(prefix + name)
+}
+function writeBlob(blob: Blob, encrypted: boolean): Promise<string> {
+  return new Promise(resolve => {
+    const reader = new FileReader()
+    reader.readAsDataURL(blob)
+    reader.onloadend = async () => {
+      resolve((encrypted ? 'e' : 'c') + (reader.result as string).split(';base64,')[1])
+    }
+  })
 }
 export async function setStorage(name: string, prefix: string, value: any, use_db: boolean, password?: string) {
-  const content = password || name in keys ? await encrypt(name, value, password) : JSON.stringify(value)
+  const encrypted = !!password || name in keys
+  const content = await (encrypted ? encrypt(name, value, password) : compress(value))
   if (content) {
     try {
-      if (!use_db) {
-        localStorage.setItem(prefix + name, content)
+      if (use_db) {
+        IDB.setItem({name: prefix + name, encrypted, content})
+      } else {
+        localStorage.setItem(prefix + name, await writeBlob(content, encrypted))
       }
     } catch {
       console.error('failed to store ' + name)
@@ -90,16 +192,21 @@ export async function getStorage(
   resolve: (content: any) => void,
   use_db: boolean,
   requestPass: (name: string, resolve: PasswordRequestCallback) => void,
-  fallback?: any
+  fallback: any
 ) {
-  const raw = localStorage.getItem(prefix + name) as string
+  const key = prefix + name
+  let raw = use_db ? await IDB.getItem(key) : localStorage.getItem(key)
+  if (!raw) raw = use_db ? localStorage.getItem(key) : await IDB.getItem(key)
   if (raw) {
-    if (raw[0] === '{') {
-      resolve(JSON.parse(raw))
-    } else {
-      if (!(name in keys)) {
+    if ('string' === typeof raw && (raw[0] === '{' || raw[0] === 'c')) {
+      resolve(raw[0] === '{' ? JSON.parse(raw) : await decompress(await parseStoredString(raw)))
+    } else if ('string' === typeof raw || raw.encrypted) {
+      const encrypted = 'string' === typeof raw ? raw : raw.content
+      if (name in keys) {
+        resolve(await decrypt(name, encrypted))
+      } else {
         requestPass(name, () => async (password: string) => {
-          const content = await decrypt(name, raw, password)
+          const content = await decrypt(name, encrypted, password)
           if (content) {
             resolve(content)
           } else {
@@ -107,11 +214,11 @@ export async function getStorage(
             throw Error
           }
         })
-        return
       }
-      resolve(await decrypt(name, raw))
+    } else {
+      resolve(await decompress(raw.content))
     }
-  } else if (fallback) {
+  } else {
     resolve(fallback)
   }
 }
@@ -158,7 +265,8 @@ export async function loadDictionary(
         }
       },
       use_db,
-      requestPass
+      requestPass,
+      {}
     )
   }
 }

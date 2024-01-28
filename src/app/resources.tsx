@@ -2,6 +2,7 @@ import {Done, Error} from '@mui/icons-material'
 import {CircularProgress, List, ListItem, ListItemIcon, Stack, Typography} from '@mui/material'
 import {type ReactNode, createContext, useEffect, useState, useMemo} from 'react'
 import {newline} from './utils'
+import {decompress, loadResource, saveResource} from './storage'
 
 type AssociatedIndices = [number | number[], (number | number[])?][]
 export type Synset = {
@@ -60,61 +61,103 @@ export function Resources({children}: {children: ReactNode}) {
   const [loadingSynsetInfo, setLoadingSynsetInfo] = useState(true)
 
   useEffect(() => {
-    fetch('/dictionary_builder/data/terms.txt')
-      .then(res => res.text())
-      .then(data => {
-        const arr = Object.freeze(data.split(newline))
-        setTerms(arr)
-        const collapsed: {[index: string]: string} = {
-          all: ';;' + arr.join(';;') + ';;',
-        }
-
-        const obj: {[index: string]: number} = {}
-
-        arr.forEach((term, index) => {
-          obj[term] = index
-          const initial = term[0]
-          if (initial) {
-            if (initial in collapsed) {
-              collapsed[initial] += term + ';;'
-            } else {
-              collapsed[initial] = ';;' + term + ';;'
-            }
-          }
+    loadResource('terms').then(res => {
+      if (res && res.content) {
+        decompress(res.content).then(processedTerms => {
+          setTerms(Object.freeze(processedTerms.arr))
+          setTermLookup(Object.freeze(processedTerms.obj))
+          setCollapsedTerms(Object.freeze(processedTerms.collapsed))
+          setLoadingTerms(false)
         })
-        setTermLookup(Object.freeze(obj))
-        setCollapsedTerms(Object.freeze(collapsed))
-      })
-      .finally(() => setLoadingTerms(false))
+      } else {
+        fetch('/dictionary_builder/data/terms.txt')
+          .then(res => res.text())
+          .then(data => {
+            const arr = Object.freeze(data.split(newline))
+            setTerms(arr)
+            const collapsed: {[index: string]: string} = {
+              all: ';;' + arr.join(';;') + ';;',
+            }
+
+            const obj: {[index: string]: number} = {}
+
+            arr.forEach((term, index) => {
+              obj[term] = index
+              const initial = term[0]
+              if (initial) {
+                if (initial in collapsed) {
+                  collapsed[initial] += term + ';;'
+                } else {
+                  collapsed[initial] = ';;' + term + ';;'
+                }
+              }
+            })
+            setTermLookup(Object.freeze(obj))
+            setCollapsedTerms(Object.freeze(collapsed))
+            saveResource('terms', {arr, obj, collapsed})
+          })
+          .finally(() => setLoadingTerms(false))
+      }
+    })
   }, [setLoadingTerms])
   useEffect(() => {
-    fetch('/dictionary_builder/data/term_associations.json')
-      .then(res => res.json())
-      .then(data => {
-        setTermAssociations(data)
-      })
-      .finally(() => setLoadingTermAssociations(false))
+    loadResource('term_associations').then(res => {
+      if (res && res.content) {
+        decompress(res.content).then(data => {
+          setTermAssociations(data)
+          setLoadingTermAssociations(false)
+        })
+      } else {
+        fetch('/dictionary_builder/data/term_associations.json')
+          .then(res => res.json())
+          .then(data => {
+            setTermAssociations(data)
+            saveResource('term_associations', data)
+          })
+          .finally(() => setLoadingTermAssociations(false))
+      }
+    })
   }, [setLoadingTermAssociations])
   useEffect(() => {
-    fetch('/dictionary_builder/data/sense_keys.txt')
-      .then(res => res.text())
-      .then(data => {
-        setSenseKeys(Object.freeze(data.split(newline)))
-      })
-      .finally(() => setLoadingSenseKeys(false))
+    loadResource('sense_keys').then(res => {
+      if (res && res.content) {
+        decompress(res.content).then(keys => {
+          setSenseKeys(Object.freeze(keys))
+          setLoadingSenseKeys(false)
+        })
+      } else {
+        fetch('/dictionary_builder/data/sense_keys.txt')
+          .then(res => res.text())
+          .then(data => {
+            const senseKeys = data.split(newline)
+            setSenseKeys(Object.freeze(senseKeys))
+            saveResource('sense_keys', senseKeys)
+          })
+          .finally(() => setLoadingSenseKeys(false))
+      }
+    })
   }, [setLoadingSenseKeys])
   useEffect(() => {
-    fetch('/dictionary_builder/data/synset_info.json')
-      .then(res => res.json())
-      .then(data => {
-        setSynsetInfo(
-          data.map((d: Synset, i: number) => {
-            d.index = i
-            return d
+    loadResource('synset_info').then(res => {
+      if (res && res.content) {
+        decompress(res.content).then(info => {
+          setSynsetInfo(info)
+          setLoadingSynsetInfo(false)
+        })
+      } else {
+        fetch('/dictionary_builder/data/synset_info.json')
+          .then(res => res.json())
+          .then(data => {
+            const synsetInfo = data.map((d: Synset, i: number) => {
+              d.index = i
+              return d
+            })
+            setSynsetInfo(synsetInfo)
+            saveResource('synset_info', synsetInfo)
           })
-        )
-      })
-      .finally(() => setLoadingSynsetInfo(false))
+          .finally(() => setLoadingSynsetInfo(false))
+      }
+    })
   }, [setLoadingSynsetInfo])
   useEffect(() => {
     if (terms && termAssociations) {
