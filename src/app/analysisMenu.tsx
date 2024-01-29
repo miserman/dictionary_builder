@@ -80,23 +80,22 @@ export function AnalyzeMenu() {
   useEffect(() => {
     setSelected(selected.filter(cat => categories.includes(cat)))
   }, [categories])
-  const nCats = categories.length
-  const {allTerms, catCount} = useMemo(() => {
-    const catCount: NumberObject = {}
+  const {allTerms, catCounts} = useMemo(() => {
+    const catCounts: NumberObject = {}
     const allTerms = new Map(
       Object.keys(dict).map(term => {
         const termCats = Object.keys(dict[term].categories)
         ;(termCats.length ? termCats : ['no categories']).forEach(cat => {
-          if (cat in catCount) {
-            catCount[cat]++
+          if (cat in catCounts) {
+            catCounts[cat]++
           } else {
-            catCount[cat] = 1
+            catCounts[cat] = 1
           }
         })
         return [term, dict[term]]
       })
     )
-    return {catCount, allTerms}
+    return {catCounts, allTerms}
   }, [dict])
   return (
     <Stack direction="row" sx={{height: '100%'}}>
@@ -113,7 +112,7 @@ export function AnalyzeMenu() {
           <Box sx={{maxHeight: '60%', overflowY: 'auto'}}>
             <Typography variant="h6">Terms</Typography>
             <List dense sx={{overflowY: 'auto', maxHeight: '300px', p: 0}}>
-              {categories.map(cat => (
+              {Object.keys(catCounts).map(cat => (
                 <ListItem key={cat} disablePadding disableGutters>
                   <ListItemButton
                     disableGutters
@@ -132,7 +131,7 @@ export function AnalyzeMenu() {
                     <ListItemIcon sx={{minWidth: '35px'}}>
                       <Checkbox sx={{p: 0}} checked={selected.includes(cat)} />
                     </ListItemIcon>
-                    <ListItemText sx={{m: 0}} primary={cat} secondary={catCount[cat] + ' terms'}></ListItemText>
+                    <ListItemText sx={{m: 0}} primary={cat} secondary={catCounts[cat] + ' terms'}></ListItemText>
                   </ListItemButton>
                 </ListItem>
               ))}
@@ -159,7 +158,7 @@ export function AnalyzeMenu() {
                 </Button>
               </Stack>
               <Typography sx={{pr: 1, whiteSpace: 'nowrap'}}>
-                {selected.length + ' / ' + nCats + ' selected'}
+                {selected.length + ' / ' + categories.length + ' selected'}
               </Typography>
             </Toolbar>
             <Stack spacing={2}>
@@ -327,7 +326,13 @@ export function AnalyzeMenu() {
           </Box>
         </Box>
       </Box>
-      <Results allTerms={allTerms} selectedCategories={selected} options={procOpts} plotOptions={plotOpts} />
+      <Results
+        allTerms={allTerms}
+        catCounts={catCounts}
+        selectedCategories={selected}
+        options={procOpts}
+        plotOptions={plotOpts}
+      />
     </Stack>
   )
 }

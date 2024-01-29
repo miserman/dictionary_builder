@@ -59,16 +59,8 @@ export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; op
         if (edges.length) {
           const presentCats: {[index: string]: boolean} = {}
           nodes.forEach(node => {
-            if ('string' === typeof node.category) {
-              presentCats[node.category] = true
-            } else {
-              let category = ''
-              node.category.forEach(cat => {
-                presentCats[cat] = true
-                category = cat
-              })
-              node.category = category
-            }
+            if ('string' !== typeof node.category) node.category = node.category[0]
+            presentCats[node.category] = true
             node.symbolSize = options.size_by_value ? 7 + node.prop * 18 : 10
           })
           const categories = Object.keys(presentCats).map(cat => {

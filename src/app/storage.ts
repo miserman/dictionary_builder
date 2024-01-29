@@ -1,7 +1,6 @@
 import type {HistoryContainer, NumberObject, PasswordRequestCallback, TermTypes} from './building'
 
 // compression
-type storedItem = {name: string; encrypted?: boolean; content: Blob}
 async function compress(content: any) {
   const streamReader = new Blob([JSON.stringify(content)])
     .stream()
@@ -91,6 +90,7 @@ async function decrypt(name: string, content: string | Blob, password?: string) 
 }
 
 // indexedDB
+type storedItem = {name: string; encrypted?: boolean; content: Blob}
 type DBName = 'resources' | 'building'
 const DBVersions = {resources: 1, building: 1}
 function openDB(name: DBName): Promise<IDBDatabase | undefined> {

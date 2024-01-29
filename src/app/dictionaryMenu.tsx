@@ -88,6 +88,7 @@ export function DictionaryMenu() {
             textOverflow: 'ellipsis',
             alignSelf: 'center',
           }}
+          noWrap
         >
           {settings.selected}
         </Typography>

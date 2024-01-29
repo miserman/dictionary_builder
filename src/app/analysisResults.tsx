@@ -5,9 +5,9 @@ import {Graph} from './graph'
 import {getProcessedTerm} from './processTerms'
 import type {FixedTerm, NetworkLookup} from './term'
 import {ResourceContext} from './resources'
-import {BuildContext} from './building'
+import {BuildContext, type NumberObject} from './building'
 import {timers} from './addedTerms'
-import {DictEntry} from './storage'
+import type {DictEntry} from './storage'
 
 export function getIntersects(a: string, b: NetworkLookup) {
   return {
@@ -68,6 +68,7 @@ async function processComparisons(
   terms: {[index: string]: TermEntry},
   edges: Edge[],
   record: {[index: string]: boolean},
+  catCounts: NumberObject,
   progress: (progress: number[]) => void,
   finish: (data: {edges: Edge[]; nodes: Node[]}) => void,
   options: ProcessOptions
@@ -95,7 +96,10 @@ async function processComparisons(
   }
   progress([i, n])
   if (i < n) {
-    timers.comparisons = setTimeout(() => processComparisons(i, terms, edges, record, progress, finish, options), 0)
+    timers.comparisons = setTimeout(
+      () => processComparisons(i, terms, edges, record, catCounts, progress, finish, options),
+      0
+    )
   } else {
     setTimeout(() => {
       const nodeIndices: {[index: string]: number} = {}
@@ -105,7 +109,7 @@ async function processComparisons(
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
           host: term.host || '',
-          category: Object.keys(term.categories),
+          category: Object.keys(term.categories).sort((a, b) => catCounts[a] - catCounts[b]),
           name: term.term,
           prop: 1,
           value: 0,
@@ -140,11 +144,13 @@ async function processComparisons(
 
 export function Results({
   allTerms,
+  catCounts,
   selectedCategories,
   options,
   plotOptions,
 }: {
   allTerms: Map<string, DictEntry>
+  catCounts: NumberObject
   selectedCategories: string[]
   options: ProcessOptions
   plotOptions: PlotOptions
@@ -189,7 +195,7 @@ export function Results({
     })
     const record: {[index: string]: boolean} = {}
     const edges: Edge[] = []
-    processComparisons(0, terms, edges, record, setProgress, setNetwork, options)
+    processComparisons(0, terms, edges, record, catCounts, setProgress, setNetwork, options)
   }, [dict, data, options, selectedCategories])
   return progress[0] < progress[1] ? (
     <Box sx={{position: 'relative', width: '100%', height: '100%'}}>
