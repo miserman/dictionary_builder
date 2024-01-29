@@ -115,8 +115,9 @@ function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JS
   }
 }
 
+const extension = /\.\w{3,4}$/i
 function exportName(name: string, format: string, delType: string) {
-  return name + '.' + (format === 'tabular' ? delType : format)
+  return name.replace(extension, '') + '.' + (format === 'tabular' ? delType : format)
 }
 export function ExportMenu() {
   const theme = useTheme()

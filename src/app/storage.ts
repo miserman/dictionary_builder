@@ -111,7 +111,7 @@ const IDB = {
     const db = await openDB(database)
     return new Promise(resolve => {
       if (db) {
-        const req = db.transaction([database], 'readwrite').objectStore(database).put(item)
+        const req = db.transaction([database], 'readwrite', {durability: 'relaxed'}).objectStore(database).put(item)
         req.onerror = e => {
           throw Error('failed to store item ' + item.name)
         }
@@ -125,7 +125,7 @@ const IDB = {
     const db = await openDB(database)
     return new Promise(resolve => {
       if (db) {
-        const req = db.transaction([database]).objectStore(database).get(name)
+        const req = db.transaction([database], 'readonly', {durability: 'relaxed'}).objectStore(database).get(name)
         req.onerror = () => resolve(null)
         req.onsuccess = () => {
           resolve(req.result)
@@ -139,7 +139,7 @@ const IDB = {
     const db = await openDB(database)
     return new Promise(resolve => {
       if (db) {
-        const req = db.transaction([database], 'readwrite').objectStore(database).delete(name)
+        const req = db.transaction([database], 'readwrite', {durability: 'relaxed'}).objectStore(database).delete(name)
         req.onerror = () => resolve(false)
         req.onsuccess = () => resolve(true)
       } else {

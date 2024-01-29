@@ -1,6 +1,6 @@
 import {SavedSearch, SearchOff} from '@mui/icons-material'
-import {AppBar, Autocomplete, Button, IconButton, ListItem, Stack, TextField, Toolbar, Tooltip} from '@mui/material'
-import {type KeyboardEvent, type SyntheticEvent, useContext, useState} from 'react'
+import {AppBar, Autocomplete, Button, IconButton, Stack, TextField, Toolbar, Tooltip} from '@mui/material'
+import {type SyntheticEvent, useContext, useState} from 'react'
 import {InfoDrawerSetter} from './infoDrawer'
 import {globToRegex, prepareRegex, special, wildcards} from './utils'
 import {ResourceContext} from './resources'
@@ -23,6 +23,7 @@ export function Nav({
   add: (term: string | RegExp, type: TermTypes) => void
 }) {
   const [inputTerm, setInputTerm] = useState('')
+  const [highlightedTerm, setHighlightedTerm] = useState('')
   const [alreadyAdded, setAlreadyAdded] = useState(false)
   const [termSuggestions, setTermSuggestions] = useState<string[]>([])
   const [asRegEx, setAsRegEx] = useState(false)
@@ -53,59 +54,58 @@ export function Nav({
   }
   const updateTerm = (e: SyntheticEvent) => {
     const input = e.target
-    if (input && 'value' in input) {
-      const term = (input.value as string).toLowerCase()
+    if (input && 'value' in input && 'innerText' in input) {
+      const term = (input['string' === typeof input.value ? 'value' : 'innerText'] as string).toLowerCase()
       setAlreadyAdded(exists(term))
       setInputTerm(term)
+    } else {
+      setInputTerm('')
     }
   }
-
   return (
     <AppBar component="nav">
       <Toolbar variant="dense" sx={{justifyContent: 'space-between'}} disableGutters>
         <DictionaryMenu />
-        <Stack direction="row" sx={{width: 'calc(min(500px, 50%))'}} spacing={1}>
+        <Stack direction="row" sx={{width: {sm: 'calc(min(500px, 50%))', xs: '100%'}}} spacing={{md: 1, sm: 0}}>
           <Autocomplete
             options={termSuggestions}
             value={inputTerm}
-            onKeyUp={(e: KeyboardEvent<HTMLDivElement>) => {
-              const inputValue = 'value' in e.target ? (e.target.value as string) : ''
-              if (e.code === 'Enter' && (!inputValue || inputValue === inputTerm)) return addTerm(inputTerm)
-              if (inputValue !== inputTerm) updateTerm(e)
-              if (terms) {
-                const suggestions: string[] = []
-                if (inputTerm && collapsedTerms) {
-                  let ex: RegExp | undefined
-                  try {
-                    ex = new RegExp(
-                      asRegEx
-                        ? prepareRegex(inputTerm)
-                        : wildcards.test(inputTerm)
-                        ? globToRegex(inputTerm)
-                        : ';' + inputTerm + '[^;]*;',
-                      'g'
-                    )
-                  } catch {
-                    ex = new RegExp(';' + inputTerm.replace(special, '\\%&') + ';', 'g')
-                  }
-                  extractMatches('', ex, collapsedTerms, suggestions, 100)
-                }
-                setTermSuggestions(suggestions)
-              }
+            onHighlightChange={(_, option) => setHighlightedTerm(option || '')}
+            onKeyUp={e => {
+              if (e.code === 'Enter' && (!highlightedTerm || highlightedTerm === inputTerm)) return addTerm(inputTerm)
+              if (highlightedTerm !== inputTerm) updateTerm(e)
             }}
             onChange={updateTerm}
-            renderOption={(props, option) => (
-              <ListItem {...props} key={option} onClick={addTerm}>
-                {option}
-              </ListItem>
-            )}
             renderInput={params => (
               <TextField
                 {...params}
                 size="small"
                 placeholder="Term to add"
                 value={inputTerm}
-                onChange={updateTerm}
+                onChange={e => {
+                  updateTerm(e)
+                  const value = e.target.value
+                  if (terms) {
+                    const suggestions: string[] = []
+                    if (value && collapsedTerms) {
+                      let ex: RegExp | undefined
+                      try {
+                        ex = new RegExp(
+                          asRegEx
+                            ? prepareRegex(value)
+                            : wildcards.test(value)
+                            ? globToRegex(value)
+                            : ';' + value + '[^;]*;',
+                          'g'
+                        )
+                      } catch {
+                        ex = new RegExp(';' + value.replace(special, '\\%&') + ';', 'g')
+                      }
+                      extractMatches('', ex, collapsedTerms, suggestions, 100)
+                    }
+                    setTermSuggestions(suggestions)
+                  }
+                }}
                 error={alreadyAdded}
               ></TextField>
             )}
@@ -123,6 +123,7 @@ export function Nav({
             </IconButton>
           </Tooltip>
           <Button
+            sx={{display: {sm: 'block', xs: 'none'}}}
             variant="outlined"
             disabled={!inputTerm}
             onClick={() => {
@@ -136,7 +137,11 @@ export function Nav({
           </Button>
         </Stack>
         <Stack direction="row">
-          <Button variant="outlined" sx={{width: 100}} onClick={() => setAsTable(!asTable)}>
+          <Button
+            variant="outlined"
+            sx={{width: {md: 100, sm: 70}, p: {md: 1, sm: 0}, display: {sm: 'block', xs: 'none'}}}
+            onClick={() => setAsTable(!asTable)}
+          >
             {asTable ? 'Analyze' : 'Edit'}
           </Button>
           <SettingsMenu />

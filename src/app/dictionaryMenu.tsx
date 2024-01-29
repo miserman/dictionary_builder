@@ -1,4 +1,4 @@
-import {Close, RemoveCircleOutline} from '@mui/icons-material'
+import {Close, Menu, RemoveCircleOutline} from '@mui/icons-material'
 import {
   Button,
   Card,
@@ -75,9 +75,23 @@ export function DictionaryMenu() {
   )
   return (
     <>
-      <Button variant="text" sx={{fontWeight: 'bold'}} onClick={toggleMenu}>
-        {settings.selected}
-      </Button>
+      <Stack direction="row">
+        <IconButton onClick={toggleMenu}>
+          <Menu />
+        </IconButton>
+        <Typography
+          sx={{
+            display: {sm: 'block', xs: 'none'},
+            fontSize: {md: '1.2em', sm: '.8em'},
+            maxWidth: {md: '285px', sm: '150px'},
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            alignSelf: 'center',
+          }}
+        >
+          {settings.selected}
+        </Typography>
+      </Stack>
       <Drawer anchor="left" open={menuOpen} onClose={toggleMenu}>
         <Card
           sx={{

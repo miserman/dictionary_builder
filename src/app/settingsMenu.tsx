@@ -1,5 +1,6 @@
-import {Close, Menu} from '@mui/icons-material'
+import {Close, MoreVert} from '@mui/icons-material'
 import {
+  Button,
   Card,
   CardActions,
   CardContent,
@@ -72,7 +73,7 @@ export function SettingsMenu() {
   return (
     <>
       <IconButton onClick={toggleMenu} aria-label="toggle settings menu">
-        <Menu />
+        <MoreVert />
       </IconButton>
       <Drawer anchor="right" open={menuOpen} onClose={toggleMenu}>
         <Card
@@ -165,20 +166,33 @@ export function SettingsMenu() {
             </Stack>
           </CardContent>
           <CardActions>
-            <Confirm
-              label="Clear Storage"
-              message="Clearing storage will delete all settings, dictionaries, and edit history."
-              onConfirm={() => {
-                if (settings.dictionary_names) {
-                  settings.dictionary_names.forEach(name => {
-                    removeStorage(name, 'dict_')
-                    removeStorage(name, 'dict_history_')
-                  })
-                }
-                localStorage.removeItem('dictionary_builder_settings')
-                window.location.reload()
-              }}
-            />
+            <Stack spacing={2}>
+              <Button
+                variant="contained"
+                size="small"
+                color="error"
+                onClick={() => {
+                  indexedDB.deleteDatabase('dictionary_builder_resources')
+                  location.reload()
+                }}
+              >
+                Refresh Resources
+              </Button>
+              <Confirm
+                label="Clear Storage"
+                message="Clearing storage will delete all settings, dictionaries, and edit history."
+                onConfirm={() => {
+                  if (settings.dictionary_names) {
+                    settings.dictionary_names.forEach(name => {
+                      removeStorage(name, 'dict_')
+                      removeStorage(name, 'dict_history_')
+                    })
+                  }
+                  localStorage.removeItem('dictionary_builder_settings')
+                  window.location.reload()
+                }}
+              />
+            </Stack>
           </CardActions>
         </Card>
       </Drawer>

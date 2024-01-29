@@ -161,6 +161,7 @@ export function CategoryWeights({
                       ></TextField>
                     )}
                     filterOptions={x => x}
+                    noOptionsText="No matches"
                     filterSelectedOptions
                     selectOnFocus
                     clearOnBlur

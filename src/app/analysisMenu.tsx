@@ -66,7 +66,12 @@ function updateOptions<T>(state: T, action: {key: keyof T; value: boolean | stri
 }
 export function AnalyzeMenu() {
   const dict = useContext(BuildContext)
-  const categories = useContext(AllCategories)
+  const allCategories = useContext(AllCategories)
+  const categories = useMemo(() => {
+    const out = [...allCategories]
+    if (!out.includes('no categories')) out.push('no categories')
+    return out
+  }, [allCategories])
 
   const [plotOpts, setPlotOpts] = useReducer(updateOptions<PlotOptions>, plotOptions)
   const [procOpts, setProcOpts] = useReducer(updateOptions<ProcessOptions>, processOptions)
@@ -80,7 +85,8 @@ export function AnalyzeMenu() {
     const catCount: NumberObject = {}
     const allTerms = new Map(
       Object.keys(dict).map(term => {
-        Object.keys(dict[term].categories).forEach(cat => {
+        const termCats = Object.keys(dict[term].categories)
+        ;(termCats.length ? termCats : ['no categories']).forEach(cat => {
           if (cat in catCount) {
             catCount[cat]++
           } else {
@@ -106,62 +112,56 @@ export function AnalyzeMenu() {
         <Box sx={{pl: 1, pr: 1, height: '100%'}}>
           <Box sx={{maxHeight: '60%', overflowY: 'auto'}}>
             <Typography variant="h6">Terms</Typography>
-            {nCats ? (
-              <>
-                <List dense sx={{overflowY: 'auto', maxHeight: '300px', p: 0}}>
-                  {categories.map(cat => (
-                    <ListItem key={cat} disablePadding disableGutters>
-                      <ListItemButton
-                        disableGutters
-                        aria-label="toggle category"
-                        onClick={() => {
-                          const newSelection = [...selected]
-                          const index = newSelection.indexOf(cat)
-                          if (index === -1) {
-                            newSelection.push(cat)
-                          } else {
-                            newSelection.splice(index, 1)
-                          }
-                          setSelected(newSelection)
-                        }}
-                      >
-                        <ListItemIcon sx={{minWidth: '35px'}}>
-                          <Checkbox sx={{p: 0}} checked={selected.includes(cat)} />
-                        </ListItemIcon>
-                        <ListItemText sx={{m: 0}} primary={cat} secondary={catCount[cat] + ' terms'}></ListItemText>
-                      </ListItemButton>
-                    </ListItem>
-                  ))}
-                </List>
-                <Toolbar sx={{justifyContent: 'space-between'}} variant="dense" disableGutters>
-                  <Stack direction="row">
-                    <Button
-                      size="small"
-                      sx={{minWidth: '1px'}}
-                      onClick={() => {
-                        setSelected([...categories])
-                      }}
-                    >
-                      All
-                    </Button>
-                    <Button
-                      size="small"
-                      sx={{minWidth: '1px'}}
-                      onClick={() => {
-                        setSelected([])
-                      }}
-                    >
-                      None
-                    </Button>
-                  </Stack>
-                  <Typography sx={{pr: 1, whiteSpace: 'nowrap'}}>
-                    {selected.length + ' / ' + nCats + ' selected'}
-                  </Typography>
-                </Toolbar>
-              </>
-            ) : (
-              <Typography textAlign="center">No Categories</Typography>
-            )}
+            <List dense sx={{overflowY: 'auto', maxHeight: '300px', p: 0}}>
+              {categories.map(cat => (
+                <ListItem key={cat} disablePadding disableGutters>
+                  <ListItemButton
+                    disableGutters
+                    aria-label="toggle category"
+                    onClick={() => {
+                      const newSelection = [...selected]
+                      const index = newSelection.indexOf(cat)
+                      if (index === -1) {
+                        newSelection.push(cat)
+                      } else {
+                        newSelection.splice(index, 1)
+                      }
+                      setSelected(newSelection)
+                    }}
+                  >
+                    <ListItemIcon sx={{minWidth: '35px'}}>
+                      <Checkbox sx={{p: 0}} checked={selected.includes(cat)} />
+                    </ListItemIcon>
+                    <ListItemText sx={{m: 0}} primary={cat} secondary={catCount[cat] + ' terms'}></ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+            <Toolbar sx={{justifyContent: 'space-between'}} variant="dense" disableGutters>
+              <Stack direction="row">
+                <Button
+                  size="small"
+                  sx={{minWidth: '1px'}}
+                  onClick={() => {
+                    setSelected([...categories])
+                  }}
+                >
+                  All
+                </Button>
+                <Button
+                  size="small"
+                  sx={{minWidth: '1px'}}
+                  onClick={() => {
+                    setSelected([])
+                  }}
+                >
+                  None
+                </Button>
+              </Stack>
+              <Typography sx={{pr: 1, whiteSpace: 'nowrap'}}>
+                {selected.length + ' / ' + nCats + ' selected'}
+              </Typography>
+            </Toolbar>
             <Stack spacing={2}>
               <Tooltip title="Include all matches to fuzzy terms in the comparison." placement="right">
                 <FormControlLabel

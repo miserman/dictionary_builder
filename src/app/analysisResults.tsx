@@ -162,7 +162,7 @@ export function Results({
       let keep = false
       const cats: {[index: string]: number} = {}
       selectedMap.forEach(cat => {
-        if (cat in entry.categories) {
+        if (cat in entry.categories || (cat === 'no categories' && !Object.keys(entry.categories).length)) {
           keep = true
           cats[cat] = entry.categories[cat]
         }
