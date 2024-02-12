@@ -40,10 +40,9 @@ function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JS
   switch (format) {
     case 'tabular':
       const sep = getSepChar(delType)
-      const terms = Object.keys(dict)
       const categories: Set<string> = new Set()
-      terms.forEach(term => {
-        const cats = dict[term].categories
+      Object.values(dict).forEach(entry => {
+        const cats = entry.categories
         if (cats) Object.keys(cats).forEach(cat => categories.add(cat))
       })
       const catArray = Array.from(categories)
@@ -55,11 +54,12 @@ function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JS
         (includeSenses ? 'term_sense"' + sep + '"' : '') +
         catArray.join('"' + sep + '"') +
         '"\n' +
-        terms
-          .map(term => {
-            const cats = dict[term].categories
-            let row = '"' + term + '"'
-            if (includeSenses) row += sep + dict[term].sense
+        Object.keys(dict)
+          .map(id => {
+            const entry = dict[id]
+            const cats = entry.categories
+            let row = '"' + (entry.term || id) + '"'
+            if (includeSenses) row += sep + entry.sense
             catMap.forEach(cat => {
               row += sep + (cat in cats ? cats[cat] : '')
             })
@@ -71,11 +71,12 @@ function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JS
       const allCats: NumberObject = {}
       let nCats = 0
       let body = ''
-      Object.keys(dict).forEach(term => {
-        const cats = dict[term].categories
+      Object.keys(dict).forEach(id => {
+        const entry = dict[id]
+        const cats = entry.categories
         if (cats) {
-          const line: (string | number)[] = [term]
-          if (includeSenses && dict[term].sense) line[0] += '@' + dict[term].sense
+          const line: (string | number)[] = [entry.term || id]
+          if (includeSenses && entry.sense) line[0] += '@' + entry.sense
           Object.keys(cats).forEach(cat => {
             if (!(cat in allCats)) allCats[cat] = ++nCats
             line.push(allCats[cat])
@@ -94,10 +95,12 @@ function exportDict(dict: Dict, format: Formats, delType: DelTypes, jsonType: JS
     case 'json':
       if (jsonType === 'full') return JSON.stringify(dict, void 0, 2)
       const temp: {[index: string]: {[index: string]: number}} = {}
-      Object.keys(dict).forEach(term => {
-        const cats = dict[term].categories
+      Object.keys(dict).forEach(id => {
+        const entry = dict[id]
+        const cats = entry.categories
         if (cats) {
-          if (includeSenses && dict[term].sense) term += '@' + dict[term].sense
+          let term = entry.term || id
+          if (includeSenses && entry.sense) term += '@' + entry.sense
           Object.keys(cats).forEach(cat => {
             if (!(cat in temp)) temp[cat] = {}
             temp[cat][term] = cats[cat]

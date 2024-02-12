@@ -10,6 +10,7 @@ export type GridRow = {
   [index: string]: number | string | FixedTerm | FuzzyTerm | DictEntry
   dictEntry: DictEntry
   id: string
+  term: string
   sense: string
   matches: number
   ncats: number
@@ -40,13 +41,6 @@ export function Table({
   const setEditorTerm = useContext(EditorTermSetter)
   return (
     <DataGrid
-      sx={{
-        '& .MuiFormControl-root': {
-          position: 'absolute',
-          bottom: '4px',
-          left: '12px',
-        },
-      }}
       rows={rows}
       columns={columns}
       showCellVerticalBorder

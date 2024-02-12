@@ -97,7 +97,7 @@ export function TermSenseEdit({
 }) {
   const Dict = useContext(BuildContext)
   const edit = useContext(BuildEditContext)
-  const dictEntry = Dict[processed.term]
+  const dictEntry = Dict[id || processed.term]
   const data = useContext(ResourceContext)
   const {terms, sense_keys, synsetInfo} = data
 
@@ -105,8 +105,8 @@ export function TermSenseEdit({
     if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
       const siblings = termsByCategory(Object.keys(dictEntry.categories), Dict)
       const siblingsExtended: {[index: string]: boolean} = {}
-      Object.keys(siblings).forEach(term => {
-        const processed = getProcessedTerm(term, data, Dict, true) as FixedTerm
+      Object.keys(siblings).forEach(id => {
+        const processed = getProcessedTerm(id, data, Dict, true) as FixedTerm
         if (processed.lookup) processed.lookup.map.forEach((_, ext) => (siblingsExtended[ext] = true))
       })
       const out = processed.synsets.map(synset => {
@@ -131,7 +131,13 @@ export function TermSenseEdit({
         value={dictEntry.sense}
         onChange={(e: SelectChangeEvent) => {
           editCell && editCell({id, field, value: e.target.value})
-          edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
+          edit({
+            type: 'update',
+            term_id: id,
+            term: processed.term,
+            term_type: processed.term_type,
+            sense: e.target.value,
+          })
         }}
         label={label}
         labelId={labelId}
@@ -158,7 +164,13 @@ export function TermSenseEdit({
         value={dictEntry.sense}
         onChange={(e: ChangeEvent<HTMLInputElement>) => {
           editCell && editCell({id, field, value: e.target.value})
-          edit({type: 'update', term: processed.term, term_type: processed.term_type, sense: e.target.value})
+          edit({
+            type: 'update',
+            term_id: id,
+            term: processed.term,
+            term_type: processed.term_type,
+            sense: e.target.value,
+          })
         }}
         label={label}
       ></TextField>
@@ -310,7 +322,7 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
                           edge="start"
                           sx={{p: 0, opacity: 0.6}}
                           onClick={() => {
-                            editDictionary({type: 'remove', term: match})
+                            editDictionary({type: 'remove', term_id: match})
                           }}
                         >
                           <Remove />
@@ -322,7 +334,7 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
                           edge="start"
                           sx={{p: 0, opacity: 0.6}}
                           onClick={() => {
-                            editDictionary({type: 'add', term: match, term_type: 'fixed'})
+                            editDictionary({type: 'add', term_id: match, term: match, term_type: 'fixed'})
                           }}
                         >
                           <Add />
@@ -365,16 +377,17 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
 
 const iconStyle = {minWidth: '20px', opacity: 0.9, '& .MuiSvgIcon-root': {fontSize: '1em'}}
 export function termListItem(
-  term: string,
+  id: string,
   dict: Dict,
   editor: (action: DictionaryActions) => void,
   showTerm: (action: InfoDrawerActions) => void
 ) {
-  const capturedBy = getFuzzyParent(term)
-  const inCurrent = term in dict
+  const capturedBy = getFuzzyParent(id)
+  const inCurrent = id in dict
+  const term = (inCurrent && dict[id].term) || id
   return (
     <ListItem
-      key={term}
+      key={id}
       disableGutters
       disablePadding
       sx={{pr: 3}}
@@ -386,7 +399,7 @@ export function termListItem(
             edge="end"
             sx={iconStyle}
             onClick={() => {
-              editor({type: 'remove', term: term})
+              editor({type: 'remove', term_id: id})
             }}
           >
             <Remove />
@@ -398,7 +411,7 @@ export function termListItem(
             edge="end"
             sx={iconStyle}
             onClick={() => {
-              editor({type: 'add', term: term, term_type: 'fixed'})
+              editor({type: 'add', term_id: id, term, term_type: 'fixed'})
             }}
           >
             <Add />

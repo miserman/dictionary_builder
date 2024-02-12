@@ -7,17 +7,15 @@ import {ResourceContext} from './resources'
 import {SettingsMenu} from './settingsMenu'
 import {DictionaryMenu} from './dictionaryMenu'
 import {extractMatches} from './processTerms'
-import type {TermTypes} from './building'
+import {isInDict, type TermTypes} from './building'
 
 export function Nav({
   terms,
-  exists,
   asTable,
   setAsTable,
   add,
 }: {
   terms?: readonly string[]
-  exists: (term: string) => boolean
   asTable: boolean
   setAsTable: (asTable: boolean) => void
   add: (term: string | RegExp, type: TermTypes) => void
@@ -38,7 +36,7 @@ export function Nav({
         ? (newTerm.target.innerText as string)
         : inputTerm
       : inputTerm
-    if (toAdd && !exists(toAdd)) {
+    if (toAdd) {
       if (asRegEx) {
         let termPattern: string | RegExp = toAdd
         try {
@@ -56,7 +54,7 @@ export function Nav({
     const input = e.target
     if (input && 'value' in input && 'innerText' in input) {
       const term = (input['string' === typeof input.value ? 'value' : 'innerText'] as string).toLowerCase()
-      setAlreadyAdded(exists(term))
+      setAlreadyAdded(isInDict(term))
       setInputTerm(term)
     } else {
       setInputTerm('')
@@ -106,7 +104,7 @@ export function Nav({
                     setTermSuggestions(suggestions)
                   }
                 }}
-                error={alreadyAdded}
+                color={alreadyAdded ? 'warning' : 'primary'}
               ></TextField>
             )}
             filterOptions={x => x}
@@ -132,7 +130,7 @@ export function Nav({
           >
             View
           </Button>
-          <Button variant="contained" onClick={() => addTerm()} disabled={!inputTerm || alreadyAdded}>
+          <Button variant="contained" onClick={() => addTerm()} disabled={!inputTerm}>
             Add
           </Button>
         </Stack>

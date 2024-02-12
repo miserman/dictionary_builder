@@ -38,12 +38,12 @@ export function CategoryWeights({
   const dict = useContext(BuildContext)
   const dictTerms = useMemo(() => {
     const out: {[index: string]: boolean} = {}
-    Object.keys(dict).forEach(term => (out[term] = true))
+    Object.keys(dict).forEach(id => (out[dict[id].term || id] = true))
     return out
   }, [dict])
   const dictTermsCollapsed = useMemo(() => {
-    return {all: ';;' + Object.keys(dict).join(';;') + ';;'}
-  }, [dict])
+    return {all: ';;' + Object.keys(dictTerms).join(';;') + ';;'}
+  }, [dictTerms])
 
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
@@ -263,7 +263,7 @@ export function CategoryWeights({
                     }
                   })
                   const range = [Infinity, -Infinity]
-                  Object.keys(toAllTerms ? dict : current).forEach(term => {
+                  Object.keys(toAllTerms ? dictTerms : current).forEach(term => {
                     let totalSim = 0
                     processedCores.forEach(processedCoreTerm => {
                       const processed = getProcessedTerm(term, data, dict)
@@ -304,7 +304,13 @@ export function CategoryWeights({
                     })
                   }
                 }
-                edit({type: 'reweight_category', name, weights: reWeighted})
+                const subset = toAllTerms ? dict : current
+                const appliedWeights: NumberObject = {}
+                Object.keys(subset).forEach(id => {
+                  const term = dict[id].term || id
+                  if (term in reWeighted) appliedWeights[id] = reWeighted[term]
+                })
+                edit({type: 'reweight_category', name, weights: appliedWeights})
                 toggleMenu()
               }}
             >

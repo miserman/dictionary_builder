@@ -33,12 +33,12 @@ export function TermEditor({
 }) {
   const data = useContext(ResourceContext)
   const dict = useContext(BuildContext)
-  const term = useContext(EditorTerm)
+  const id = useContext(EditorTerm)
   const setTerm = useContext(EditorTermSetter)
   const [showEmptyCategories, setShowEmptyCategories] = useState(false)
-  if (!term || !(term in dict)) return <></>
-  const processed = getProcessedTerm(term, data, dict)
-  const dictEntry = dict[term]
+  if (!id || !(id in dict)) return <></>
+  const processed = getProcessedTerm(id, data, dict)
+  const dictEntry = dict[id]
   const cols: GridColDef[] = useMemo(
     () => [
       {field: 'id', headerName: 'Name', width: 110},
@@ -103,7 +103,7 @@ export function TermEditor({
                   Sense
                 </InputLabel>
               )}
-              <TermSenseEdit labelId="term_editor_sense" label="Sense" id="" field="" processed={processed} />
+              <TermSenseEdit labelId="term_editor_sense" label="Sense" id={id} field="" processed={processed} />
             </FormControl>
             <Stack direction="column" spacing={1} sx={{height: '100%'}}>
               <Typography fontWeight="bold">Category Weights</Typography>

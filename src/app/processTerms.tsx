@@ -170,11 +170,13 @@ function processTerm(term: string | RegExp, data: TermResources) {
   }
 }
 
-export function getProcessedTerm(term: string, data: TermResources, dict?: Dict, expand?: boolean) {
-  const type = dict && term in dict && dict[term].type === 'regex' ? 'regex' : 'fixed'
+export function getProcessedTerm(id: string | RegExp, data: TermResources, dict?: Dict, expand?: boolean) {
+  const registered = 'string' === typeof id && dict && id in dict
+  const term = registered && dict[id].term ? dict[id].term : id
+  const type = registered && dict[id].type === 'regex' ? 'regex' : 'fixed'
   const key = term + '_' + type
   if (!(key in Processed)) {
-    Processed[key] = processTerm(type === 'regex' ? attemptRegex(term) : term, data)
+    Processed[key] = processTerm(type === 'regex' ? attemptRegex(term as string) : (term as RegExp), data)
   }
   const processed = Processed[key]
   if (expand && processed.type === 'fixed' && !processed.lookup.expanded) {
@@ -183,15 +185,16 @@ export function getProcessedTerm(term: string, data: TermResources, dict?: Dict,
   return processed
 }
 
-export async function makeRow(rows: GridRow[], index: number, term: string, dict: Dict, data: TermResources) {
-  const processed = getProcessedTerm(term, data, dict)
-  const dictEntry = dict[term]
+export async function makeRow(rows: GridRow[], index: number, id: string, dict: Dict, data: TermResources) {
+  const processed = getProcessedTerm(id, data, dict)
+  const dictEntry = dict[id]
   const row: GridRow =
     processed.type === 'fixed'
       ? {
           processed,
           dictEntry,
-          id: term,
+          id,
+          term: dictEntry.term || id,
           sense: dictEntry.sense,
           matches: processed.recognized ? 1 : 0,
           ncats: Object.keys(dictEntry.categories).length,
@@ -202,7 +205,8 @@ export async function makeRow(rows: GridRow[], index: number, term: string, dict
       : {
           processed,
           dictEntry,
-          id: term,
+          id,
+          term: dictEntry.term || id,
           sense: dictEntry.sense,
           matches: processed.matches.length,
           ncats: Object.keys(dictEntry.categories).length,
@@ -219,20 +223,20 @@ export async function makeRow(rows: GridRow[], index: number, term: string, dict
 export async function makeRows(dict: Dict, data: TermResources, progress?: (perc: number) => void) {
   clearTimeout(timers.dictionary)
   return new Promise<GridRow[]>(resolve => {
-    const terms = Object.freeze(Object.keys(dict))
-    const n_terms = terms.length
+    const ids = Object.freeze(Object.keys(dict))
+    const n_ids = ids.length
     const limit = 1000
-    const rows: GridRow[] = new Array(n_terms)
+    const rows: GridRow[] = new Array(n_ids)
     let i = 0
     let batch_i = 0
     const runBatch = () => {
       clearTimeout(timers.dictionary)
-      for (; i < n_terms && batch_i < limit; i++, batch_i++) {
-        makeRow(rows, i, terms[i], dict, data)
+      for (; i < n_ids && batch_i < limit; i++, batch_i++) {
+        makeRow(rows, i, ids[i], dict, data)
       }
-      if (i !== n_terms) {
+      if (i !== n_ids) {
         batch_i = 0
-        progress && progress(i / n_terms)
+        progress && progress(i / n_ids)
         timers.dictionary = setTimeout(runBatch, 0)
       } else {
         progress && progress(1)

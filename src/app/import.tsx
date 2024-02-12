@@ -55,10 +55,22 @@ function makeDictEntry(term: string, cats: NumberObject, sense: string, detectRe
     type: (detectRegex && containsRegex(term) ? 'regex' : 'fixed') as 'fixed' | 'regex',
     categories: cats,
     sense: sense || '',
+    term,
   }
 }
 function parseDict(raw: string, detectRegex: boolean) {
-  let parsed: Dict = {}
+  const termMap: {[index: string]: Set<string>} = {}
+  const makeId = (term: string) => {
+    let id = term
+    if (term in termMap) {
+      id += termMap[term].size + 1
+      termMap[term].add(id)
+    } else {
+      termMap[term] = new Set()
+    }
+    return id
+  }
+  const parsed: Dict = {}
   if (raw) {
     try {
       if (raw[0] === '%') {
@@ -87,7 +99,7 @@ function parseDict(raw: string, detectRegex: boolean) {
                   if (index in categories) cats[categories[index]] = 1
                 })
                 const [term, sense] = fullterm.split(senseSep)
-                parsed[term] = makeDictEntry(term, cats, sense, detectRegex)
+                parsed[makeId(term)] = makeDictEntry(term, cats, sense, detectRegex)
               }
             }
           }
@@ -106,22 +118,24 @@ function parseDict(raw: string, detectRegex: boolean) {
             if (Array.isArray(terms)) {
               terms.forEach(fullterm => {
                 if (fullterm) {
-                  if (fullterm in parsed) {
-                    parsed[fullterm].categories[cat] = 1
+                  const [term, sense] = fullterm.toLowerCase().split(senseSep)
+                  const id = makeId(term)
+                  if (id in parsed) {
+                    parsed[id].categories[cat] = 1
                   } else {
-                    const [term, sense] = fullterm.toLowerCase().split(senseSep)
-                    parsed[fullterm] = makeDictEntry(term, {[cat]: 1}, sense, detectRegex)
+                    parsed[id] = makeDictEntry(term, {[cat]: 1}, sense, detectRegex)
                   }
                 }
               })
             } else {
               Object.keys(terms).forEach(fullterm => {
                 if (fullterm) {
-                  if (fullterm in parsed) {
-                    parsed[fullterm].categories[cat] = terms[fullterm]
+                  const [term, sense] = fullterm.toLowerCase().split(senseSep)
+                  const id = makeId(term)
+                  if (id in parsed) {
+                    parsed[id].categories[cat] = terms[fullterm]
                   } else {
-                    const [term, sense] = fullterm.toLowerCase().split(senseSep)
-                    parsed[fullterm] = makeDictEntry(term, {[cat]: terms[term]}, sense, detectRegex)
+                    parsed[id] = makeDictEntry(term, {[cat]: terms[term]}, sense, detectRegex)
                   }
                 }
               })
@@ -154,7 +168,7 @@ function parseDict(raw: string, detectRegex: boolean) {
                 }
               }
             })
-            parsed[term] = makeDictEntry(term, cats, sense, detectRegex)
+            parsed[makeId(term)] = makeDictEntry(term, cats, sense, detectRegex)
           }
         })
       }

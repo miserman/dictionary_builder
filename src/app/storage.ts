@@ -49,9 +49,9 @@ async function getKey(name: string, password: string, salt: Uint8Array): Promise
 }
 async function encrypt(name: string, content: any, password?: string) {
   const key = password ? await getKey(name, password, crypto.getRandomValues(new Uint8Array(16))) : keys[name]
-  const iv = crypto.getRandomValues(new Uint8Array(12))
   if (key) {
     try {
+      const iv = crypto.getRandomValues(new Uint8Array(12))
       const encrypted = await crypto.subtle.encrypt(
         {name: 'AES-GCM', iv},
         key.key,
@@ -223,7 +223,7 @@ export async function getStorage(
   }
 }
 
-export type DictEntry = {added: number; type: TermTypes; categories: NumberObject; sense: string}
+export type DictEntry = {term?: string; added: number; type: TermTypes; categories: NumberObject; sense: string}
 export type Dict = {[index: string]: DictEntry}
 const dictionaries: {[index: string]: Dict} = {}
 export async function loadHistory(

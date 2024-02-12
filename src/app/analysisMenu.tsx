@@ -83,8 +83,8 @@ export function AnalyzeMenu() {
   const {allTerms, catCounts} = useMemo(() => {
     const catCounts: NumberObject = {}
     const allTerms = new Map(
-      Object.keys(dict).map(term => {
-        const termCats = Object.keys(dict[term].categories)
+      Object.keys(dict).map(id => {
+        const termCats = Object.keys(dict[id].categories)
         ;(termCats.length ? termCats : ['no categories']).forEach(cat => {
           if (cat in catCounts) {
             catCounts[cat]++
@@ -92,7 +92,7 @@ export function AnalyzeMenu() {
             catCounts[cat] = 1
           }
         })
-        return [term, dict[term]]
+        return [dict[id].term || id, dict[id]]
       })
     )
     return {catCounts, allTerms}

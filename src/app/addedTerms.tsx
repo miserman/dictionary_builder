@@ -26,7 +26,15 @@ export default function AddedTerms({
   const Cats = useContext(AllCategories)
   const isCategory = useCallback((name: string) => Cats.includes(name), [Cats])
   const editDictionary = useContext(BuildEditContext)
-  const dictTerms = useMemo(() => Object.freeze(Object.keys(Dict).sort()), [Dict])
+  const dictTerms = useMemo(
+    () =>
+      Object.freeze(
+        Object.keys(Dict)
+          .map(id => Dict[id].term || id)
+          .sort()
+      ),
+    [Dict]
+  )
   const cols: GridColDef[] = useMemo(() => {
     const cols: GridColDef[] = [
       {
@@ -42,7 +50,7 @@ export default function AddedTerms({
               size="small"
               aria-label="remove term"
               onClick={() => {
-                editDictionary({type: 'remove', term: params.id as string})
+                editDictionary({type: 'remove', term_id: params.id as string})
               }}
             >
               <RemoveCircleOutline sx={{fontSize: '.9em'}} />
@@ -51,7 +59,7 @@ export default function AddedTerms({
         },
       },
       {
-        field: 'id',
+        field: 'term',
         headerName: 'Term',
         renderCell: (params: GridRenderEditCellParams) => {
           return <TermLink term={params.value} />

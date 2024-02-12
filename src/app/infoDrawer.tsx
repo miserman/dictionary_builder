@@ -25,7 +25,7 @@ function TermContent({term}: {term: string}) {
       <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
         <Button
           onClick={() => {
-            editDictionary(isInDict ? {type: 'remove', term: term} : {type: 'add', term: term, term_type: 'fixed'})
+            editDictionary(isInDict ? {type: 'remove', term_id: term} : {type: 'add', term, term_type: 'fixed'})
           }}
         >
           {isInDict ? 'Remove' : 'Add'}

@@ -49,6 +49,7 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
         }
         editDictionary({
           type: 'update',
+          term_id: params.id as string,
           term: processed.term,
           term_type: processed.term_type,
           categories: cats,
@@ -57,37 +58,40 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
     },
     [editDictionary, category]
   )
-  const terms = useMemo(() => new Map(Object.keys(dict).map((term, index) => [index, term])), [dict])
+  const ids = useMemo(() => new Map(Object.keys(dict).map((term, index) => [index, term])), [dict])
   const catWeights = useMemo(() => {
     const weights: NumberObject = {}
-    terms.forEach(term => {
-      const {categories} = dict[term]
-      if (category in categories) weights[term] = categories[category]
+    ids.forEach(id => {
+      const {categories} = dict[id]
+      if (category in categories) weights[id] = categories[category]
     })
     return weights
-  }, [dict, terms, category])
+  }, [dict, ids, category])
   const rows = useMemo(() => {
     const out: {
       id: string
+      term: string
       weight: string | number
       dictEntry: DictEntry
       processed: FixedTerm | FuzzyTerm
     }[] = []
-    terms.forEach(term => {
-      if (showEmptyTerms || term in catWeights) {
+    ids.forEach(id => {
+      if (showEmptyTerms || id in catWeights) {
+        const entry = dict[id]
         out.push({
-          id: term,
-          weight: catWeights[term] || '',
-          dictEntry: dict[term],
-          processed: getProcessedTerm(term, data, dict),
+          id,
+          term: entry.term ? (entry.sense && id !== entry.term ? entry.term + '@' + entry.sense : entry.term) : id,
+          weight: catWeights[id] || '',
+          dictEntry: entry,
+          processed: getProcessedTerm(id, data, dict),
         })
       }
     })
     return out
-  }, [data, dict, terms, showEmptyTerms, catWeights])
+  }, [data, dict, ids, showEmptyTerms, catWeights])
   if (!category || !categories.includes(category)) return <></>
   const cols: GridColDef[] = [
-    {field: 'id', headerName: 'Term', width: 170},
+    {field: 'term', headerName: 'Term', width: 170},
     {
       field: 'weight',
       headerName: 'Weight',
@@ -165,7 +169,7 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
               density="compact"
               slots={{toolbar: GridToolbarQuickFilter}}
               onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
-                if (e.key === 'Delete' || e.key === 'Backspace') {
+                if ((e.key === 'Delete' || e.key === 'Backspace') && params.cellMode === 'view') {
                   editFromEvent(0, params)
                 }
               }}

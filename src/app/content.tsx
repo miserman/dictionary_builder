@@ -32,6 +32,7 @@ export function Content() {
         }
         editDictionary({
           type: 'update',
+          term_id: params.id as string,
           term: processed.term,
           term_type: processed.term_type,
           categories: cats,
@@ -48,7 +49,6 @@ export function Content() {
     <Container>
       <Nav
         terms={terms}
-        exists={(term: string) => term in dict}
         asTable={asTable}
         setAsTable={setAsTable}
         add={(term: string | RegExp, type: TermTypes) => {

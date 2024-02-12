@@ -12,14 +12,22 @@ export type DictionaryStorageAction =
 export type DictionaryActions =
   | {type: 'change_dict'; name: string; dict: Dict}
   | {type: 'history_bulk'; dict: Dict}
-  | {type: 'remove'; term: string | RegExp}
+  | {type: 'remove'; term_id: string}
   | {type: 'remove_category'; name: string}
   | {type: 'rename_category'; name: string; newName: string}
   | {type: 'add_category'; name: string; weights: NumberObject}
   | {type: 'reweight_category'; name: string; weights: NumberObject}
-  | {type: 'add' | 'update'; term: string | RegExp; term_type: TermTypes; categories?: NumberObject; sense?: string}
+  | {
+      type: 'add' | 'update'
+      term_id?: string
+      term: string | RegExp
+      term_type: TermTypes
+      categories?: NumberObject
+      sense?: string
+    }
   | {
       type: 'replace'
+      term_id: string
       term: string | RegExp
       term_type: TermTypes
       originalTerm: string | RegExp
@@ -73,13 +81,30 @@ export const PasswordResolve = createContext(async (password: string) => {
 
 export function termsByCategory(categories: string[], dict: Dict) {
   const terms: {[index: string]: DictEntry} = {}
-  Object.keys(dict).forEach(term => {
-    const entry = dict[term]
+  Object.keys(dict).forEach(id => {
+    const entry = dict[id]
     categories.forEach(category => {
-      if (category in entry.categories) terms[term] = entry
+      if (category in entry.categories) terms[id] = entry
     })
   })
   return terms
+}
+let termMap: {[index: string]: Set<string>} = {}
+function mapTerms(dict: Dict) {
+  termMap = {}
+  Object.keys(dict).forEach(id => {
+    const entry = dict[id]
+    const term = entry.term || id
+    entry.term = term
+    if (term in termMap) {
+      if (id !== term) termMap[term].add(id)
+    } else {
+      termMap[term] = new Set()
+    }
+  })
+}
+export function isInDict(term: string) {
+  return term in termMap
 }
 
 function byLowerAlphabet(a: string, b: string) {
@@ -159,8 +184,8 @@ export function Building({children}: {children: ReactNode}) {
     let newState = state
     if (action.type === 'collect') {
       const cats: Set<string> = new Set(action.reset ? [] : state)
-      Object.keys(action.dictionary).forEach(term => {
-        const entry = action.dictionary[term]
+      Object.keys(action.dictionary).forEach(id => {
+        const entry = action.dictionary[id]
         entry && entry.categories && Object.keys(entry.categories).forEach(cat => cats.add(cat))
       })
       newState = Array.from(cats).sort(byLowerAlphabet)
@@ -179,6 +204,7 @@ export function Building({children}: {children: ReactNode}) {
       return action.dict
     }
     if (action.type === 'change_dict') {
+      mapTerms(action.dict)
       loadHistory(action.name, history => editHistory({type: 'replace', history}), passwordRequester, use_db)
       categoryAction({type: 'collect', dictionary: action.dict, reset: true})
       return action.dict
@@ -186,8 +212,8 @@ export function Building({children}: {children: ReactNode}) {
     const newState = {...state} as Dict
     if (action.type === 'rename_category') {
       let nTerms = 0
-      Object.keys(newState).forEach(term => {
-        const entry = newState[term]
+      Object.keys(newState).forEach(id => {
+        const entry = newState[id]
         if (action.name in entry.categories) {
           nTerms++
           if (entry.categories[action.name]) entry.categories[action.newName] = entry.categories[action.name]
@@ -205,11 +231,11 @@ export function Building({children}: {children: ReactNode}) {
     } else if (action.type === 'remove_category') {
       const edited_terms: NumberObject = {}
       let nTerms = 0
-      Object.keys(newState).forEach(term => {
-        const entry = newState[term]
+      Object.keys(newState).forEach(id => {
+        const entry = newState[id]
         if (action.name in entry.categories) {
           nTerms++
-          if (entry.categories[action.name]) edited_terms[term] = entry.categories[action.name]
+          if (entry.categories[action.name]) edited_terms[id] = entry.categories[action.name]
           delete entry.categories[action.name]
         }
       })
@@ -220,12 +246,12 @@ export function Building({children}: {children: ReactNode}) {
         })
       }
     } else if (action.type === 'add_category') {
-      Object.keys(action.weights).forEach(term => {
-        if (term in newState) {
-          if (action.weights[term]) {
-            newState[term].categories[action.name] = action.weights[term]
+      Object.keys(action.weights).forEach(id => {
+        if (id in newState) {
+          if (action.weights[id]) {
+            newState[id].categories[action.name] = action.weights[id]
           } else {
-            delete newState[term].categories[action.name]
+            delete newState[id].categories[action.name]
           }
         }
       })
@@ -233,13 +259,13 @@ export function Building({children}: {children: ReactNode}) {
     } else if (action.type === 'reweight_category') {
       const originalWeights: NumberObject = {}
       let nChanged = 0
-      Object.keys(newState).forEach(term => {
-        const entry = newState[term]
-        if (entry.categories[action.name] !== action.weights[term]) {
+      Object.keys(newState).forEach(id => {
+        const entry = newState[id]
+        if (entry.categories[action.name] !== action.weights[id]) {
           nChanged++
-          originalWeights[term] = entry.categories[action.name] || 0
-          if (action.weights[term]) {
-            entry.categories[action.name] = action.weights[term]
+          originalWeights[id] = entry.categories[action.name] || 0
+          if (action.weights[id]) {
+            entry.categories[action.name] = action.weights[id]
           } else {
             delete entry.categories[action.name]
           }
@@ -247,13 +273,27 @@ export function Building({children}: {children: ReactNode}) {
       })
       if (nChanged) editHistory({type: 'add', entry: {...action, originalWeights}})
     } else {
-      const term = 'string' === typeof action.term ? action.term : action.term.source
       if (action.type === 'remove') {
-        delete newState[term]
-        editHistory({type: 'add', entry: {type: 'remove_term', name: term, value: state[term]}})
+        delete newState[action.term_id]
+        editHistory({type: 'add', entry: {type: 'remove_term', name: action.term_id, value: state[action.term_id]}})
       } else {
-        const existing = newState[term] || {}
-        newState[term] = {
+        const term = 'string' === typeof action.term ? action.term : action.term.source
+        if (!action.term_id) {
+          if (action.type === 'add') {
+            if (!(term in termMap)) {
+              termMap[term] = new Set()
+            } else {
+              action.term_id = term + (termMap[term].size ? termMap[term].size + 1 : '')
+              termMap[term].add(action.term_id)
+            }
+          } else {
+            action.term_id = term
+          }
+        }
+        const id = action.term_id || term
+        const existing = newState[id] || {}
+        newState[id] = {
+          term,
           added: existing.added || Date.now(),
           type: action.term_type || existing.type || 'fixed',
           categories: {...(action.categories || existing.categories || {})},
@@ -266,17 +306,17 @@ export function Building({children}: {children: ReactNode}) {
             type: 'add',
             entry: {
               type: 'replace_term',
-              name: term,
-              value: newState[term],
+              name: id,
+              value: newState[id],
               originalName: original,
               originalValue: state[original],
             },
           })
         } else {
-          if (term in state) {
+          if (id in state) {
             let change: HistoryTermEdit | undefined
-            const original = state[term]
-            const newEntry = newState[term]
+            const original = state[id]
+            const newEntry = newState[id]
             if (original.sense && newEntry.sense !== original.sense) {
               change = {field: 'sense', new: newEntry.sense, original: original.sense}
             } else {
@@ -308,11 +348,11 @@ export function Building({children}: {children: ReactNode}) {
             if (change) {
               editHistory({
                 type: 'add',
-                entry: {type: 'edit_term', name: term, value: change},
+                entry: {type: 'edit_term', name: id, value: change},
               })
             }
           } else {
-            editHistory({type: 'add', entry: {type: 'add_term', name: term, value: newState[term]}})
+            editHistory({type: 'add', entry: {type: 'add_term', name: id, value: newState[id]}})
           }
         }
       }
