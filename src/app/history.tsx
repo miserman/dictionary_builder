@@ -215,6 +215,8 @@ export function History() {
       </CardContent>
       <CardActions>
         <Button
+          variant="contained"
+          color="warning"
           fullWidth
           onClick={() => {
             editHistory({type: 'clear'})

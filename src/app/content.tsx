@@ -22,9 +22,10 @@ export function Content() {
     (value: string | number, params: GridCellParams) => {
       const {field, row} = params
       const {processed, dictEntry} = row
-      if (field && (field === 'from_term_editor' || field.startsWith('category_'))) {
+      const fromEditor = field === 'from_term_editor'
+      if (field && (fromEditor || field.startsWith('category_'))) {
         const cats = {...dictEntry.categories}
-        const cat = field === 'from_term_editor' ? row.id : field.replace(categoryPrefix, '')
+        const cat = fromEditor ? row.id : field.replace(categoryPrefix, '')
         if (cat in cats && !value) {
           delete cats[cat]
         } else if (value) {
@@ -32,10 +33,11 @@ export function Content() {
         }
         editDictionary({
           type: 'update',
-          term_id: params.id as string,
+          term_id: row[fromEditor ? 'term_id' : 'id'],
           term: processed.term,
           term_type: processed.term_type,
           categories: cats,
+          sense: dictEntry.sense,
         })
       }
     },

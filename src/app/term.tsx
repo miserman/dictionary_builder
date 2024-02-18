@@ -1,4 +1,5 @@
 import {
+  Autocomplete,
   Box,
   Button,
   IconButton,
@@ -85,14 +86,12 @@ export function TermSenseEdit({
   field,
   processed,
   label,
-  labelId,
   editCell,
 }: {
   processed: FixedTerm | FuzzyTerm
   id: string
   field: string
   label?: string
-  labelId?: string
   editCell?: (params: any) => void
 }) {
   const Dict = useContext(BuildContext)
@@ -123,39 +122,43 @@ export function TermSenseEdit({
     }
   }, [terms, sense_keys, synsetInfo, processed, Dict, data, dictEntry])
   if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
+    const synsetKeys = rankedSynsets.map(rank => sense_keys[rank.synset.index])
     return (
-      <Select
-        fullWidth
+      <Autocomplete
         size="small"
-        aria-label="assign synset"
+        options={synsetKeys}
         value={dictEntry.sense}
-        onChange={(e: SelectChangeEvent) => {
-          editCell && editCell({id, field, value: e.target.value})
+        renderOption={(props, option, state) => {
+          const {synset, score} = rankedSynsets[state.index]
+          return (
+            <MenuItem key={option} value={option} {...props}>
+              <Tooltip title={synset.definition} placement="right">
+                <Typography sx={{width: '100%'}}>
+                  <span className="number-annotation">{'(' + score.toFixed(2) + ') '}</span>
+                  {sense_keys[synset.index]}
+                </Typography>
+              </Tooltip>
+            </MenuItem>
+          )
+        }}
+        renderInput={params => <TextField label={label} {...params}></TextField>}
+        onChange={(e, value) => {
+          const newValue = value || ''
+          editCell && editCell({id, field, value: newValue})
           edit({
             type: 'update',
             term_id: id,
             term: processed.term,
             term_type: processed.term_type,
-            sense: e.target.value,
+            sense: newValue,
           })
         }}
-        label={label}
-        labelId={labelId}
-      >
-        {rankedSynsets.map(({score, synset}) => {
-          const {index} = synset
-          return (
-            <MenuItem key={index} value={sense_keys[index]}>
-              <Tooltip title={synset.definition} placement="right">
-                <Typography sx={{width: '100%'}}>
-                  <span className="number-annotation">{'(' + score.toFixed(2) + ') '}</span>
-                  {sense_keys[index]}
-                </Typography>
-              </Tooltip>
-            </MenuItem>
-          )
-        })}
-      </Select>
+        selectOnFocus
+        clearOnEscape
+        handleHomeEndKeys
+        fullWidth
+        freeSolo
+      ></Autocomplete>
     )
   } else {
     return (

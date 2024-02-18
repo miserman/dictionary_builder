@@ -154,7 +154,9 @@ export function DictionaryMenu() {
                         setNewCategory(e.target.value)
                       }}
                     ></TextField>
-                    <Button onClick={add}>Add</Button>
+                    <Button variant="contained" onClick={add}>
+                      Add
+                    </Button>
                   </Stack>
                 </CardActions>
               </Card>

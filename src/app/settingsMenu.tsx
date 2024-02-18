@@ -27,6 +27,7 @@ export type Settings = {
   dictionary_names: string[]
   undo?: string
   redo?: string
+  copyTerm?: string
   disable_storage?: boolean
   use_db?: boolean
 }
@@ -52,13 +53,20 @@ export function SettingsMenu() {
   const [redo, setRedo] = useState(settings.redo || 'x')
   const [disableStore, setDisableStore] = useState(!!settings.disable_storage)
   const [use_db, setUseDB] = useState(!!settings.use_db)
+  const setters = {
+    undo: setUndo,
+    redo: setRedo,
+  }
   const listener = useCallback(
     (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && (!e.target || !('tagName' in e.target) || e.target.tagName !== 'INPUT')) {
-        if (e.key === redo) {
-          historyStep(-1)
-        } else if (e.key === undo) {
-          historyStep(1)
+        switch (e.key) {
+          case redo:
+            historyStep(-1)
+            break
+          case undo:
+            historyStep(1)
+            break
         }
       }
     },
@@ -70,6 +78,16 @@ export function SettingsMenu() {
       window.removeEventListener('keydown', listener)
     }
   }, [listener])
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const key = e.target.labels && e.target.labels[0].innerText
+    if (key && key in settings) {
+      window.removeEventListener('keydown', listener)
+      settings[key as 'redo'] = e.target.value
+      updateSettings({...settings})
+      localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+      setters[key as 'redo'](e.target.value)
+    }
+  }
   return (
     <>
       <IconButton onClick={toggleMenu} aria-label="toggle settings menu">
@@ -138,30 +156,8 @@ export function SettingsMenu() {
               <Typography fontWeight="bold">Keybinds</Typography>
               <Typography variant="caption">CTRL + </Typography>
               <Stack spacing={2} sx={{mt: 1}}>
-                <TextField
-                  size="small"
-                  label="undo"
-                  value={undo}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    window.removeEventListener('keydown', listener)
-                    settings.undo = e.target.value
-                    updateSettings({...settings})
-                    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-                    setUndo(e.target.value)
-                  }}
-                ></TextField>
-                <TextField
-                  size="small"
-                  label="redo"
-                  value={redo}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    window.removeEventListener('keydown', listener)
-                    settings.redo = e.target.value
-                    updateSettings({...settings})
-                    localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-                    setRedo(e.target.value)
-                  }}
-                ></TextField>
+                <TextField size="small" label="undo" value={undo} onChange={handleChange}></TextField>
+                <TextField size="small" label="redo" value={redo} onChange={handleChange}></TextField>
               </Stack>
             </Stack>
           </CardContent>
@@ -169,8 +165,7 @@ export function SettingsMenu() {
             <Stack spacing={2}>
               <Button
                 variant="contained"
-                size="small"
-                color="error"
+                color="warning"
                 onClick={() => {
                   indexedDB.deleteDatabase('dictionary_builder_resources')
                   location.reload()

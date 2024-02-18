@@ -24,6 +24,7 @@ export type DictionaryActions =
       term_type: TermTypes
       categories?: NumberObject
       sense?: string
+      added?: number
     }
   | {
       type: 'replace'
@@ -33,6 +34,7 @@ export type DictionaryActions =
       originalTerm: string | RegExp
       categories?: NumberObject
       sense?: string
+      added?: number
     }
 type CategoryActions = {type: 'collect'; dictionary: Dict; reset?: boolean} | {type: 'add' | 'remove'; cat: string}
 type TermCategoryEdit = {category: string; from: number; to: number}
@@ -273,6 +275,7 @@ export function Building({children}: {children: ReactNode}) {
       })
       if (nChanged) editHistory({type: 'add', entry: {...action, originalWeights}})
     } else {
+      // single term actions
       if (action.type === 'remove') {
         delete newState[action.term_id]
         editHistory({type: 'add', entry: {type: 'remove_term', name: action.term_id, value: state[action.term_id]}})
@@ -294,7 +297,7 @@ export function Building({children}: {children: ReactNode}) {
         const existing = newState[id] || {}
         newState[id] = {
           term,
-          added: existing.added || Date.now(),
+          added: existing.added || action.added || Date.now(),
           type: action.term_type || existing.type || 'fixed',
           categories: {...(action.categories || existing.categories || {})},
           sense: 'sense' in action ? action.sense || '' : existing.sense || '',

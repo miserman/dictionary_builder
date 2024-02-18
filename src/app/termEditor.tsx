@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -16,7 +17,7 @@ import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
 import {TERM_EDITOR_WIDTH} from './settingsMenu'
 import {type KeyboardEvent, useState, useContext, createContext, useMemo} from 'react'
 import {DataGrid, type GridCellParams, type GridColDef} from '@mui/x-data-grid'
-import {BuildContext} from './building'
+import {BuildContext, BuildEditContext} from './building'
 import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
 import type {DictEntry} from './storage'
@@ -35,6 +36,7 @@ export function TermEditor({
   const dict = useContext(BuildContext)
   const id = useContext(EditorTerm)
   const setTerm = useContext(EditorTermSetter)
+  const editDictionary = useContext(BuildEditContext)
   const [showEmptyCategories, setShowEmptyCategories] = useState(false)
   if (!id || !(id in dict)) return <></>
   const processed = getProcessedTerm(id, data, dict)
@@ -62,13 +64,14 @@ export function TermEditor({
   const weights = dictEntry.categories
   const rows: {
     id: string
+    term_id: string
     from_term_editor: string | number
     dictEntry: DictEntry
     processed: FixedTerm | FuzzyTerm
   }[] = []
   categories.forEach(cat => {
     if (showEmptyCategories || cat in weights)
-      rows.push({id: cat, from_term_editor: weights[cat] || '', dictEntry, processed})
+      rows.push({id: cat, term_id: id, from_term_editor: weights[cat] || '', dictEntry, processed})
   })
   return (
     <Box
@@ -82,29 +85,21 @@ export function TermEditor({
     >
       <Card sx={{height: '100%', pb: '2.5em'}} elevation={1}>
         <CardHeader
+          sx={{pl: 0.5, pr: 0.5}}
           action={
             <IconButton aria-label="Close term editor" onClick={() => setTerm('')} className="close-button">
               <Close />
             </IconButton>
           }
           title={
-            <Typography fontWeight="bold" sx={{whiteSpace: 'nowrap'}}>
+            <Typography sx={{whiteSpace: 'nowrap', '& .MuiButtonBase-root': {fontWeight: 'bold', fontSize: '1.1em'}}}>
               <TermLink term={processed.term} />
             </Typography>
           }
         />
         <CardContent sx={{p: 0.5, height: '100%'}}>
-          <Stack direction="column" sx={{height: '100%'}}>
-            <FormControl sx={{mb: 3}}>
-              {processed.type === 'fuzzy' || !processed.synsets.length ? (
-                <></>
-              ) : (
-                <InputLabel sx={{mt: dictEntry.sense ? '' : '-7px'}} id="term_editor_sense">
-                  Sense
-                </InputLabel>
-              )}
-              <TermSenseEdit labelId="term_editor_sense" label="Sense" id={id} field="" processed={processed} />
-            </FormControl>
+          <Stack direction="column" sx={{height: '100%', pb: 1}} spacing={2}>
+            <TermSenseEdit label="Sense" id={id} field="" processed={processed} />
             <Stack direction="column" spacing={1} sx={{height: '100%'}}>
               <Typography fontWeight="bold">Category Weights</Typography>
               <FormControlLabel
@@ -133,6 +128,22 @@ export function TermEditor({
                   }
                 }}
               />
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() => {
+                  editDictionary({
+                    type: 'add',
+                    term: dictEntry.term || id,
+                    term_type: dictEntry.type,
+                    sense: dictEntry.sense,
+                    categories: {...dictEntry.categories},
+                    added: dictEntry.added,
+                  })
+                }}
+              >
+                Duplicate
+              </Button>
             </Stack>
           </Stack>
         </CardContent>
