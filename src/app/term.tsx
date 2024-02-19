@@ -7,8 +7,6 @@ import {
   ListItem,
   ListItemIcon,
   MenuItem,
-  Select,
-  SelectChangeEvent,
   Stack,
   Table,
   TableBody,
@@ -130,6 +128,7 @@ export function TermSenseEdit({
         value={dictEntry.sense}
         renderOption={(props, option, state) => {
           const {synset, score} = rankedSynsets[state.index]
+          delete (props as unknown as any).key
           return (
             <MenuItem key={option} value={option} {...props}>
               <Tooltip title={synset.definition} placement="right">
@@ -153,6 +152,8 @@ export function TermSenseEdit({
             sense: newValue,
           })
         }}
+        autoSelect
+        blurOnSelect
         selectOnFocus
         clearOnEscape
         handleHomeEndKeys

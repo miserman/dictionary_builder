@@ -49,9 +49,9 @@ function containsRegex(term: string) {
   const close = regex_close.test(term)
   return (open && close) || (!open && !close)
 }
-function makeDictEntry(term: string, cats: NumberObject, sense: string, detectRegex?: boolean) {
+function makeDictEntry(term: string, cats: NumberObject, sense: string, added: number, detectRegex?: boolean) {
   return {
-    added: Date.now(),
+    added,
     type: (detectRegex && containsRegex(term) ? 'regex' : 'fixed') as 'fixed' | 'regex',
     categories: cats,
     sense: sense || '',
@@ -59,6 +59,7 @@ function makeDictEntry(term: string, cats: NumberObject, sense: string, detectRe
   }
 }
 function parseDict(raw: string, detectRegex: boolean) {
+  const lastTime = Date.now()
   const termMap: {[index: string]: Set<string>} = {}
   const makeId = (term: string) => {
     let id = term
@@ -99,7 +100,7 @@ function parseDict(raw: string, detectRegex: boolean) {
                   if (index in categories) cats[categories[index]] = 1
                 })
                 const [term, sense] = fullterm.split(senseSep)
-                parsed[makeId(term)] = makeDictEntry(term, cats, sense, detectRegex)
+                parsed[makeId(term)] = makeDictEntry(term, cats, sense, lastTime - n + i, detectRegex)
               }
             }
           }
@@ -112,30 +113,33 @@ function parseDict(raw: string, detectRegex: boolean) {
           // assumed to be a full export
           return initial
         }
+        let n = 0
         keys.forEach(cat => {
           if (cat) {
             const terms = initial[cat]
             if (Array.isArray(terms)) {
-              terms.forEach(fullterm => {
+              n += terms.length
+              terms.forEach((fullterm, i) => {
                 if (fullterm) {
                   const [term, sense] = fullterm.toLowerCase().split(senseSep)
                   const id = makeId(term)
                   if (id in parsed) {
                     parsed[id].categories[cat] = 1
                   } else {
-                    parsed[id] = makeDictEntry(term, {[cat]: 1}, sense, detectRegex)
+                    parsed[id] = makeDictEntry(term, {[cat]: 1}, sense, lastTime - n + i, detectRegex)
                   }
                 }
               })
             } else {
-              Object.keys(terms).forEach(fullterm => {
+              Object.keys(terms).forEach((fullterm, i) => {
+                n++
                 if (fullterm) {
                   const [term, sense] = fullterm.toLowerCase().split(senseSep)
                   const id = makeId(term)
                   if (id in parsed) {
                     parsed[id].categories[cat] = terms[fullterm]
                   } else {
-                    parsed[id] = makeDictEntry(term, {[cat]: terms[term]}, sense, detectRegex)
+                    parsed[id] = makeDictEntry(term, {[cat]: terms[term]}, sense, lastTime - n + i, detectRegex)
                   }
                 }
               })
@@ -152,7 +156,8 @@ function parseDict(raw: string, detectRegex: boolean) {
           .map(cat => cat.replace(quote_padding, ''))
         categories.splice(0, 1)
         const has_sense = categories[0] === 'term_sense'
-        lines.forEach(l => {
+        const n = lines.length
+        lines.forEach((l, i) => {
           const weights = l.split(sep).map(entry => entry.replace(quote_padding, ''))
           const term = weights.splice(0, 1)[0].toLowerCase()
           if (term) {
@@ -168,7 +173,7 @@ function parseDict(raw: string, detectRegex: boolean) {
                 }
               }
             })
-            parsed[makeId(term)] = makeDictEntry(term, cats, sense, detectRegex)
+            parsed[makeId(term)] = makeDictEntry(term, cats, sense, lastTime - n + i, detectRegex)
           }
         })
       }

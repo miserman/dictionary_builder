@@ -111,7 +111,7 @@ export function AnalyzeMenu() {
         <Box sx={{pl: 1, pr: 1, height: '100%'}}>
           <Box sx={{maxHeight: '60%', overflowY: 'auto'}}>
             <Typography variant="h6">Terms</Typography>
-            <List dense sx={{overflowY: 'auto', maxHeight: '300px', p: 0}}>
+            <List dense sx={{overflowY: 'auto', overflowX: 'hidden', maxHeight: '300px', p: 0}}>
               {Object.keys(catCounts).map(cat => (
                 <ListItem key={cat} disablePadding disableGutters>
                   <ListItemButton

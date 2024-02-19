@@ -1,7 +1,15 @@
 import {type ReactNode, createContext, useEffect, useReducer, useState} from 'react'
 import {type Settings, loadSettings} from './settingsMenu'
 import {moveInHistory} from './history'
-import {type Dict, type DictEntry, loadDictionary, loadHistory, removeStorage, setStorage} from './storage'
+import {
+  type Dict,
+  type DictEntry,
+  loadDictionary,
+  loadHistory,
+  removeStorage,
+  setStorage,
+  deleteDictionary,
+} from './storage'
 
 export type NumberObject = {[index: string]: number}
 export type TermTypes = 'fixed' | 'glob' | 'regex'
@@ -167,6 +175,7 @@ export function Building({children}: {children: ReactNode}) {
       updateSettings({...settings})
       removeStorage(action.name, 'dict_')
       removeStorage(action.name, 'dict_history_')
+      deleteDictionary(action.name)
       changeDictionary('default')
     } else {
       if (!settings.dictionary_names.includes(action.name)) settings.dictionary_names.push(action.name)
@@ -286,7 +295,7 @@ export function Building({children}: {children: ReactNode}) {
             if (!(term in termMap)) {
               termMap[term] = new Set()
             } else {
-              action.term_id = term + (termMap[term].size ? termMap[term].size + 1 : '')
+              action.term_id = term + (term in termMap ? termMap[term].size + 1 : '')
               termMap[term].add(action.term_id)
             }
           } else {

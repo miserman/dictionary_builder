@@ -4,10 +4,8 @@ import {
   Card,
   CardContent,
   CardHeader,
-  FormControl,
   FormControlLabel,
   IconButton,
-  InputLabel,
   Stack,
   Switch,
   Typography,
@@ -43,7 +41,7 @@ export function TermEditor({
   const dictEntry = dict[id]
   const cols: GridColDef[] = useMemo(
     () => [
-      {field: 'id', headerName: 'Name', width: 110},
+      {field: 'id', headerName: 'Name', width: 108},
       {
         field: 'from_term_editor',
         headerName: 'Weight',
@@ -124,7 +122,10 @@ export function TermEditor({
                 density="compact"
                 onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
                   if (e.key === 'Delete' || e.key === 'Backspace') {
-                    editor(0, params)
+                    const stringValue = '' + params.value
+                    const newValue = params.cellMode === 'view' ? 0 : +stringValue.substring(0, stringValue.length - 1)
+                    editor(newValue, params)
+                    if (!newValue) e.preventDefault()
                   }
                 }}
               />

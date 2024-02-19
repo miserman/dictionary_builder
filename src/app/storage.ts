@@ -246,6 +246,9 @@ export async function loadHistory(
       {edits: [], position: -1}
     )
 }
+export function deleteDictionary(name: string) {
+  delete dictionaries[name]
+}
 export async function loadDictionary(
   name: string,
   setDict: (dict: Dict) => void,
