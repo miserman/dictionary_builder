@@ -6,6 +6,7 @@ import {
   List,
   ListItem,
   ListItemIcon,
+  ListSubheader,
   MenuItem,
   Stack,
   Table,
@@ -22,7 +23,7 @@ import {
 import {relativeFrequency, sortByLength} from './utils'
 import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'react'
 import {ResourceContext, type Synset} from './resources'
-import {BuildContext, BuildEditContext, type DictionaryActions, termsByCategory} from './building'
+import {BuildContext, BuildEditContext, type DictionaryActions, termsByCategory, type NumberObject} from './building'
 import {InfoDrawerActions, InfoDrawerSetter} from './infoDrawer'
 import {SynsetLink, unpackSynsetMembers} from './synset'
 import {extractExpanded} from './wordParts'
@@ -76,9 +77,6 @@ export type FuzzyTerm = {
   common_matches?: string[]
 }
 
-function byRank(a: {score: number; synset: Synset}, b: {score: number; synset: Synset}) {
-  return b.score - a.score
-}
 export function TermSenseEdit({
   id,
   field,
@@ -106,31 +104,58 @@ export function TermSenseEdit({
         const processed = getProcessedTerm(id, data, Dict, true) as FixedTerm
         if (processed.lookup) processed.lookup.map.forEach((_, ext) => (siblingsExtended[ext] = true))
       })
+      const clusterRanks: NumberObject = {}
       const out = processed.synsets.map(synset => {
         let score = 0
         unpackSynsetMembers(synset, terms, synsetInfo).forEach(term => {
           if (term in siblings) score++
           if (term in siblingsExtended) score += 0.01
         })
-        return {score, synset}
+        if (!synset.csi_labels) synset.csi_labels = 'no category'
+        const cluster = 'string' === typeof synset.csi_labels ? synset.csi_labels : synset.csi_labels[0]
+        if (!(cluster in clusterRanks) || clusterRanks[cluster] < score) {
+          clusterRanks[cluster] = score
+        }
+        return {key: sense_keys[synset.index], score, synset}
       })
-      return out.sort(byRank)
+      const synsetCategories = out
+        .map(({synset}) => ('string' === typeof synset.csi_labels ? synset.csi_labels : synset.csi_labels[0]))
+        .sort()
+      synsetCategories
+      return out.sort((a, b) => {
+        const clusterA = 'string' === typeof a.synset.csi_labels ? a.synset.csi_labels : a.synset.csi_labels[0]
+        const clusterRankA = clusterRanks[clusterA]
+        const clusterNameA = -synsetCategories.indexOf(clusterA)
+        const clusterB = 'string' === typeof b.synset.csi_labels ? b.synset.csi_labels : b.synset.csi_labels[0]
+        const clusterRankB = clusterRanks[clusterB]
+        const clusterNameB = -synsetCategories.indexOf(clusterB)
+        return (
+          clusterRankB * 100 +
+          clusterNameB * 0.1 +
+          b.score * 0.01 -
+          (clusterRankA * 100 + clusterNameA * 0.1 + a.score * 0.01)
+        )
+      })
     } else {
       return []
     }
   }, [terms, sense_keys, synsetInfo, processed, Dict, data, dictEntry])
   if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
-    const synsetKeys = rankedSynsets.map(rank => sense_keys[rank.synset.index])
     return (
       <Autocomplete
         size="small"
-        options={synsetKeys}
+        componentsProps={{popper: {className: 'synset-select'}}}
+        options={rankedSynsets}
         value={dictEntry.sense}
-        renderOption={(props, option, state) => {
-          const {synset, score} = rankedSynsets[state.index]
+        groupBy={rank =>
+          'string' === typeof rank.synset.csi_labels ? rank.synset.csi_labels : rank.synset.csi_labels[0]
+        }
+        getOptionLabel={option => ('string' === typeof option ? option : option.key)}
+        renderOption={(props, rank) => {
+          const {key, synset, score} = rank
           delete (props as unknown as any).key
           return (
-            <MenuItem key={option} value={option} {...props}>
+            <MenuItem key={key} value={key} {...props}>
               <Tooltip title={synset.definition} placement="right">
                 <Typography sx={{width: '100%'}}>
                   <span className="number-annotation">{'(' + score.toFixed(2) + ') '}</span>
@@ -141,8 +166,25 @@ export function TermSenseEdit({
           )
         }}
         renderInput={params => <TextField label={label} {...params}></TextField>}
-        onChange={(e, value) => {
-          const newValue = value || ''
+        ListboxProps={{
+          style: {cursor: 'pointer'},
+          onClick: e => {
+            const target = e.target
+            if ('tagName' in target && 'innerText' in target && target.tagName === 'DIV') {
+              const newValue = target.innerText as string
+              editCell && editCell({id, field, value: newValue})
+              edit({
+                type: 'update',
+                term_id: id,
+                term: processed.term,
+                term_type: processed.term_type,
+                sense: newValue,
+              })
+            }
+          },
+        }}
+        onChange={(_, value) => {
+          const newValue = (value && 'object' === typeof value && value.key) || ''
           editCell && editCell({id, field, value: newValue})
           edit({
             type: 'update',
@@ -460,6 +502,18 @@ function TermFixed({processed}: {processed: FixedTerm}) {
     processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
     processed.forms.sort(sortByLength)
   }
+  const synset_clusters: {[index: string]: Synset[]} = {}
+  if (processed.synsets) {
+    processed.synsets.map(synset => {
+      const labels = synset.csi_labels || 'no category'
+      const label = 'string' === typeof labels ? labels : labels[0]
+      if (label in synset_clusters) {
+        synset_clusters[label].push(synset)
+      } else {
+        synset_clusters[label] = [synset]
+      }
+    })
+  }
   return (
     <Stack direction="row" spacing={4} sx={{height: '100%'}}>
       <Stack>
@@ -512,13 +566,23 @@ function TermFixed({processed}: {processed: FixedTerm}) {
         <>
           <Stack>
             <Typography>Senses</Typography>
-            <Box sx={containerStyle}>
-              <List sx={{p: 0}}>
-                {processed.synsets.map(info => (
-                  <ListItem key={info.index} disablePadding>
-                    <SynsetLink senseKey={sense_keys[info.index]} info={info} />
-                  </ListItem>
-                ))}
+            <Box sx={{...containerStyle, p: 0}}>
+              <List subheader={<li />} className="term-sense-list">
+                {Object.keys(synset_clusters).map(cluster => {
+                  const infos = synset_clusters[cluster]
+                  return (
+                    <li key={cluster}>
+                      <ul>
+                        <ListSubheader>{cluster}</ListSubheader>
+                        {infos.map(info => (
+                          <ListItem key={info.index} disablePadding>
+                            <SynsetLink senseKey={sense_keys[info.index]} info={info} />
+                          </ListItem>
+                        ))}
+                      </ul>
+                    </li>
+                  )
+                })}
               </List>
             </Box>
           </Stack>

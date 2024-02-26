@@ -160,7 +160,7 @@ if (file.exists(paste0(baseDir, "by_synset.json"))) {
     topic_name <- gsub("^[^.]+\\.|\\.yaml$", "", file)
     lapply(
       topic,
-      function(d){
+      function(d) {
         if (!is.null(d$members)) {
           members <- tolower(d$members)
           members <- members[!grepl("^\\d+$", members)]
@@ -187,16 +187,39 @@ if (file.exists(paste0(baseDir, "by_synset.json"))) {
   write_json(by_synset, paste0(baseDir, "by_synset.json"), auto_unbox = TRUE)
 }
 
+# synset clusters
+synset_clusters_raw_file <- paste0(baseDir, "synset_clusters.tsv")
+if (!file.exists(synset_clusters_raw_file)) {
+  download.file(
+    "https://github.com/SapienzaNLP/csi_code/raw/master/data/sensekey2csi_complete.tsv",
+    synset_clusters_raw_file
+  )
+}
+synset_clusters_json_file <- paste0(baseDir, "synset_clusters.json")
+if (!file.exists(synset_clusters_json_file)) {
+  synset_clusters_raw <- lapply(readLines(synset_clusters_raw_file), strsplit, "\t")
+  synset_clusters <- structure(
+    lapply(synset_clusters_raw, function(l) l[[1]][-1]),
+    names = vapply(synset_clusters_raw, function(l) l[[1]][1], "")
+  )
+  jsonlite::write_json(synset_clusters, synset_clusters_json_file, auto_unbox = TRUE)
+}
+synset_keys <- readLines("public/data/sense_keys.txt")
+synset_clusters <- jsonlite::read_json(synset_clusters_json_file)[synset_keys]
+
 # write synset resources
 synset_ids <- structure(seq_along(by_synset), names = names(by_synset))
 write_json(lapply(seq_along(by_synset), function(i) {
   d <- by_synset[[i]]
+  d$csi_labels <- synset_clusters[[i]]
   d$partOfSpeech <- NULL
   d$example <- NULL
-  d <- lapply(d, function(e) if (any(grepl("^\\d+-\\w$", e))) {
-    unname(synset_ids[unlist(e)])
-  } else {
-    e
+  d <- lapply(d, function(e) {
+    if (any(grepl("^\\d+-\\w$", e))) {
+      unname(synset_ids[unlist(e)])
+    } else {
+      e
+    }
   })
   d$id <- names(by_synset)[[i]]
   d
@@ -225,7 +248,8 @@ if (!file.exists(tagged_file)) {
   system2("docker", c("compose", "down"))
 }
 tagged <- read.table(
-  tagged_file, sep = "\t", quote = "", col.names = c("term", "pos", "lemma")
+  tagged_file,
+  sep = "\t", quote = "", col.names = c("term", "pos", "lemma")
 )
 tagged <- tagged[
   tagged$term != tagged$lemma & tagged$lemma != "<unknown>" &

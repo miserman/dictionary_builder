@@ -92,7 +92,7 @@ async function decrypt(name: string, content: string | Blob, password?: string) 
 // indexedDB
 type storedItem = {name: string; encrypted?: boolean; content: Blob}
 type DBName = 'resources' | 'building'
-const DBVersions = {resources: 1, building: 1}
+const DBVersions = {resources: 2, building: 1}
 function openDB(name: DBName): Promise<IDBDatabase | undefined> {
   return new Promise(resolve => {
     const req = indexedDB.open('dictionary_builder_' + name, DBVersions[name])

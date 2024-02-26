@@ -13,6 +13,7 @@ export type Synset = {
   ili: string
   source: string
   wikidata: string
+  csi_labels: string | string[]
   members: number | number[]
   attribute: number | number[]
   domain_topic: number | number[]

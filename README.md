@@ -24,7 +24,7 @@ As part of _analysis_, the tool will...
 
 Similar terms come from the pre-trained embeddings spaces available at [osf.io/489he](https://osf.io/489he/).
 
-Synsets are from the [Open English WordNet](https://github.com/globalwordnet/english-wordnet).
+Synsets are from the [Open English WordNet](https://github.com/globalwordnet/english-wordnet). With added cluster information from a [Coarse Sense Inventory](https://sapienzanlp.github.io/csi/).
 
 The [preprocess.R](/preprocess.R) script was used to make the resources from these sources that are used within the app.
 

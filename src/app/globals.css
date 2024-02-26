@@ -48,3 +48,18 @@ th {
   bottom: 4px;
   left: 12px;
 }
+.term-sense-list,
+.term-sense-list ul,
+.term-sense-list li {
+  padding: 0;
+}
+.term-sense-list .MuiListSubheader-root {
+  line-height: 1em;
+  padding: 0.5em;
+}
+.term-sense-list .MuiListItem-root {
+  padding: 0 0 0 1em;
+}
+div.base-Popper-root.MuiAutocomplete-popper.synset-select {
+  width: auto !important;
+}

@@ -83,7 +83,7 @@ function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   )
 }
 
-const basicInfo = {id: 0, index: 0, ili: 0, definition: 0, topic: 0}
+const basicInfo = {id: 0, index: 0, ili: 0, definition: 0, topic: 0, csi_labels: 0}
 const partsOfSpeech = {a: 'adj', r: 'adv', s: 'adj', n: 'noun', v: 'verb'}
 export function SynsetDisplay({info}: {info: Synset}) {
   const {sense_keys} = useContext(ResourceContext)
@@ -112,6 +112,16 @@ export function SynsetDisplay({info}: {info: Synset}) {
           <Typography component="p" variant="caption" sx={{ml: 1}}>
             Topic: <span className="number">{info.topic}</span>
           </Typography>
+          {info.csi_labels ? (
+            <Typography component="p" variant="caption" sx={{ml: 1}}>
+              Coarse Sense Inventory Labels:{' '}
+              <span className="number">
+                {'string' === typeof info.csi_labels ? info.csi_labels : info.csi_labels.join(', ')}
+              </span>
+            </Typography>
+          ) : (
+            <></>
+          )}
         </Box>
       </Stack>
       <Stack direction="row" sx={{mt: 2}}>
