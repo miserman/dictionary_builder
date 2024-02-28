@@ -1,5 +1,6 @@
-import {Close} from '@mui/icons-material'
+import {Close, Visibility, VisibilityOff} from '@mui/icons-material'
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -192,6 +193,7 @@ export function ImportMenu() {
   const [encrypt, setEncrypt] = useState(false)
   const [rawContent, setRawContent] = useState('')
   const [password, setPassword] = useState('')
+  const [hide, setHide] = useState(true)
   const clear = () => {
     setName('')
     setRawContent('')
@@ -199,10 +201,10 @@ export function ImportMenu() {
   }
   const addDict = () => {
     if (name) {
-      clear()
-      setMenuOpen(false)
       const dict = parseDict(rawContent, detectRegex)
       manageDictionaries({type: 'add', name, dict, password: encrypt ? password : ''})
+      clear()
+      setMenuOpen(false)
     }
   }
   return (
@@ -292,13 +294,23 @@ export function ImportMenu() {
               />
             </Tooltip>
             {encrypt ? (
-              <TextField
-                size="small"
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-              />
+              <Box>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Password"
+                  type={hide ? 'password' : 'text'}
+                  value={password}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                />
+                <IconButton
+                  sx={{position: 'absolute', right: 15}}
+                  aria-label="toggle password visibility"
+                  onClick={() => setHide(!hide)}
+                >
+                  {hide ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </Box>
             ) : (
               <></>
             )}

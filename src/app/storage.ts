@@ -1,4 +1,5 @@
 import type {HistoryContainer, NumberObject, PasswordRequestCallback, TermTypes} from './building'
+import {CoarseSenseMap} from './resources'
 
 // compression
 async function compress(content: any) {
@@ -65,11 +66,7 @@ async function encrypt(name: string, content: any, password?: string) {
 }
 function parseStoredString(raw: string): Promise<Blob> {
   return new Promise(async resolve => {
-    if (raw[0] === 'e' || raw[0] === 'c') {
-      resolve(await fetch('data:application/octet-stream;base64,' + raw.substring(1)).then(res => res.blob()))
-    } else {
-      resolve(new Blob([Uint8Array.from(raw.split(',').map(v => +v))]))
-    }
+    resolve(await fetch('data:application/octet-stream;base64,' + raw.substring(1)).then(res => res.blob()))
   })
 }
 async function decrypt(name: string, content: string | Blob, password?: string) {
@@ -91,8 +88,8 @@ async function decrypt(name: string, content: string | Blob, password?: string) 
 
 // indexedDB
 type storedItem = {name: string; encrypted?: boolean; content: Blob}
-type DBName = 'resources' | 'building'
-const DBVersions = {resources: 2, building: 1}
+type DBName = 'resources' | 'building' | 'coarse_sense_map'
+const DBVersions = {resources: 3, building: 1, coarse_sense_map: 1}
 function openDB(name: DBName): Promise<IDBDatabase | undefined> {
   return new Promise(resolve => {
     const req = indexedDB.open('dictionary_builder_' + name, DBVersions[name])
@@ -107,7 +104,7 @@ function openDB(name: DBName): Promise<IDBDatabase | undefined> {
   })
 }
 const IDB = {
-  setItem: async function (item: storedItem, database: DBName = 'building'): Promise<boolean> {
+  setItem: async function (item: storedItem, database: DBName): Promise<boolean> {
     const db = await openDB(database)
     return new Promise(resolve => {
       if (db) {
@@ -121,7 +118,7 @@ const IDB = {
       }
     })
   },
-  getItem: async function (name: string, database: DBName = 'building'): Promise<storedItem | null> {
+  getItem: async function (name: string, database: DBName): Promise<storedItem | null> {
     const db = await openDB(database)
     return new Promise(resolve => {
       if (db) {
@@ -135,7 +132,7 @@ const IDB = {
       }
     })
   },
-  removeItem: async function (name: string, database: DBName = 'building'): Promise<boolean> {
+  removeItem: async function (name: string, database: DBName): Promise<boolean> {
     const db = await openDB(database)
     return new Promise(resolve => {
       if (db) {
@@ -159,7 +156,7 @@ export async function saveResource(name: string, content: any) {
 }
 export async function removeStorage(name: string, prefix: string) {
   delete keys[name]
-  IDB.removeItem(prefix + name)
+  IDB.removeItem(prefix + name, name === 'coarse_sense_map' ? name : 'building')
   localStorage.removeItem(prefix + name)
 }
 function writeBlob(blob: Blob, encrypted: boolean): Promise<string> {
@@ -177,7 +174,7 @@ export async function setStorage(name: string, prefix: string, value: any, use_d
   if (content) {
     try {
       if (use_db) {
-        IDB.setItem({name: prefix + name, encrypted, content})
+        IDB.setItem({name: prefix + name, encrypted, content}, name === 'coarse_sense_map' ? name : 'building')
       } else {
         localStorage.setItem(prefix + name, await writeBlob(content, encrypted))
       }
@@ -195,8 +192,9 @@ export async function getStorage(
   fallback: any
 ) {
   const key = prefix + name
-  let raw = use_db ? await IDB.getItem(key) : localStorage.getItem(key)
-  if (!raw) raw = use_db ? localStorage.getItem(key) : await IDB.getItem(key)
+  const dbName = key === 'coarse_sense_map' ? key : 'building'
+  let raw = use_db ? await IDB.getItem(key, key === 'coarse_sense_map' ? key : dbName) : localStorage.getItem(key)
+  if (!raw) raw = use_db ? localStorage.getItem(key) : await IDB.getItem(key, dbName)
   if (raw) {
     if ('string' === typeof raw && (raw[0] === '{' || raw[0] === 'c')) {
       resolve(raw[0] === '{' ? JSON.parse(raw) : await decompress(await parseStoredString(raw)))
@@ -272,4 +270,10 @@ export async function loadDictionary(
       {}
     )
   }
+}
+export async function loadSenseMap(
+  setSenseMap: (map: CoarseSenseMap) => void,
+  requestPass: (name: string, resolve: PasswordRequestCallback) => void
+) {
+  getStorage('coarse_sense_map', '', map => (map ? setSenseMap(map) : undefined), true, requestPass, {})
 }

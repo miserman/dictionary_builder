@@ -3,6 +3,7 @@ import {CircularProgress, List, ListItem, ListItemIcon, Stack, Typography} from 
 import {type ReactNode, createContext, useEffect, useState, useMemo} from 'react'
 import {newline} from './utils'
 import {decompress, loadResource, saveResource} from './storage'
+import {NumberObject} from './building'
 
 type AssociatedIndices = [number | number[], (number | number[])?][]
 export type Synset = {
@@ -11,6 +12,8 @@ export type Synset = {
   definition: string
   topic: string
   ili: string
+  sense_index: number
+  nltk_id: string
   source: string
   wikidata: string
   csi_labels: string | string[]
@@ -29,6 +32,7 @@ export type Synset = {
   causes: number | number[]
 }
 type Synsets = readonly Synset[]
+export type CoarseSenseMap = {[index: string]: string[]}
 export type TermResources = {
   terms?: readonly string[]
   lemmas?: {[index: string]: number | number[]}
@@ -37,8 +41,12 @@ export type TermResources = {
   termAssociations?: AssociatedIndices
   sense_keys?: readonly string[]
   synsetInfo?: Synsets
+  senseMap: CoarseSenseMap
+  SenseLookup: NumberObject
+  NLTKLookup: NumberObject
 }
-export const ResourceContext = createContext<TermResources>({})
+export const ResourceContext = createContext<TermResources>({senseMap: {}, SenseLookup: {}, NLTKLookup: {}})
+export const SenseMapSetter = createContext((map: CoarseSenseMap) => {})
 
 const resources = [
   {key: 'terms', label: 'Terms'},
@@ -47,6 +55,7 @@ const resources = [
   {key: 'synsetInfo', label: 'Synset Info'},
 ] as const
 
+const wordSep = /[\s-]+/g
 export function Resources({children}: {children: ReactNode}) {
   const [terms, setTerms] = useState<readonly string[]>()
   const [lemmas, setLemmas] = useState<{[index: string]: number | number[]}>()
@@ -55,6 +64,9 @@ export function Resources({children}: {children: ReactNode}) {
   const [termAssociations, setTermAssociations] = useState<AssociatedIndices>()
   const [sense_keys, setSenseKeys] = useState<readonly string[]>()
   const [synsetInfo, setSynsetInfo] = useState<Synsets>()
+  const [senseMap, setSenseMap] = useState<CoarseSenseMap>({})
+  const [SenseLookup, setSenseLookup] = useState<NumberObject>({})
+  const [NLTKLookup, setNLTKLookup] = useState<NumberObject>({})
 
   const [loadingTerms, setLoadingTerms] = useState(true)
   const [loadingTermAssociations, setLoadingTermAssociations] = useState(true)
@@ -188,9 +200,57 @@ export function Resources({children}: {children: ReactNode}) {
       setLemmas(tempLemmas)
     }
   }, [terms, termAssociations])
+  useEffect(() => {
+    if (terms && sense_keys && synsetInfo) {
+      const sense_lookup: NumberObject = {}
+      const nltk_lookup: NumberObject = {}
+      synsetInfo.forEach((synset, index) => {
+        sense_lookup[sense_keys[index]] = index
+        if (synset.sense_index && synset.members) {
+          const senseIndex = synset.sense_index + ''
+          const firstMemberIndex = 'number' === typeof synset.members ? synset.members : synset.members[0]
+          if (firstMemberIndex) {
+            const nltkId =
+              terms[firstMemberIndex - 1].replace(wordSep, '_') +
+              '.' +
+              synset.id.substring(synset.id.length - 1) +
+              '.' +
+              (senseIndex.length === 1 ? '0' : '') +
+              senseIndex
+            nltk_lookup[nltkId] = index
+            synset.nltk_id = nltkId
+          }
+        }
+      })
+      setSenseLookup(sense_lookup)
+      setNLTKLookup(nltk_lookup)
+    }
+  }, [terms, sense_keys, synsetInfo])
   const Data = useMemo(() => {
-    return {terms, lemmas, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo}
-  }, [terms, lemmas, termLookup, collapsedTerms, termAssociations, sense_keys, synsetInfo])
+    return {
+      terms,
+      lemmas,
+      termLookup,
+      collapsedTerms,
+      termAssociations,
+      sense_keys,
+      synsetInfo,
+      senseMap,
+      NLTKLookup,
+      SenseLookup,
+    }
+  }, [
+    terms,
+    lemmas,
+    termLookup,
+    collapsedTerms,
+    termAssociations,
+    sense_keys,
+    synsetInfo,
+    senseMap,
+    NLTKLookup,
+    SenseLookup,
+  ])
   const loading = {
     terms: loadingTerms,
     termAssociations: loadingTermAssociations,
@@ -200,7 +260,7 @@ export function Resources({children}: {children: ReactNode}) {
   return (
     <ResourceContext.Provider value={Data}>
       {lemmas && synsetInfo ? (
-        children
+        <SenseMapSetter.Provider value={setSenseMap}>{children}</SenseMapSetter.Provider>
       ) : (
         <Stack sx={{margin: 'auto', marginTop: 10, maxWidth: 350}}>
           <Typography variant="h4">Loading Resources...</Typography>

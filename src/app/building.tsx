@@ -1,4 +1,4 @@
-import {type ReactNode, createContext, useEffect, useReducer, useState} from 'react'
+import {type ReactNode, createContext, useEffect, useReducer, useState, useContext} from 'react'
 import {type Settings, loadSettings} from './settingsMenu'
 import {moveInHistory} from './history'
 import {
@@ -9,7 +9,9 @@ import {
   removeStorage,
   setStorage,
   deleteDictionary,
+  loadSenseMap,
 } from './storage'
+import {SenseMapSetter} from './resources'
 
 export type NumberObject = {[index: string]: number}
 export type TermTypes = 'fixed' | 'glob' | 'regex'
@@ -132,6 +134,10 @@ export function Building({children}: {children: ReactNode}) {
       setRequester(defaultRequester)
     }
   }
+  const senseMapSetter = useContext(SenseMapSetter)
+  useEffect(() => {
+    loadSenseMap(senseMapSetter, passwordRequester)
+  }, [])
   const [settings, updateSettings] = useState(loadSettings())
   const use_db = !!settings.use_db
   const changeDictionary = (name: string) => {

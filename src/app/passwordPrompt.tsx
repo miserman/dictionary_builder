@@ -13,7 +13,7 @@ import {type ChangeEvent, useState, useContext, type KeyboardEvent} from 'react'
 import {ManageDictionaries, PasswordEnterer, PasswordPrompter, PasswordResolve} from './building'
 
 export function PasswordPrompt() {
-  const dictName = useContext(PasswordEnterer)
+  const name = useContext(PasswordEnterer)
   const reply = useContext(PasswordResolve)
   const close = useContext(PasswordPrompter)
   const manageDictionaries = useContext(ManageDictionaries)
@@ -23,8 +23,10 @@ export function PasswordPrompt() {
   const bail = () => {
     setPassword('')
     close('')
-    if (!succeeded && !!dictName) {
-      manageDictionaries({type: 'set', name: 'default'})
+    if (!succeeded && !!name) {
+      if (name !== 'coarse_sense_map') {
+        manageDictionaries({type: 'set', name: 'default'})
+      }
     }
   }
   const [password, setPassword] = useState('')
@@ -44,8 +46,8 @@ export function PasswordPrompt() {
     }
   }
   return (
-    <Dialog open={!!dictName} onClose={bail}>
-      <DialogTitle>Encrypted Dictionary</DialogTitle>
+    <Dialog open={!!name} onClose={bail}>
+      <DialogTitle>Encrypted Resource</DialogTitle>
       <IconButton
         aria-label="close export menu"
         onClick={bail}
@@ -60,7 +62,7 @@ export function PasswordPrompt() {
       </IconButton>
       <DialogContent sx={{p: 1}}>
         <Typography sx={{mb: 2}}>
-          The <span className="number">{dictName}</span> dictionary is encrypted.
+          The <span className="number">{name}</span> resource is encrypted.
         </Typography>
         <TextField
           fullWidth

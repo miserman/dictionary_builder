@@ -83,10 +83,20 @@ function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   )
 }
 
-const basicInfo = {id: 0, index: 0, ili: 0, definition: 0, topic: 0, csi_labels: 0}
+const basicInfo = {
+  id: 0,
+  index: 0,
+  ili: 0,
+  definition: 0,
+  topic: 0,
+  csi_labels: 0,
+  wikidata: 0,
+  source: 0,
+  sense_index: 0,
+  nltk_id: 0,
+}
 const partsOfSpeech = {a: 'adj', r: 'adv', s: 'adj', n: 'noun', v: 'verb'}
 export function SynsetDisplay({info}: {info: Synset}) {
-  const {sense_keys} = useContext(ResourceContext)
   return (
     <>
       <Typography variant="h6">{info.definition}</Typography>
@@ -95,12 +105,20 @@ export function SynsetDisplay({info}: {info: Synset}) {
           <Typography component="p" variant="caption" sx={{ml: 1}}>
             Open English WordNet ID: <span className="number">{info.id}</span>
           </Typography>
-          <Typography component="p" variant="caption" sx={{ml: 1}}>
-            Sense Key: <span className="number">{sense_keys && sense_keys[info.index]}</span>
-          </Typography>
-          <Typography component="p" variant="caption" sx={{ml: 1}}>
-            Interlingual ID: <span className="number">{info.ili}</span>
-          </Typography>
+          {info.ili ? (
+            <Typography component="p" variant="caption" sx={{ml: 1}}>
+              Interlingual ID: <span className="number">{info.ili}</span>
+            </Typography>
+          ) : (
+            <></>
+          )}
+          {info.nltk_id ? (
+            <Typography component="p" variant="caption" sx={{ml: 1}}>
+              Natural Language Toolkit ID: <span className="number">{info.nltk_id}</span>
+            </Typography>
+          ) : (
+            <></>
+          )}
         </Box>
         <Box>
           <Typography component="p" variant="caption" sx={{ml: 1}}>
@@ -123,6 +141,29 @@ export function SynsetDisplay({info}: {info: Synset}) {
             <></>
           )}
         </Box>
+        {info.wikidata || info.source ? (
+          <Box>
+            {info.source ? (
+              <Typography component="p" variant="caption" sx={{ml: 1}}>
+                Source: <span className="number">{info.source}</span>
+              </Typography>
+            ) : (
+              <></>
+            )}
+            {info.wikidata ? (
+              <Typography component="p" variant="caption" sx={{ml: 1}}>
+                Wikidata:{' '}
+                <Link href={'https://www.wikidata.org/wiki/' + info.wikidata} rel="noreferrer" target="_blank">
+                  {info.wikidata}
+                </Link>
+              </Typography>
+            ) : (
+              <></>
+            )}
+          </Box>
+        ) : (
+          <></>
+        )}
       </Stack>
       <Stack direction="row" sx={{mt: 2}}>
         {Object.keys(info)

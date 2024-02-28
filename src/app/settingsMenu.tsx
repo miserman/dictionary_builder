@@ -18,6 +18,9 @@ import {type ChangeEvent, useCallback, useContext, useEffect, useState} from 're
 import {HistoryStepper, SettingEditor, SettingsContext} from './building'
 import {Confirm} from './confirmDialog'
 import {removeStorage} from './storage'
+import {ImportCoarseSenseMap} from './senseMapImport'
+import {ExportCoarseSenseMap} from './senseMapExport'
+import {ResourceContext, SenseMapSetter} from './resources'
 
 export const INFO_DRAWER_HEIGHT = '30vh'
 export const TERM_EDITOR_WIDTH = '200px'
@@ -46,6 +49,8 @@ export function loadSettings() {
 export function SettingsMenu() {
   const updateSettings = useContext(SettingEditor)
   const settings = useContext(SettingsContext)
+  const senseMapSetter = useContext(SenseMapSetter)
+  const {senseMap} = useContext(ResourceContext)
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const historyStep = useContext(HistoryStepper)
@@ -88,6 +93,7 @@ export function SettingsMenu() {
       setters[key as 'redo'](e.target.value)
     }
   }
+  const mappedSenses = Object.keys(senseMap).length
   return (
     <>
       <IconButton onClick={toggleMenu} aria-label="toggle settings menu">
@@ -158,6 +164,29 @@ export function SettingsMenu() {
               <Stack spacing={2} sx={{mt: 1}}>
                 <TextField size="small" label="undo" value={undo} onChange={handleChange}></TextField>
                 <TextField size="small" label="redo" value={redo} onChange={handleChange}></TextField>
+              </Stack>
+              <Typography fontWeight="bold">Coarse Senses</Typography>
+
+              <Stack spacing={1}>
+                <ImportCoarseSenseMap />
+                {mappedSenses ? (
+                  <>
+                    <Typography>
+                      Mapped senses: <span className="number">{mappedSenses} </span>
+                    </Typography>
+                    <ExportCoarseSenseMap />
+                    <Confirm
+                      label="Remove"
+                      message="The stored coarse sense map will be deleted."
+                      onConfirm={() => {
+                        removeStorage('coarse_sense_map', '')
+                        senseMapSetter({})
+                      }}
+                    />
+                  </>
+                ) : (
+                  <></>
+                )}
               </Stack>
             </Stack>
           </CardContent>

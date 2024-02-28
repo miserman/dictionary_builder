@@ -207,11 +207,21 @@ if (!file.exists(synset_clusters_json_file)) {
 synset_keys <- readLines("public/data/sense_keys.txt")
 synset_clusters <- jsonlite::read_json(synset_clusters_json_file)[synset_keys]
 
+# synset NLTK IDs
+nltk_ids_file <- paste0(baseDir, "nltk_ids.txt")
+if (!file.exists(nltk_ids_file)) {
+  system2("python3", "-m pip install nltk")
+  system2("python3", "preprocess.py")
+}
+nltk_ids <- readLines(nltk_ids_file)
+
 # write synset resources
 synset_ids <- structure(seq_along(by_synset), names = names(by_synset))
 write_json(lapply(seq_along(by_synset), function(i) {
   d <- by_synset[[i]]
   d$csi_labels <- synset_clusters[[i]]
+  nltk_id = nltk_ids[[i]]
+  if (nltk_id != "") d$sense_index = as.integer(sub("^.*\\.", "", nltk_id))
   d$partOfSpeech <- NULL
   d$example <- NULL
   d <- lapply(d, function(e) {

@@ -94,8 +94,11 @@ export function TermSenseEdit({
   const edit = useContext(BuildEditContext)
   const dictEntry = Dict[id || processed.term]
   const data = useContext(ResourceContext)
-  const {terms, sense_keys, synsetInfo} = data
-
+  const {terms, senseMap, sense_keys, synsetInfo} = data
+  const getCoarseSense = (key: string, synset: Synset) => {
+    const labels = key in senseMap ? senseMap[key] : synset.csi_labels
+    return 'string' === typeof labels ? labels : labels[0]
+  }
   const rankedSynsets = useMemo(() => {
     if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
       const siblings = termsByCategory(Object.keys(dictEntry.categories), Dict)
@@ -112,21 +115,20 @@ export function TermSenseEdit({
           if (term in siblingsExtended) score += 0.01
         })
         if (!synset.csi_labels) synset.csi_labels = 'no category'
-        const cluster = 'string' === typeof synset.csi_labels ? synset.csi_labels : synset.csi_labels[0]
+        const key = sense_keys[synset.index]
+        const cluster = getCoarseSense(key, synset)
         if (!(cluster in clusterRanks) || clusterRanks[cluster] < score) {
           clusterRanks[cluster] = score
         }
-        return {key: sense_keys[synset.index], score, synset}
+        return {key, score, synset}
       })
-      const synsetCategories = out
-        .map(({synset}) => ('string' === typeof synset.csi_labels ? synset.csi_labels : synset.csi_labels[0]))
-        .sort()
+      const synsetCategories = out.map(({key, synset}) => getCoarseSense(key, synset)).sort()
       synsetCategories
       return out.sort((a, b) => {
-        const clusterA = 'string' === typeof a.synset.csi_labels ? a.synset.csi_labels : a.synset.csi_labels[0]
+        const clusterA = getCoarseSense(a.key, a.synset)
         const clusterRankA = clusterRanks[clusterA]
         const clusterNameA = -synsetCategories.indexOf(clusterA)
-        const clusterB = 'string' === typeof b.synset.csi_labels ? b.synset.csi_labels : b.synset.csi_labels[0]
+        const clusterB = getCoarseSense(b.key, b.synset)
         const clusterRankB = clusterRanks[clusterB]
         const clusterNameB = -synsetCategories.indexOf(clusterB)
         return (
@@ -139,7 +141,7 @@ export function TermSenseEdit({
     } else {
       return []
     }
-  }, [terms, sense_keys, synsetInfo, processed, Dict, data, dictEntry])
+  }, [terms, senseMap, sense_keys, synsetInfo, processed, Dict, data, dictEntry])
   if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
     return (
       <Autocomplete
@@ -147,9 +149,7 @@ export function TermSenseEdit({
         componentsProps={{popper: {className: 'synset-select'}}}
         options={rankedSynsets}
         value={dictEntry.sense}
-        groupBy={rank =>
-          'string' === typeof rank.synset.csi_labels ? rank.synset.csi_labels : rank.synset.csi_labels[0]
-        }
+        groupBy={rank => getCoarseSense(rank.key, rank.synset)}
         getOptionLabel={option => ('string' === typeof option ? option : option.key)}
         renderOption={(props, rank) => {
           const {key, synset, score} = rank
@@ -494,7 +494,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
   const updateInfoDrawerState = useContext(InfoDrawerSetter)
-  const {terms, termLookup, collapsedTerms, sense_keys} = useContext(ResourceContext)
+  const {terms, senseMap, termLookup, collapsedTerms, sense_keys} = useContext(ResourceContext)
   const byIndex = useCallback(termLookup ? (a: string, b: string) => termLookup[a] - termLookup[b] : () => 0, [
     termLookup,
   ])
@@ -505,7 +505,8 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const synset_clusters: {[index: string]: Synset[]} = {}
   if (processed.synsets) {
     processed.synsets.map(synset => {
-      const labels = synset.csi_labels || 'no category'
+      const key = sense_keys ? sense_keys[synset.index] : ''
+      const labels = key in senseMap ? senseMap[key] : synset.csi_labels || 'no category'
       const label = 'string' === typeof labels ? labels : labels[0]
       if (label in synset_clusters) {
         synset_clusters[label].push(synset)
