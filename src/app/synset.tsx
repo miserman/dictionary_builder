@@ -97,6 +97,9 @@ const basicInfo = {
 }
 const partsOfSpeech = {a: 'adj', r: 'adv', s: 'adj', n: 'noun', v: 'verb'}
 export function SynsetDisplay({info}: {info: Synset}) {
+  const {sense_keys, senseMap} = useContext(ResourceContext)
+  const key = sense_keys ? sense_keys[info.index] : ''
+  const labels = key && key in senseMap ? senseMap[key] : info.csi_labels
   return (
     <>
       <Typography variant="h6">{info.definition}</Typography>
@@ -130,12 +133,9 @@ export function SynsetDisplay({info}: {info: Synset}) {
           <Typography component="p" variant="caption" sx={{ml: 1}}>
             Topic: <span className="number">{info.topic}</span>
           </Typography>
-          {info.csi_labels ? (
+          {labels ? (
             <Typography component="p" variant="caption" sx={{ml: 1}}>
-              Coarse Sense Inventory Labels:{' '}
-              <span className="number">
-                {'string' === typeof info.csi_labels ? info.csi_labels : info.csi_labels.join(', ')}
-              </span>
+              Coarse Labels: <span className="number">{'string' === typeof labels ? labels : labels.join(', ')}</span>
             </Typography>
           ) : (
             <></>

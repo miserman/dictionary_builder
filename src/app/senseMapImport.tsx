@@ -35,19 +35,21 @@ const HiddenInput = styled('input')({
   width: 1,
 })
 
-const sep = ','
+const quotes = /^"|"$/g
+const sep = /"*,"*/
 function parseCoarseMap(rows: readonly string[], fine_col: number, coarse_col: number) {
   const parsed: CoarseSenseMap = {}
   if (rows) {
     if (fine_col !== -1 && coarse_col !== -1) {
       try {
         rows.forEach(row => {
-          const values = row.split(sep)
+          const values = row.replace(quotes, '').split(sep)
           const fine = values[fine_col]
           const coarse = values[coarse_col]
-          if (fine && coarse) {
+          if (fine && coarse && coarse[0]) {
             if (fine in parsed) {
-              parsed[fine].push(coarse)
+              const existing = parsed[fine]
+              if (!existing.includes(coarse)) existing.push(coarse)
             } else {
               parsed[fine] = [coarse]
             }
@@ -70,7 +72,7 @@ export function ImportCoarseSenseMap() {
   const [header, setHeader] = useState<string[]>([])
   const [rows, setRows] = useState<readonly string[]>([])
   const [selectedCols, setSelectedCols] = useState(['', ''])
-  const [recognized, setRecognized] = useState([0, 0])
+  const [recognized, setRecognized] = useState([0, 0, 0])
   const [map, setMap] = useState<CoarseSenseMap>({})
   const [password, setPassword] = useState('')
   const [hide, setHide] = useState(true)
@@ -80,35 +82,40 @@ export function ImportCoarseSenseMap() {
     setRows([])
     setPassword('')
   }
-  const parseMap = (fine: string, coarse: string) => {
-    if (fine && coarse) {
-      const map = parseCoarseMap(rows, header.indexOf(fine), header.indexOf(coarse))
-      const recognizedMap: CoarseSenseMap = {}
-      const fineMapped = Object.keys(map)
-      if (fineMapped.length && sense_keys) {
-        const isNLTK = !senseKeySep.test(fineMapped[0])
-        const lookup = isNLTK ? NLTKLookup : SenseLookup
-        let nRecognized = 0
-        fineMapped.forEach(key => {
-          if (key in lookup) {
-            nRecognized++
-            recognizedMap[isNLTK ? sense_keys[NLTKLookup[key]] : key] = map[key]
-          }
-        })
-        setRecognized([fineMapped.length, nRecognized])
-      }
-      setMap(recognizedMap)
+  const parseMap = (rows: readonly string[], fine: number, coarse: number) => {
+    const map = parseCoarseMap(rows, fine, coarse)
+    const recognizedMap: CoarseSenseMap = {}
+    const fineMapped = Object.keys(map)
+    if (fineMapped.length && sense_keys) {
+      const isNLTK = !senseKeySep.test(fineMapped[0])
+      const lookup = isNLTK ? NLTKLookup : SenseLookup
+      const coarse: Set<String> = new Set()
+      let nRecognized = 0
+      fineMapped.forEach(key => {
+        const to = map[key]
+        if ('string' === typeof to) {
+          coarse.add(to)
+        } else {
+          to.forEach(l => coarse.add(l))
+        }
+        if (key in lookup) {
+          nRecognized++
+          recognizedMap[isNLTK ? sense_keys[NLTKLookup[key]] : key] = to
+        }
+      })
+      setRecognized([fineMapped.length, nRecognized, coarse.size])
     }
+    setMap(recognizedMap)
   }
   const handleUpload = (rows: string[]) => {
     if (rows.length > 1) {
-      const header = rows.splice(0, 1)[0].split(sep)
+      const header = rows.splice(0, 1)[0].replace(quotes, '').split(sep)
       setRows(Object.freeze(rows))
       setHeader(header)
       if (header.length > 1) {
         const cols = [header[0], header[1]]
         setSelectedCols(cols)
-        parseMap(cols[0], cols[1])
+        parseMap(rows, 0, 1)
       }
     }
   }
@@ -167,20 +174,19 @@ export function ImportCoarseSenseMap() {
                       size="small"
                       value={selectedCols[0]}
                       onChange={e => {
-                        const cols = [e.target.value, selectedCols[1]]
-                        parseMap(cols[0], cols[1])
+                        const value = e.target.value
+                        const cols = [value, selectedCols[selectedCols[1] === value ? 0 : 1]]
+                        parseMap(rows, header.indexOf(cols[0]), header.indexOf(cols[1]))
                         setSelectedCols(cols)
                       }}
                     >
-                      {header
-                        .filter(v => v !== selectedCols[1])
-                        .map((colName, index) => {
-                          return (
-                            <MenuItem key={colName + index} value={colName}>
-                              {colName}
-                            </MenuItem>
-                          )
-                        })}
+                      {header.map((colName, index) => {
+                        return (
+                          <MenuItem key={colName + index} value={colName}>
+                            {colName}
+                          </MenuItem>
+                        )
+                      })}
                     </Select>
                   </FormControl>
                 </Tooltip>
@@ -191,35 +197,40 @@ export function ImportCoarseSenseMap() {
                   recognized
                 </Typography>
               </Box>
-              <Tooltip
-                title="Name of the column containing coarse-grained sense labels (such as sense clusters)."
-                placement="right"
-              >
-                <FormControl sx={{width: '50%'}}>
-                  <InputLabel id="coarse_sense_select">Coarse Senses</InputLabel>
-                  <Select
-                    labelId="coarse_sense_select"
-                    label="Coarse Senses"
-                    size="small"
-                    value={selectedCols[1]}
-                    onChange={e => {
-                      const cols = [selectedCols[0], e.target.value]
-                      parseMap(cols[0], cols[1])
-                      setSelectedCols(cols)
-                    }}
-                  >
-                    {header
-                      .filter(v => v !== selectedCols[0])
-                      .map((colName, index) => {
+              <Box sx={{width: '50%'}}>
+                <Tooltip
+                  title="Name of the column containing coarse-grained sense labels (such as sense clusters)."
+                  placement="right"
+                >
+                  <FormControl fullWidth>
+                    <InputLabel id="coarse_sense_select">Coarse Senses</InputLabel>
+                    <Select
+                      labelId="coarse_sense_select"
+                      label="Coarse Senses"
+                      size="small"
+                      value={selectedCols[1]}
+                      onChange={e => {
+                        const value = e.target.value
+                        const cols = [selectedCols[selectedCols[0] === value ? 1 : 0], value]
+                        parseMap(rows, header.indexOf(cols[0]), header.indexOf(cols[1]))
+                        setSelectedCols(cols)
+                      }}
+                    >
+                      {header.map((colName, index) => {
                         return (
                           <MenuItem key={colName + index} value={colName}>
                             {colName}
                           </MenuItem>
                         )
                       })}
-                  </Select>
-                </FormControl>
-              </Tooltip>
+                    </Select>
+                  </FormControl>
+                </Tooltip>
+                <Typography sx={{pl: 2}} variant="caption">
+                  <span className="number"> {recognized[2]} </span>
+                  unique labels
+                </Typography>
+              </Box>
             </Stack>
           ) : (
             <Typography sx={{p: 2}}>
@@ -272,7 +283,7 @@ export function ImportCoarseSenseMap() {
         </DialogContent>
         <DialogActions sx={{justifyContent: 'space-between'}}>
           <Stack direction="row" spacing={1}>
-            <Tooltip title="select a file to import a dictionary from">
+            <Tooltip title="select a file to import a coarse sense map from">
               <Button variant="outlined" component="label">
                 File
                 <HiddenInput
@@ -283,6 +294,7 @@ export function ImportCoarseSenseMap() {
                       const reader = new FileReader()
                       reader.onload = () => {
                         handleUpload((reader.result as string).split(newLine))
+                        e.target.value = ''
                       }
                       reader.readAsText(file)
                     }
@@ -290,7 +302,7 @@ export function ImportCoarseSenseMap() {
                 />
               </Button>
             </Tooltip>
-            <Tooltip title="clear current content">
+            <Tooltip title="clear any loaded content">
               <Button onClick={clear}>clear</Button>
             </Tooltip>
           </Stack>

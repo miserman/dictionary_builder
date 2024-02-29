@@ -331,6 +331,7 @@ export function ImportMenu() {
                       reader.onload = () => {
                         setName(fileBaseName(file.name))
                         setRawContent(reader.result as string)
+                        e.target.value = ''
                       }
                       reader.readAsText(file)
                     }

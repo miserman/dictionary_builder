@@ -181,7 +181,7 @@ export function ExportMenu() {
                     minHeight: '20em',
                   }}
                   value={content}
-                  onChange={() => {}}
+                  readOnly
                 ></textarea>
               </FormControl>
             </Stack>

@@ -37,7 +37,7 @@ export function ExportCoarseSenseMap() {
             fine = nltk_id
           }
         }
-        if (fine && coarse) rows.push('"' + fine + '","' + coarse.join(', ') + '"')
+        if (fine && coarse) coarse.forEach(l => rows.push('"' + fine + '","' + l + '"'))
       })
     }
     return rows.length > 1 ? rows.join('\n') : ''
@@ -86,7 +86,7 @@ export function ExportCoarseSenseMap() {
                     minHeight: '20em',
                   }}
                   value={content}
-                  onChange={() => {}}
+                  readOnly
                 ></textarea>
               </FormControl>
             </Stack>
@@ -94,7 +94,7 @@ export function ExportCoarseSenseMap() {
           <DialogActions sx={{justifyContent: 'space-between'}}>
             <FormControlLabel
               control={<Switch size="small" checked={useNLTK} onChange={() => setUseNLTK(!useNLTK)}></Switch>}
-              label={<Typography variant="caption">NLTK Style Labels</Typography>}
+              label={<Typography variant="caption">NLTK-Style Labels</Typography>}
               labelPlacement="top"
             />
             <Button

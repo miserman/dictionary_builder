@@ -1,5 +1,6 @@
 import {Close, MoreVert} from '@mui/icons-material'
 import {
+  Box,
   Button,
   Card,
   CardActions,
@@ -8,6 +9,7 @@ import {
   Drawer,
   FormControlLabel,
   IconButton,
+  Paper,
   Stack,
   Switch,
   TextField,
@@ -117,56 +119,67 @@ export function SettingsMenu() {
               </IconButton>
             }
           />
-          <CardContent sx={{alignContent: 'left', mb: 'auto'}}>
-            <Stack spacing={2}>
-              <FormControlLabel
-                label="Disable Storage"
-                labelPlacement="start"
-                sx={{justifyContent: 'space-between'}}
-                control={
-                  <Switch
-                    checked={disableStore}
-                    size="small"
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                      settings.disable_storage = !disableStore
-                      updateSettings({...settings})
-                      localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-                      setDisableStore(!disableStore)
-                    }}
-                  />
-                }
-              />
-              {disableStore ? (
-                <></>
-              ) : (
-                <Tooltip title="IndexedDB can store larger dictionaries, but it may be a bit slower.">
-                  <FormControlLabel
-                    label="Use IndexedDB"
-                    labelPlacement="start"
-                    sx={{justifyContent: 'space-between'}}
-                    control={
-                      <Switch
-                        checked={use_db}
-                        size="small"
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                          settings.use_db = !use_db
-                          updateSettings({...settings})
-                          localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-                          setUseDB(!use_db)
-                        }}
-                      />
-                    }
-                  />
-                </Tooltip>
-              )}
-              <Typography fontWeight="bold">Keybinds</Typography>
-              <Typography variant="caption">CTRL + </Typography>
-              <Stack spacing={2} sx={{mt: 1}}>
-                <TextField size="small" label="undo" value={undo} onChange={handleChange}></TextField>
-                <TextField size="small" label="redo" value={redo} onChange={handleChange}></TextField>
+          <CardContent
+            sx={{alignContent: 'left', mb: 'auto', p: 0, '& .MuiPaper-root': {ml: 0.5, mr: 0.5, mb: 1, p: 0.5}}}
+          >
+            <Typography fontWeight="bold">Storage</Typography>
+            <Paper elevation={3}>
+              <Stack spacing={1}>
+                <FormControlLabel
+                  label="Disable"
+                  aria-label="disable storage"
+                  labelPlacement="start"
+                  sx={{justifyContent: 'space-between'}}
+                  control={
+                    <Switch
+                      checked={disableStore}
+                      size="small"
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        settings.disable_storage = !disableStore
+                        updateSettings({...settings})
+                        localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+                        setDisableStore(!disableStore)
+                      }}
+                    />
+                  }
+                />
+                {disableStore ? (
+                  <></>
+                ) : (
+                  <Tooltip title="IndexedDB can store larger dictionaries, but it may be a bit slower.">
+                    <FormControlLabel
+                      label="IndexedDB"
+                      labelPlacement="start"
+                      sx={{justifyContent: 'space-between'}}
+                      control={
+                        <Switch
+                          checked={use_db}
+                          size="small"
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            settings.use_db = !use_db
+                            updateSettings({...settings})
+                            localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+                            setUseDB(!use_db)
+                          }}
+                        />
+                      }
+                    />
+                  </Tooltip>
+                )}
               </Stack>
-              <Typography fontWeight="bold">Coarse Senses</Typography>
-
+            </Paper>
+            <Typography fontWeight="bold">Keybinds</Typography>
+            <Paper elevation={3}>
+              <Box>
+                <Typography variant="caption">CTRL + </Typography>
+                <Stack spacing={2}>
+                  <TextField size="small" label="undo" value={undo} onChange={handleChange}></TextField>
+                  <TextField size="small" label="redo" value={redo} onChange={handleChange}></TextField>
+                </Stack>
+              </Box>
+            </Paper>
+            <Typography fontWeight="bold">Coarse Senses</Typography>
+            <Paper elevation={3}>
               <Stack spacing={1}>
                 <ImportCoarseSenseMap />
                 {mappedSenses ? (
@@ -188,7 +201,7 @@ export function SettingsMenu() {
                   <></>
                 )}
               </Stack>
-            </Stack>
+            </Paper>
           </CardContent>
           <CardActions>
             <Stack spacing={2}>
