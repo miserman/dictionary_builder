@@ -183,6 +183,15 @@ export async function setStorage(name: string, prefix: string, value: any, use_d
     }
   }
 }
+type getStorageArgs = [
+  string,
+  string,
+  (content: any) => void,
+  boolean,
+  (name: string, resolve: PasswordRequestCallback) => void,
+  any
+]
+const requestQueue: Map<string, getStorageArgs> = new Map()
 export async function getStorage(
   name: string,
   prefix: string,
@@ -192,32 +201,53 @@ export async function getStorage(
   fallback: any
 ) {
   const key = prefix + name
-  const dbName = key === 'coarse_sense_map' ? key : 'building'
-  let raw = use_db ? await IDB.getItem(key, key === 'coarse_sense_map' ? key : dbName) : localStorage.getItem(key)
-  if (!raw) raw = use_db ? localStorage.getItem(key) : await IDB.getItem(key, dbName)
-  if (raw) {
-    if ('string' === typeof raw && (raw[0] === '{' || raw[0] === 'c')) {
-      resolve(raw[0] === '{' ? JSON.parse(raw) : await decompress(await parseStoredString(raw)))
-    } else if ('string' === typeof raw || raw.encrypted) {
-      const encrypted = 'string' === typeof raw ? raw : raw.content
-      if (name in keys) {
-        resolve(await decrypt(name, encrypted))
-      } else {
-        requestPass(name, () => async (password: string) => {
-          const content = await decrypt(name, encrypted, password)
-          if (content) {
-            resolve(content)
-          } else {
-            delete keys[name]
-            throw Error
-          }
-        })
+  if (!requestQueue.has(key)) {
+    requestQueue.set(key, [...arguments] as getStorageArgs)
+    const complete = (content?: any) => {
+      requestQueue.delete(key)
+      resolve(content)
+      const nextRequest = requestQueue.keys().next()
+      if (nextRequest.value) {
+        const args = requestQueue.get(nextRequest.value)
+        if (args) {
+          requestQueue.delete(nextRequest.value)
+          getStorage.apply(void 0, args)
+        }
       }
-    } else {
-      resolve(await decompress(raw.content))
     }
-  } else {
-    resolve(fallback)
+    if (requestQueue.size === 1) {
+      const dbName = key === 'coarse_sense_map' ? key : 'building'
+      let raw = use_db ? await IDB.getItem(key, key === 'coarse_sense_map' ? key : dbName) : localStorage.getItem(key)
+      if (!raw) raw = use_db ? localStorage.getItem(key) : await IDB.getItem(key, dbName)
+      if (raw) {
+        if ('string' === typeof raw && (raw[0] === '{' || raw[0] === 'c')) {
+          complete(raw[0] === '{' ? JSON.parse(raw) : await decompress(await parseStoredString(raw)))
+        } else if ('string' === typeof raw || raw.encrypted) {
+          const encrypted = 'string' === typeof raw ? raw : raw.content
+          if (name in keys) {
+            complete(await decrypt(name, encrypted))
+          } else {
+            requestPass(name, () => async (password: string) => {
+              if (password) {
+                const content = await decrypt(name, encrypted, password)
+                if (content) {
+                  complete(content)
+                } else {
+                  delete keys[name]
+                  throw Error
+                }
+              } else {
+                complete()
+              }
+            })
+          }
+        } else {
+          complete(await decompress(raw.content))
+        }
+      } else {
+        complete(fallback)
+      }
+    }
   }
 }
 

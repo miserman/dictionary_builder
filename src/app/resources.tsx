@@ -2,7 +2,7 @@ import {Done, Error} from '@mui/icons-material'
 import {CircularProgress, List, ListItem, ListItemIcon, Stack, Typography} from '@mui/material'
 import {type ReactNode, createContext, useEffect, useState, useMemo} from 'react'
 import {newline} from './utils'
-import {decompress, loadResource, saveResource} from './storage'
+import {decompress, loadResource, saveResource, setStorage} from './storage'
 import {NumberObject} from './building'
 
 type AssociatedIndices = [number | number[], (number | number[])?][]
@@ -44,8 +44,16 @@ export type TermResources = {
   senseMap: CoarseSenseMap
   SenseLookup: NumberObject
   NLTKLookup: NumberObject
+  collapsedSenses: string
+  collapsedNLTK: string
 }
-export const ResourceContext = createContext<TermResources>({senseMap: {}, SenseLookup: {}, NLTKLookup: {}})
+export const ResourceContext = createContext<TermResources>({
+  senseMap: {},
+  SenseLookup: {},
+  NLTKLookup: {},
+  collapsedSenses: '',
+  collapsedNLTK: '',
+})
 export const SenseMapSetter = createContext((map: CoarseSenseMap) => {})
 
 const resources = [
@@ -67,6 +75,8 @@ export function Resources({children}: {children: ReactNode}) {
   const [senseMap, setSenseMap] = useState<CoarseSenseMap>({})
   const [SenseLookup, setSenseLookup] = useState<NumberObject>({})
   const [NLTKLookup, setNLTKLookup] = useState<NumberObject>({})
+  const [collapsedSenses, setCollapsedSenses] = useState('')
+  const [collapsedNLTK, setCollapsedNLTK] = useState('')
 
   const [loadingTerms, setLoadingTerms] = useState(true)
   const [loadingTermAssociations, setLoadingTermAssociations] = useState(true)
@@ -224,6 +234,8 @@ export function Resources({children}: {children: ReactNode}) {
       })
       setSenseLookup(sense_lookup)
       setNLTKLookup(nltk_lookup)
+      setCollapsedSenses(';;' + sense_keys.join(';;') + ';;')
+      setCollapsedNLTK(';;' + Object.keys(nltk_lookup).join(';;') + ';;')
     }
   }, [terms, sense_keys, synsetInfo])
   const Data = useMemo(() => {
@@ -238,6 +250,8 @@ export function Resources({children}: {children: ReactNode}) {
       senseMap,
       NLTKLookup,
       SenseLookup,
+      collapsedSenses,
+      collapsedNLTK,
     }
   }, [
     terms,
@@ -250,6 +264,8 @@ export function Resources({children}: {children: ReactNode}) {
     senseMap,
     NLTKLookup,
     SenseLookup,
+    collapsedSenses,
+    collapsedNLTK,
   ])
   const loading = {
     terms: loadingTerms,
@@ -260,7 +276,14 @@ export function Resources({children}: {children: ReactNode}) {
   return (
     <ResourceContext.Provider value={Data}>
       {lemmas && synsetInfo ? (
-        <SenseMapSetter.Provider value={setSenseMap}>{children}</SenseMapSetter.Provider>
+        <SenseMapSetter.Provider
+          value={(map: CoarseSenseMap) => {
+            setSenseMap(map)
+            setStorage('coarse_sense_map', '', map, true)
+          }}
+        >
+          {children}
+        </SenseMapSetter.Provider>
       ) : (
         <Stack sx={{margin: 'auto', marginTop: 10, maxWidth: 350}}>
           <Typography variant="h4">Loading Resources...</Typography>

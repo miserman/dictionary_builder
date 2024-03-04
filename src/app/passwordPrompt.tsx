@@ -21,6 +21,7 @@ export function PasswordPrompt() {
   const [hide, setHide] = useState(true)
   let succeeded = false
   const bail = () => {
+    setFailed(false)
     setPassword('')
     close('')
     if (!succeeded && !!name) {
@@ -28,6 +29,7 @@ export function PasswordPrompt() {
         manageDictionaries({type: 'set', name: 'default'})
       }
     }
+    reply('')
   }
   const [password, setPassword] = useState('')
   const submit = () => {
@@ -72,7 +74,7 @@ export function PasswordPrompt() {
           value={password}
           error={failed}
           onKeyDown={(e: KeyboardEvent) => {
-            if (e.code === 'Enter') {
+            if (e.code === 'Enter' || e.code === 'NumpadEnter') {
               submit()
             }
           }}

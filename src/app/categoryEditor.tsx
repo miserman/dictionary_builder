@@ -159,7 +159,7 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
               labelPlacement="start"
             />
             <DataGrid
-              className="datagrid-vertical"
+              className="bottom-search datagrid-vertical"
               rows={rows}
               columns={cols}
               disableRowSelectionOnClick

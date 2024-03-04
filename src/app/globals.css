@@ -43,7 +43,7 @@ th {
 .datagrid-vertical .MuiTablePagination-actions {
   margin: 0;
 }
-.MuiDataGrid-root > .MuiFormControl-root {
+.bottom-search.MuiDataGrid-root > .MuiFormControl-root {
   position: absolute;
   bottom: 4px;
   left: 12px;

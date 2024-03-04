@@ -146,7 +146,7 @@ export function DictionaryMenu() {
                       size="small"
                       value={newCategory}
                       onKeyDown={(e: KeyboardEvent) => {
-                        if (e.code === 'Enter') {
+                        if (e.code === 'Enter' || e.code === 'NumpadEnter') {
                           add()
                         }
                       }}

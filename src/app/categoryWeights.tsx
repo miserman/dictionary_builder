@@ -114,7 +114,11 @@ export function CategoryWeights({
                     options={termSuggestions}
                     onKeyUp={(e: KeyboardEvent<HTMLDivElement>) => {
                       const inputValue = 'value' in e.target ? (e.target.value as string) : ''
-                      if (e.code === 'Enter' && inputTerm && (!inputValue || inputValue === inputTerm)) {
+                      if (
+                        (e.code === 'Enter' || e.code === 'NumpadEnter') &&
+                        inputTerm &&
+                        (!inputValue || inputValue === inputTerm)
+                      ) {
                         addCore(inputValue)
                         return
                       }

@@ -70,7 +70,11 @@ export function Nav({
             value={inputTerm}
             onHighlightChange={(_, option) => setHighlightedTerm(option || '')}
             onKeyUp={e => {
-              if (e.code === 'Enter' && (!highlightedTerm || highlightedTerm === inputTerm)) return addTerm(inputTerm)
+              if (
+                (e.code === 'Enter' || e.code === 'NumpadEnter') &&
+                (!highlightedTerm || highlightedTerm === inputTerm)
+              )
+                return addTerm(inputTerm)
               if (highlightedTerm !== inputTerm) updateTerm(e)
             }}
             onChange={updateTerm}

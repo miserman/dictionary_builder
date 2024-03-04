@@ -23,6 +23,7 @@ import {removeStorage} from './storage'
 import {ImportCoarseSenseMap} from './senseMapImport'
 import {ExportCoarseSenseMap} from './senseMapExport'
 import {ResourceContext, SenseMapSetter} from './resources'
+import {EditSenseMap} from './senseMapEdit'
 
 export const INFO_DRAWER_HEIGHT = '30vh'
 export const TERM_EDITOR_WIDTH = '200px'
@@ -182,6 +183,7 @@ export function SettingsMenu() {
             <Paper elevation={3}>
               <Stack spacing={1}>
                 <ImportCoarseSenseMap />
+                <EditSenseMap />
                 {mappedSenses ? (
                   <>
                     <Typography>

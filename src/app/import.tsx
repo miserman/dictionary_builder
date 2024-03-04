@@ -248,7 +248,7 @@ export function ImportMenu() {
               label="Name"
               value={name}
               onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-                if (name && e.code === 'Enter') {
+                if ((name && e.code === 'Enter') || e.code === 'NumpadEnter') {
                   addDict()
                 }
               }}

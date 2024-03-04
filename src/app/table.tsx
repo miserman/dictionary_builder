@@ -41,6 +41,7 @@ export function Table({
   const setEditorTerm = useContext(EditorTermSetter)
   return (
     <DataGrid
+      className="bottom-search"
       rows={rows}
       columns={columns}
       showCellVerticalBorder

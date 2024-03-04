@@ -112,7 +112,7 @@ export function TermEditor({
                 labelPlacement="start"
               />
               <DataGrid
-                className="datagrid-vertical"
+                className="bottom-search datagrid-vertical"
                 rows={rows}
                 columns={cols}
                 disableRowSelectionOnClick
