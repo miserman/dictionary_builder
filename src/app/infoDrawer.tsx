@@ -1,11 +1,21 @@
-import {Button, Card, CardActions, CardContent, CardHeader, Drawer, IconButton, Stack, Typography} from '@mui/material'
-import {createContext, useContext} from 'react'
-import {BuildContext, BuildEditContext} from './building'
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardHeader,
+  Drawer,
+  IconButton,
+  Stack,
+  Typography,
+} from '@mui/material'
+import {createContext, useCallback, useContext, useEffect} from 'react'
+import {BuildContext, BuildEditContext, SettingEditor, SettingsContext} from './building'
 import {TermDisplay} from './term'
 import {Close} from '@mui/icons-material'
 import type {Synset} from './resources'
 import {SynsetDisplay} from './synset'
-import {INFO_DRAWER_HEIGHT} from './settingsMenu'
 import {EditorTermSetter} from './termEditor'
 
 export type InfoDrawerState = {type: 'term'; value: string} | {type: 'synset'; value: string; info: Synset}
@@ -43,11 +53,54 @@ function SynsetContent({info}: {info: Synset}) {
   )
 }
 
-export function InfoDrawer() {
+let resizeAnimationFrame = -1
+export function InfoDrawer({height, setHeight}: {height: number; setHeight: (height: number) => void}) {
   const dict = useContext(BuildContext)
   const edit = useContext(InfoDrawerSetter)
+  const settings = useContext(SettingsContext)
+  const updateSettings = useContext(SettingEditor)
   const setEditorTerm = useContext(EditorTermSetter)
   const state = useContext(InfoDrawerContext)
+  const resize = useCallback(
+    (e: MouseEvent) => {
+      const value = Math.max(16.2, Math.min(Math.ceil((1 - e.y / window.innerHeight) * 100), 87))
+      if (value !== height) {
+        cancelAnimationFrame(resizeAnimationFrame)
+        resizeAnimationFrame = requestAnimationFrame(() => {
+          setHeight(value)
+          window.dispatchEvent(new Event('resize'))
+        })
+      }
+    },
+    [setHeight]
+  )
+  const startResize = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      document.body.style.cursor = 'row-resize'
+      window.addEventListener('mousemove', resize)
+    },
+    [resize]
+  )
+  useEffect(() => {
+    const endResize = (e: MouseEvent) => {
+      e.preventDefault()
+      if (resizeAnimationFrame !== -1) {
+        cancelAnimationFrame(resizeAnimationFrame)
+        resizeAnimationFrame = -1
+        document.body.style.cursor = 'default'
+        window.removeEventListener('mousemove', resize)
+        const value = Math.max(16.2, Math.min(Math.ceil((1 - e.y / window.innerHeight) * 100), 87))
+        setHeight(value)
+        settings.info_drawer_height = value
+        updateSettings({...settings})
+        localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
+        window.dispatchEvent(new Event('resize'))
+      }
+    }
+    window.addEventListener('mouseup', endResize)
+    return () => window.removeEventListener('mouseup', endResize)
+  }, [resize, settings, updateSettings, setHeight])
   if (!state.length) return
   const close = () => {
     edit({type: 'reset'})
@@ -62,7 +115,7 @@ export function InfoDrawer() {
       anchor="bottom"
       sx={{
         '& .MuiPaper-root': {
-          height: INFO_DRAWER_HEIGHT,
+          height: height + 'vh',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -70,6 +123,10 @@ export function InfoDrawer() {
       }}
     >
       <Card>
+        <Box
+          sx={{backgroundColor: '#757575', height: '3px', width: '100%', position: 'absolute', cursor: 'row-resize'}}
+          onMouseDownCapture={startResize}
+        ></Box>
         <CardHeader
           action={
             <IconButton aria-label="Close info drawer" onClick={close} className="close-button">
@@ -95,7 +152,6 @@ export function InfoDrawer() {
             </Stack>
           }
         />
-
         {currentState.type === 'term' ? (
           <TermContent term={currentState.value} />
         ) : (

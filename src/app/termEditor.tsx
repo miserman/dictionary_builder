@@ -12,7 +12,6 @@ import {
 } from '@mui/material'
 import {Close} from '@mui/icons-material'
 import {type FixedTerm, type FuzzyTerm, TermLink, TermSenseEdit} from './term'
-import {TERM_EDITOR_WIDTH} from './settingsMenu'
 import {type KeyboardEvent, useState, useContext, createContext, useMemo} from 'react'
 import {DataGrid, type GridCellParams, type GridColDef} from '@mui/x-data-grid'
 import {BuildContext, BuildEditContext} from './building'
@@ -26,9 +25,11 @@ export const EditorTermSetter = createContext((term: string, fromGraph?: boolean
 export function TermEditor({
   categories,
   editor,
+  width,
 }: {
   categories: string[]
   editor: (value: string | number, params: GridCellParams) => void
+  width: number
 }) {
   const data = useContext(ResourceContext)
   const dict = useContext(BuildContext)
@@ -76,14 +77,14 @@ export function TermEditor({
       sx={{
         position: 'absolute',
         top: 0,
-        right: '-' + TERM_EDITOR_WIDTH,
+        right: '-' + width + 'px',
         height: '100%',
-        width: TERM_EDITOR_WIDTH,
+        width: width + 'px',
       }}
     >
-      <Card sx={{height: '100%', pb: '2.5em'}} elevation={1}>
+      <Card sx={{height: '100%', pb: '1em'}} elevation={1}>
         <CardHeader
-          sx={{pl: 0.5, pr: 0.5}}
+          sx={{p: 0.5}}
           action={
             <IconButton aria-label="Close term editor" onClick={() => setTerm('')} className="close-button">
               <Close />
@@ -96,7 +97,7 @@ export function TermEditor({
           }
         />
         <CardContent sx={{p: 0.5, height: '100%'}}>
-          <Stack direction="column" sx={{height: '100%', pb: 1}} spacing={2}>
+          <Stack direction="column" sx={{pb: 1, pt: 1, height: '100%', overflowY: 'auto'}} spacing={2}>
             <TermSenseEdit label="Sense" id={id} field="" processed={processed} />
             <Stack direction="column" spacing={1} sx={{height: '100%'}}>
               <Typography fontWeight="bold">Category Weights</Typography>
@@ -112,6 +113,7 @@ export function TermEditor({
                 labelPlacement="start"
               />
               <DataGrid
+                sx={{minHeight: '140px'}}
                 className="bottom-search datagrid-vertical"
                 rows={rows}
                 columns={cols}

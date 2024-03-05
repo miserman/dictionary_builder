@@ -25,12 +25,11 @@ import {ExportCoarseSenseMap} from './senseMapExport'
 import {ResourceContext, SenseMapSetter} from './resources'
 import {EditSenseMap} from './senseMapEdit'
 
-export const INFO_DRAWER_HEIGHT = '30vh'
-export const TERM_EDITOR_WIDTH = '200px'
-
 export type Settings = {
   selected: string
   dictionary_names: string[]
+  term_editor_width?: number
+  info_drawer_height?: number
   undo?: string
   redo?: string
   copyTerm?: string
@@ -87,13 +86,14 @@ export function SettingsMenu() {
     }
   }, [listener])
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const key = e.target.labels && e.target.labels[0].innerText
-    if (key && key in settings) {
+    const key = e.target.name
+    if (key && key in setters) {
+      let value = e.target.value
       window.removeEventListener('keydown', listener)
-      settings[key as 'redo'] = e.target.value
+      settings[key as 'redo'] = value
+      setters[key as 'redo'](value)
       updateSettings({...settings})
       localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
-      setters[key as 'redo'](e.target.value)
     }
   }
   const mappedSenses = Object.keys(senseMap).length
@@ -174,8 +174,8 @@ export function SettingsMenu() {
               <Box>
                 <Typography variant="caption">CTRL + </Typography>
                 <Stack spacing={2}>
-                  <TextField size="small" label="undo" value={undo} onChange={handleChange}></TextField>
-                  <TextField size="small" label="redo" value={redo} onChange={handleChange}></TextField>
+                  <TextField size="small" label="Undo" name="undo" value={undo} onChange={handleChange}></TextField>
+                  <TextField size="small" label="Redo" name="redo" value={redo} onChange={handleChange}></TextField>
                 </Stack>
               </Box>
             </Paper>

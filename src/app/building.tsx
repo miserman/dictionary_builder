@@ -68,6 +68,8 @@ export type DictionaryEditor = (action: DictionaryActions) => void
 export const SettingsContext = createContext<Settings>({
   selected: 'default',
   dictionary_names: ['default'],
+  info_drawer_height: 30,
+  term_editor_width: 200,
   use_db: true,
 })
 export const SettingEditor = createContext((settings: Settings) => {})

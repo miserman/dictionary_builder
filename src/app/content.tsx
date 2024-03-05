@@ -1,14 +1,13 @@
 import {Box, Container} from '@mui/material'
 import {useCallback, useContext, useState} from 'react'
 import {ResourceContext} from './resources'
-import {AllCategories, BuildContext, BuildEditContext, type TermTypes} from './building'
+import {AllCategories, BuildContext, BuildEditContext, SettingsContext, type TermTypes} from './building'
 import {InfoDrawer, InfoDrawerContext} from './infoDrawer'
 import AddedTerms from './addedTerms'
 import {EditorTerm, TermEditor} from './termEditor'
 import {AnalyzeMenu} from './analysisMenu'
 import {Nav} from './nav'
 import type {GridCellParams} from '@mui/x-data-grid'
-import {INFO_DRAWER_HEIGHT, TERM_EDITOR_WIDTH} from './settingsMenu'
 import {PasswordPrompt} from './passwordPrompt'
 
 const categoryPrefix = /^category_/
@@ -46,7 +45,9 @@ export function Content() {
   const editorTerm = useContext(EditorTerm)
   const infoDrawerState = useContext(InfoDrawerContext)
   const showTermEditor = editorTerm in dict
-  const bottomMargin = infoDrawerState.length ? INFO_DRAWER_HEIGHT : 0
+  const settings = useContext(SettingsContext)
+  const [infoDrawerHeight, setInfoDrawerHeight] = useState(settings.info_drawer_height || 30)
+  const bottomMargin = infoDrawerState.length ? infoDrawerHeight : 0
   return (
     <Container>
       <Nav
@@ -63,14 +64,18 @@ export function Content() {
           top: 0,
           left: 0,
           bottom: 0,
-          right: showTermEditor ? TERM_EDITOR_WIDTH : 0,
+          right: (showTermEditor ? settings.term_editor_width || 200 : 0) + 'px',
           mt: '3em',
-          mb: bottomMargin,
+          mb: bottomMargin + 'vh',
         }}
       >
         {asTable ? <AddedTerms editFromEvent={editFromEvent} /> : <AnalyzeMenu />}
-        {showTermEditor ? <TermEditor categories={Cats} editor={editFromEvent} /> : <></>}
-        <InfoDrawer />
+        {showTermEditor ? (
+          <TermEditor categories={Cats} editor={editFromEvent} width={settings.term_editor_width || 200} />
+        ) : (
+          <></>
+        )}
+        <InfoDrawer height={infoDrawerHeight} setHeight={setInfoDrawerHeight} />
       </Box>
       <PasswordPrompt />
     </Container>

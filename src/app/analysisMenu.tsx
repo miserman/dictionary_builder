@@ -108,8 +108,8 @@ export function AnalyzeMenu() {
           justifyContent: 'space-between',
         }}
       >
-        <Box sx={{pl: 1, pr: 1, height: '100%'}}>
-          <Box sx={{maxHeight: '60%', overflowY: 'auto'}}>
+        <Box sx={{pl: 1, pr: 1, height: '100%', display: 'flex', flexDirection: 'column'}}>
+          <Box sx={{overflowY: 'auto'}}>
             <Typography variant="h6">Terms</Typography>
             <List dense sx={{overflowY: 'auto', overflowX: 'hidden', maxHeight: '300px', p: 0}}>
               {Object.keys(catCounts).map(cat => (
@@ -205,7 +205,7 @@ export function AnalyzeMenu() {
               </Tooltip>
             </Stack>
           </Box>
-          <Box sx={{maxHeight: '40%', overflowY: 'auto'}}>
+          <Box sx={{overflowY: 'auto'}}>
             <Typography variant="h6" sx={{mt: 2}}>
               Plot Options
             </Typography>

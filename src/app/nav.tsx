@@ -82,7 +82,7 @@ export function Nav({
               <TextField
                 {...params}
                 size="small"
-                placeholder="Term to add"
+                placeholder="Term Search"
                 value={inputTerm}
                 onChange={e => {
                   updateTerm(e)
