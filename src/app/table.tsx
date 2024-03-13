@@ -1,6 +1,6 @@
-import {ListItemIcon, ListItemText, MenuItem} from '@mui/material'
-import {useContext, type KeyboardEvent, createContext, type MutableRefObject} from 'react'
-import {Edit} from '@mui/icons-material'
+import {IconButton, ListItemIcon, ListItemText, MenuItem, Stack} from '@mui/material'
+import {useContext, type KeyboardEvent, createContext, type MutableRefObject, type MouseEvent} from 'react'
+import {Edit, FirstPage, ChevronLeft, ChevronRight, LastPage} from '@mui/icons-material'
 import type {FixedTerm, FuzzyTerm} from './term'
 import {
   DataGrid,
@@ -44,6 +44,37 @@ export function showTableTerm(term: string) {
     tableAPI.ref.current.selectRow(term, true, true)
   }
 }
+
+function pageActions({
+  count,
+  page,
+  onPageChange,
+}: {
+  count: number
+  page: number
+  onPageChange: (e: MouseEvent<HTMLButtonElement>, newPage: number) => void
+}) {
+  const pages = Math.ceil(count / 100) - 1
+  const onFirstPage = page === 0
+  const onLastPage = page === pages
+  return (
+    <Stack direction="row">
+      <IconButton aria-label="Go to first page" disabled={onFirstPage} onClick={e => onPageChange(e, 0)}>
+        <FirstPage />
+      </IconButton>
+      <IconButton aria-label="Go to previous page" disabled={onFirstPage} onClick={e => onPageChange(e, page - 1)}>
+        <ChevronLeft />
+      </IconButton>
+      <IconButton aria-label="Go to next page" disabled={onLastPage} onClick={e => onPageChange(e, page + 1)}>
+        <ChevronRight />
+      </IconButton>
+      <IconButton aria-label="Go to last page" disabled={onLastPage} onClick={e => onPageChange(e, pages)}>
+        <LastPage />
+      </IconButton>
+    </Stack>
+  )
+}
+
 export function Table({
   rows,
   columns,
@@ -102,6 +133,11 @@ export function Table({
           ) : (
             <GridColumnMenu {...props} />
           )
+        },
+      }}
+      slotProps={{
+        pagination: {
+          ActionsComponent: pageActions,
         },
       }}
       onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
