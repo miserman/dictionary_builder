@@ -35,8 +35,8 @@ export default function AddedTerms({
       ),
     [Dict]
   )
-  const cols: GridColDef[] = useMemo(() => {
-    const cols: GridColDef[] = [
+  const cols = useMemo(() => {
+    const out: GridColDef[] = [
       {
         field: 'remove',
         headerName: '',
@@ -101,7 +101,7 @@ export default function AddedTerms({
       },
     ]
     Cats.forEach(cat =>
-      cols.push({
+      out.push({
         field: 'category_' + cat,
         headerName: cat,
         editable: true,
@@ -114,7 +114,7 @@ export default function AddedTerms({
         },
       })
     )
-    return cols
+    return out
   }, [Cats, editFromEvent])
   const [rows, setRows] = useState<GridRow[]>([])
   const [progress, setProgress] = useState(0)

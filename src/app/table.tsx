@@ -1,10 +1,20 @@
 import {ListItemIcon, ListItemText, MenuItem} from '@mui/material'
-import {useContext, type KeyboardEvent} from 'react'
+import {useContext, type KeyboardEvent, createContext, type MutableRefObject} from 'react'
 import {Edit} from '@mui/icons-material'
 import type {FixedTerm, FuzzyTerm} from './term'
-import {DataGrid, type GridColDef, type GridCellParams, GridToolbarQuickFilter, GridColumnMenu} from '@mui/x-data-grid'
+import {
+  DataGrid,
+  type GridColDef,
+  type GridCellParams,
+  GridToolbarQuickFilter,
+  GridColumnMenu,
+  useGridApiRef,
+} from '@mui/x-data-grid'
 import type {DictEntry} from './storage'
 import {EditorTermSetter} from './termEditor'
+import type {GridApiCommunity} from '@mui/x-data-grid/internals'
+
+export const TableAPIContext = createContext<MutableRefObject<GridApiCommunity> | null>(null)
 
 export type GridRow = {
   [index: string]: number | string | FixedTerm | FuzzyTerm | DictEntry
@@ -25,6 +35,15 @@ export type GridRow = {
     }
 )
 
+const tableAPI: {ref: MutableRefObject<GridApiCommunity> | undefined} = {ref: undefined}
+export function showTableTerm(term: string) {
+  if (tableAPI.ref && tableAPI.ref.current) {
+    const rowIndex = tableAPI.ref.current.state.sorting.sortedRows.indexOf(term)
+    tableAPI.ref.current.setPage(Math.floor(rowIndex / 100))
+    tableAPI.ref.current.scrollToIndexes({rowIndex})
+    tableAPI.ref.current.selectRow(term, true, true)
+  }
+}
 export function Table({
   rows,
   columns,
@@ -39,8 +58,11 @@ export function Table({
   editFromEvent: (index: number, params: GridCellParams) => void
 }) {
   const setEditorTerm = useContext(EditorTermSetter)
+  const api = useGridApiRef()
+  tableAPI.ref = api
   return (
     <DataGrid
+      apiRef={api}
       className="bottom-search"
       rows={rows}
       columns={columns}

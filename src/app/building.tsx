@@ -300,11 +300,11 @@ export function Building({children}: {children: ReactNode}) {
         const term = 'string' === typeof action.term ? action.term : action.term.source
         if (!action.term_id) {
           if (action.type === 'add') {
-            if (!(term in termMap)) {
-              termMap[term] = new Set()
-            } else {
-              action.term_id = term + (term in termMap ? termMap[term].size + 1 : '')
+            if (term in termMap) {
+              action.term_id = term + (termMap[term].size ? termMap[term].size + 1 : '')
               termMap[term].add(action.term_id)
+            } else {
+              termMap[term] = new Set()
             }
           } else {
             action.term_id = term

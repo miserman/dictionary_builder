@@ -6,14 +6,20 @@ import {Building} from './building'
 import {type InfoDrawerActions, InfoDrawerContext, InfoDrawerSetter, InfoDrawerState} from './infoDrawer'
 import {EditorTerm, EditorTermSetter} from './termEditor'
 import {Content} from './content'
+import {showTableTerm} from './table'
 
 const theme = createTheme({
   palette: {mode: 'dark', primary: {main: '#b393d3'}, success: {main: '#4986cb'}, error: {main: '#e0561c'}},
 })
 
+let resizeAnimationFrame = -1
+function dispatchResize() {
+  window.dispatchEvent(new Event('resize'))
+}
 const manageInfoDrawerState = (state: InfoDrawerState[], action: InfoDrawerActions) => {
   if (action.type === 'reset' || !state.length) {
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 0)
+    cancelAnimationFrame(resizeAnimationFrame)
+    resizeAnimationFrame = requestAnimationFrame(dispatchResize)
   }
   switch (action.type) {
     case 'add':
@@ -30,8 +36,10 @@ export default function Home() {
   const [editorTerm, setEditorTerm] = useState('')
   const updateEditorTerm = (term: string, fromGraph?: boolean) => {
     if ((!editorTerm && !fromGraph) || !term) {
-      setTimeout(() => window.dispatchEvent(new Event('resize')), 0)
+      cancelAnimationFrame(resizeAnimationFrame)
+      resizeAnimationFrame = requestAnimationFrame(dispatchResize)
     }
+    showTableTerm(term)
     setEditorTerm(term)
   }
   return (

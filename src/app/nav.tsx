@@ -8,6 +8,7 @@ import {SettingsMenu} from './settingsMenu'
 import {DictionaryMenu} from './dictionaryMenu'
 import {extractMatches} from './processTerms'
 import {isInDict, type TermTypes} from './building'
+import {showTableTerm} from './table'
 
 export function Nav({
   terms,
@@ -129,7 +130,10 @@ export function Nav({
             variant="outlined"
             disabled={!inputTerm}
             onClick={() => {
-              if (inputTerm) updateInfoDrawerState({type: 'add', state: {type: 'term', value: inputTerm}})
+              if (inputTerm) {
+                updateInfoDrawerState({type: 'add', state: {type: 'term', value: inputTerm}})
+                if (alreadyAdded) showTableTerm(inputTerm)
+              }
             }}
           >
             View
