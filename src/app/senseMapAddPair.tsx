@@ -45,11 +45,12 @@ export function AddSenseMapPair({coarseLabels, useNLTK}: {coarseLabels: readonly
         >
           <Close />
         </IconButton>
-        <DialogContent sx={{p: 1, width: '500px'}}>
+        <DialogContent sx={{p: 1, minWidth: '500px'}}>
           <DialogContentText sx={{mb: 1}}>Define fine to coarse sense mappings:</DialogContentText>
           <Stack direction="row" spacing={1}>
             <SenseSelector selected={fines} setSelected={setFines} multi={true} useNLTK={useNLTK} />
             <Autocomplete
+              componentsProps={{popper: {className: 'synset-select'}}}
               multiple
               disableCloseOnSelect
               options={coarseLabels}

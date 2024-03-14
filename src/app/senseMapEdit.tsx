@@ -17,7 +17,7 @@ import {
 } from '@mui/material'
 import {DataGrid, type GridColDef, GridToolbarQuickFilter, GridRenderEditCellParams} from '@mui/x-data-grid'
 import {type KeyboardEvent, useContext, useMemo, useState, ChangeEvent} from 'react'
-import {ResourceContext, SenseMapSetter, Synset} from './resources'
+import {type CoarseSenseMap, ResourceContext, SenseMapSetter, type Synset} from './resources'
 import {AddSenseMapPair} from './senseMapAddPair'
 import {extractMatches} from './processTerms'
 import {globToRegex, special, wildcards} from './utils'
@@ -27,11 +27,15 @@ export function SenseSelector({
   setSelected,
   multi,
   useNLTK,
+  editCell,
+  params,
 }: {
   selected: string[]
   setSelected: (values: string[]) => void
   multi: boolean
   useNLTK: boolean
+  editCell?: (params: any) => void
+  params?: GridRenderEditCellParams
 }) {
   const {synsetInfo, SenseLookup, collapsedSenses, NLTKLookup, collapsedNLTK} = useContext(ResourceContext)
   const [suggested, setSuggested] = useState<string[]>([])
@@ -41,8 +45,9 @@ export function SenseSelector({
 
   return synsetInfo ? (
     <Autocomplete
+      componentsProps={{popper: {className: 'synset-select'}}}
       multiple={multi}
-      disableCloseOnSelect
+      autoSelect
       options={suggested}
       onKeyUp={(e: KeyboardEvent<HTMLDivElement>) => {
         const inputValue = ('value' in e.target ? (e.target.value as string) : '').toLowerCase()
@@ -64,9 +69,9 @@ export function SenseSelector({
       value={multi ? selected : selected[0]}
       onChange={(e, value) => {
         if (value) {
-          if (Math.abs(value.length - selected.length) === 1) {
-            setSelected([...value])
-          }
+          const newValue = 'string' === typeof value ? [value] : [...value]
+          editCell && params && editCell({...params, newValue})
+          setSelected(newValue)
         }
       }}
       renderTags={(value: readonly string[], getTagProps) => {
@@ -78,7 +83,7 @@ export function SenseSelector({
         <TextField
           {...params}
           size="small"
-          label="Core Terms"
+          label="Fine Senses"
           value={input}
           onChange={(e: ChangeEvent<HTMLInputElement>) => {
             if (!selected.includes(e.target.value)) setInput(e.target.value)
@@ -118,11 +123,64 @@ type rowSpec = {
   definition: string
   info: Synset
 }
+function parseMapId(id: string, map: CoarseSenseMap) {
+  const idParts = id.split('||')
+  const fine = idParts[0]
+  const newMap = {...map}
+  const coarses = newMap[fine]
+  if (coarses.length === 1) {
+    delete newMap[fine]
+  } else {
+    coarses.splice(+idParts[2], 1)
+    newMap[fine] = [...coarses]
+  }
+  return {newMap, fine: idParts[0], coarse: idParts[1], index: idParts[2]}
+}
+function CoarseLabelEdit({
+  params,
+  labels,
+  senseMap,
+  updateSenseMap,
+}: {
+  params: GridRenderEditCellParams
+  labels: readonly string[]
+  senseMap: CoarseSenseMap
+  updateSenseMap: (newMap: CoarseSenseMap) => void
+}) {
+  const [newValue, setNewValue] = useState('')
+  return (
+    <Autocomplete
+      componentsProps={{popper: {className: 'synset-select'}}}
+      disableCloseOnSelect
+      options={labels}
+      value={params.value}
+      onChange={(_, value) => {
+        const {newMap, fine} = parseMapId(params.id as string, senseMap)
+        if (fine in newMap) {
+          newMap[fine].push(value)
+        } else {
+          newMap[fine] = [value]
+        }
+        updateSenseMap(newMap)
+        params.api.setEditCellValue({...params, value})
+      }}
+      inputValue={newValue}
+      onInputChange={(_, value) => setNewValue(value)}
+      renderInput={params => <TextField {...params} size="small" label="Coarse Senses"></TextField>}
+      filterSelectedOptions
+      selectOnFocus
+      clearOnEscape
+      handleHomeEndKeys
+      fullWidth
+      freeSolo
+    ></Autocomplete>
+  )
+}
 export function EditSenseMap() {
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
 
-  const {senseMap, sense_keys, synsetInfo, SenseLookup, NLTKLookup} = useContext(ResourceContext)
+  const {senseMap, synsetInfo, SenseLookup} = useContext(ResourceContext)
   const setSenseMap = useContext(SenseMapSetter)
   const coarseLabels = useMemo(() => {
     const out: Set<string> = new Set()
@@ -146,16 +204,7 @@ export function EditSenseMap() {
               size="small"
               aria-label="remove term"
               onClick={() => {
-                const idParts = (params.id as string).split('||')
-                const fine = idParts[0]
-                const newMap = {...senseMap}
-                const coarses = newMap[fine]
-                if (coarses.length === 1) {
-                  delete newMap[fine]
-                } else {
-                  coarses.splice(+idParts[2], 1)
-                  newMap[fine] = [...coarses]
-                }
+                const {newMap} = parseMapId(params.id as string, senseMap)
                 setSenseMap(newMap)
               }}
             >
@@ -164,12 +213,45 @@ export function EditSenseMap() {
           )
         },
       },
-      {field: 'fine', headerName: 'Fine', width: 180, hideable: false},
+      {
+        field: 'fine',
+        headerName: 'Fine',
+        width: 180,
+        hideable: false,
+        editable: true,
+        renderEditCell: (params: GridRenderEditCellParams) => {
+          return (
+            <SenseSelector
+              selected={[params.value]}
+              setSelected={selected => {
+                const {newMap, coarse} = parseMapId(params.id as string, senseMap)
+                const newFine = selected[0]
+                if (newFine in newMap) {
+                  newMap[newFine].push(coarse)
+                } else {
+                  newMap[newFine] = [coarse]
+                }
+                setSenseMap(newMap)
+              }}
+              multi={false}
+              useNLTK={useNLTK}
+              editCell={params.api.setEditCellValue}
+              params={params}
+            />
+          )
+        },
+      },
       {
         field: 'coarse',
         headerName: 'Coarse',
         width: 125,
         hideable: false,
+        editable: true,
+        renderEditCell: (params: GridRenderEditCellParams) => {
+          return (
+            <CoarseLabelEdit params={params} labels={coarseLabels} senseMap={senseMap} updateSenseMap={setSenseMap} />
+          )
+        },
       },
       {
         field: 'definition',
