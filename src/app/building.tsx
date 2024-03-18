@@ -302,7 +302,7 @@ export function Building({children}: {children: ReactNode}) {
         if (!action.term_id) {
           if (action.type === 'add') {
             if (term in termMap) {
-              action.term_id = term + (termMap[term].size ? termMap[term].size + 1 : '')
+              action.term_id = term + (termMap[term].size + 1)
               termMap[term].add(action.term_id)
             } else {
               termMap[term] = new Set()
