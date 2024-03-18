@@ -3,7 +3,7 @@ import type {Dict} from './storage'
 import type {TermResources} from './resources'
 import {unpackSynsetMembers} from './synset'
 import type {FixedTerm, FuzzyTerm} from './term'
-import {globToRegex, prepareRegex, relativeFrequency, termBounds, wildcard} from './utils'
+import {globToRegex, prepareRegex, relativeFrequency, termBounds, wildcard} from './lib/utils'
 import type {GridRow} from './table'
 
 const Processed: {[index: string]: FuzzyTerm | FixedTerm} = {}

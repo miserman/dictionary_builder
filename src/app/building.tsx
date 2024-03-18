@@ -10,6 +10,7 @@ import {
   setStorage,
   deleteDictionary,
   loadSenseMap,
+  saveDictionary,
 } from './storage'
 import {SenseMapSetter} from './resources'
 
@@ -191,7 +192,7 @@ export function Building({children}: {children: ReactNode}) {
       if (action.type === 'set') {
         changeDictionary(action.name)
       } else {
-        if (!settings.disable_storage) setStorage(action.name, 'dict_', action.dict, use_db, action.password)
+        if (!settings.disable_storage) saveDictionary(action.name, action.dict, use_db, action.password)
         if (action.type === 'add') {
           dictionaryAction({type: 'change_dict', name: action.name, dict: action.dict})
         }

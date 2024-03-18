@@ -40,8 +40,12 @@ export function showTableTerm(term: string) {
   if (tableAPI.ref && tableAPI.ref.current) {
     const rowIndex = tableAPI.ref.current.state.sorting.sortedRows.indexOf(term)
     tableAPI.ref.current.setPage(Math.floor(rowIndex / 100))
-    tableAPI.ref.current.scrollToIndexes({rowIndex})
     tableAPI.ref.current.selectRow(term, true, true)
+    requestAnimationFrame(() => {
+      if (tableAPI.ref && tableAPI.ref.current) {
+        tableAPI.ref.current.scrollToIndexes({rowIndex})
+      }
+    })
   }
 }
 

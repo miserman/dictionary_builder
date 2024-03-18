@@ -20,7 +20,7 @@ import {type KeyboardEvent, useContext, useMemo, useState, ChangeEvent} from 're
 import {type CoarseSenseMap, ResourceContext, SenseMapSetter, type Synset} from './resources'
 import {AddSenseMapPair} from './senseMapAddPair'
 import {extractMatches} from './processTerms'
-import {globToRegex, special, wildcards} from './utils'
+import {globToRegex, special, wildcards} from './lib/utils'
 
 export function SenseSelector({
   selected,

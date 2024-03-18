@@ -1,9 +1,10 @@
 import {Done, Error} from '@mui/icons-material'
 import {CircularProgress, List, ListItem, ListItemIcon, Stack, Typography} from '@mui/material'
 import {type ReactNode, createContext, useEffect, useState, useMemo} from 'react'
-import {newline} from './utils'
-import {decompress, loadResource, saveResource, setStorage} from './storage'
+import {newline} from './lib/utils'
+import {loadResource, saveResource, setStorage} from './storage'
 import {NumberObject} from './building'
+import {decompress} from './lib/compression'
 
 type AssociatedIndices = [number | number[], (number | number[])?][]
 export type Synset = {

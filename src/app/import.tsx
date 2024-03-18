@@ -19,7 +19,7 @@ import {
 } from '@mui/material'
 import {type ChangeEvent, type DragEvent, type KeyboardEvent, useContext, useState} from 'react'
 import {ManageDictionaries, type NumberObject} from './building'
-import {fileBaseName, newline} from './utils'
+import {fileBaseName, newline} from './lib/utils'
 import {CopyDictionary} from './copyDictionary'
 import type {Dict} from './storage'
 

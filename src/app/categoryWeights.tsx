@@ -19,7 +19,7 @@ import {
 import {type ChangeEvent, type KeyboardEvent, useContext, useMemo, useState} from 'react'
 import {BuildContext, type DictionaryActions, type NumberObject} from './building'
 import {ResourceContext} from './resources'
-import {globToRegex, special, wildcards} from './utils'
+import {globToRegex, special, wildcards} from './lib/utils'
 import {extractMatches, getProcessedTerm} from './processTerms'
 import {getIntersects} from './analysisResults'
 import type {FixedTerm, NetworkLookup} from './term'

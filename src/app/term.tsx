@@ -20,7 +20,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {relativeFrequency, sortByLength} from './utils'
+import {relativeFrequency, sortByLength} from './lib/utils'
 import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {BuildContext, BuildEditContext, type DictionaryActions, termsByCategory, type NumberObject} from './building'

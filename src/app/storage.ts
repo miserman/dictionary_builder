@@ -1,152 +1,9 @@
 import type {HistoryContainer, NumberObject, PasswordRequestCallback, TermTypes} from './building'
+import {IDB} from './lib/IDB'
+import {compress, decompress} from './lib/compression'
+import {decrypt, encrypt, keys, parseStoredString} from './lib/encryption'
 import {CoarseSenseMap} from './resources'
 
-// compression
-async function compress(content: any) {
-  const streamReader = new Blob([JSON.stringify(content)])
-    .stream()
-    .pipeThrough(new CompressionStream('gzip'))
-    .getReader()
-  const chunks = []
-  while (true) {
-    const {done, value} = await streamReader.read()
-    if (done) break
-    chunks.push(value)
-  }
-  return new Blob(chunks)
-}
-export async function decompress(blob: Blob) {
-  const stream = blob.stream().pipeThrough(new DecompressionStream('gzip'))
-  const json = await new Response(stream).json()
-  return json
-}
-
-// encryption
-type StoredKey = {salt: Uint8Array; key: CryptoKey}
-const keys: {[index: string]: StoredKey} = {}
-const encoder = new TextEncoder()
-async function getKey(name: string, password: string, salt: Uint8Array): Promise<StoredKey | undefined> {
-  if (!(name in keys)) {
-    const baseKey = await crypto.subtle.importKey('raw', encoder.encode(password), {name: 'PBKDF2'}, false, [
-      'deriveKey',
-    ])
-    keys[name] = {
-      salt,
-      key: await crypto.subtle.deriveKey(
-        {
-          name: 'PBKDF2',
-          salt,
-          iterations: 1e6,
-          hash: 'SHA-256',
-        },
-        baseKey,
-        {name: 'AES-GCM', length: 256},
-        false,
-        ['encrypt', 'decrypt']
-      ),
-    }
-  }
-  return keys[name]
-}
-async function encrypt(name: string, content: any, password?: string) {
-  const key = password ? await getKey(name, password, crypto.getRandomValues(new Uint8Array(16))) : keys[name]
-  if (key) {
-    try {
-      const iv = crypto.getRandomValues(new Uint8Array(12))
-      const encrypted = await crypto.subtle.encrypt(
-        {name: 'AES-GCM', iv},
-        key.key,
-        new Uint8Array(await (await compress(content)).arrayBuffer())
-      )
-      return new Blob([iv, key.salt, encrypted])
-    } catch {
-      console.error('failed to encrypt ' + name)
-    }
-  }
-}
-function parseStoredString(raw: string): Promise<Blob> {
-  return new Promise(async resolve => {
-    resolve(await fetch('data:application/octet-stream;base64,' + raw.substring(1)).then(res => res.blob()))
-  })
-}
-async function decrypt(name: string, content: string | Blob, password?: string) {
-  const buffer = await ('string' === typeof content
-    ? (await parseStoredString(content)).arrayBuffer()
-    : content.arrayBuffer())
-  const key = password ? await getKey(name, password, new Uint8Array(buffer, 12, 16)) : keys[name]
-  if (key) {
-    try {
-      const decrypted = await crypto.subtle.decrypt(
-        {name: 'AES-GCM', iv: new Uint8Array(buffer, 0, 12)},
-        key.key,
-        new Uint8Array(buffer, 28)
-      )
-      return decompress(new Blob([decrypted]))
-    } catch {}
-  }
-}
-
-// indexedDB
-type storedItem = {name: string; encrypted?: boolean; content: Blob}
-type DBName = 'resources' | 'building' | 'coarse_sense_map'
-const DBVersions = {resources: 3, building: 1, coarse_sense_map: 1}
-function openDB(name: DBName): Promise<IDBDatabase | undefined> {
-  return new Promise(resolve => {
-    const req = indexedDB.open('dictionary_builder_' + name, DBVersions[name])
-    req.onupgradeneeded = () => {
-      const db = req.result
-      if (db.objectStoreNames.contains(name)) db.deleteObjectStore(name)
-      db.createObjectStore(name, {keyPath: 'name'})
-    }
-    req.onsuccess = () => {
-      resolve(req.result)
-    }
-  })
-}
-const IDB = {
-  setItem: async function (item: storedItem, database: DBName): Promise<boolean> {
-    const db = await openDB(database)
-    return new Promise(resolve => {
-      if (db) {
-        const req = db.transaction([database], 'readwrite', {durability: 'relaxed'}).objectStore(database).put(item)
-        req.onerror = e => {
-          throw Error('failed to store item ' + item.name)
-        }
-        req.onsuccess = () => resolve(true)
-      } else {
-        throw Error
-      }
-    })
-  },
-  getItem: async function (name: string, database: DBName): Promise<storedItem | null> {
-    const db = await openDB(database)
-    return new Promise(resolve => {
-      if (db) {
-        const req = db.transaction([database], 'readonly', {durability: 'relaxed'}).objectStore(database).get(name)
-        req.onerror = () => resolve(null)
-        req.onsuccess = () => {
-          resolve(req.result)
-        }
-      } else {
-        resolve(null)
-      }
-    })
-  },
-  removeItem: async function (name: string, database: DBName): Promise<boolean> {
-    const db = await openDB(database)
-    return new Promise(resolve => {
-      if (db) {
-        const req = db.transaction([database], 'readwrite', {durability: 'relaxed'}).objectStore(database).delete(name)
-        req.onerror = () => resolve(false)
-        req.onsuccess = () => resolve(true)
-      } else {
-        resolve(false)
-      }
-    })
-  },
-}
-
-// interface
 export async function loadResource(name: string) {
   const resource = await IDB.getItem(name, 'resources')
   return resource
@@ -276,6 +133,10 @@ export async function loadHistory(
 }
 export function deleteDictionary(name: string) {
   delete dictionaries[name]
+}
+export function saveDictionary(name: string, dict: Dict, use_db: boolean, password?: string) {
+  dictionaries[name] = dict
+  setStorage(name, 'dict_', dict, use_db, password)
 }
 export async function loadDictionary(
   name: string,

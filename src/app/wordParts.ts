@@ -1,4 +1,4 @@
-import {special, termBounds} from './utils'
+import {special, termBounds} from './lib/utils'
 
 const commonPrefixes = [
   'anti',
