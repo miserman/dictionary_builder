@@ -184,7 +184,7 @@ export function EditSenseMap() {
   const setSenseMap = useContext(SenseMapSetter)
   const coarseLabels = useMemo(() => {
     const out: Set<string> = new Set()
-    Object.values(senseMap).forEach(coarses => coarses.forEach(l => out.add(l)))
+    Object.values(senseMap).forEach(coarses => coarses.forEach(l => l && out.add(l)))
     return Object.freeze(Array.from(out))
   }, [senseMap])
   const [useNLTK, setUseNLTK] = useState(false)
