@@ -20,8 +20,7 @@ import {
   styled,
 } from '@mui/material'
 import {type ChangeEvent, type DragEvent, useState, useContext} from 'react'
-import {setStorage} from './storage'
-import {CoarseSenseMap, ResourceContext, SenseMapSetter} from './resources'
+import {type CoarseSenseMap, ResourceContext, SenseMapSetter} from './resources'
 
 const HiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -37,16 +36,15 @@ const HiddenInput = styled('input')({
 
 const quotes = /^"|"$/g
 const sep = /"*,"*/
-function parseCoarseMap(rows: readonly string[], fine_col: number, coarse_col: number) {
+function parseCoarseMap(rows: readonly string[][], fine_col: number, coarse_col: number) {
   const parsed: CoarseSenseMap = {}
   if (rows) {
     if (fine_col !== -1 && coarse_col !== -1) {
       try {
         rows.forEach(row => {
-          const values = row.replace(quotes, '').split(sep)
-          const fine = values[fine_col]
-          const coarse = values[coarse_col]
-          if (fine && coarse && coarse[0]) {
+          const fine = row[fine_col]
+          const coarse = row[coarse_col]
+          if (fine && coarse && coarse.length) {
             if (fine in parsed) {
               const existing = parsed[fine]
               if (!existing.includes(coarse)) existing.push(coarse)
@@ -70,8 +68,9 @@ export function ImportCoarseSenseMap() {
   const [store, setStore] = useState(true)
   const [encrypt, setEncrypt] = useState(false)
   const [header, setHeader] = useState<string[]>([])
-  const [rows, setRows] = useState<readonly string[]>([])
+  const [rows, setRows] = useState<readonly string[][]>([])
   const [selectedCols, setSelectedCols] = useState(['', ''])
+  const [NLTKLabels, setNLTKLabels] = useState(false)
   const [recognized, setRecognized] = useState([0, 0, 0])
   const [map, setMap] = useState<CoarseSenseMap>({})
   const [password, setPassword] = useState('')
@@ -82,12 +81,13 @@ export function ImportCoarseSenseMap() {
     setRows([])
     setPassword('')
   }
-  const parseMap = (rows: readonly string[], fine: number, coarse: number) => {
+  const parseMap = (rows: readonly string[][], fine: number, coarse: number) => {
     const map = parseCoarseMap(rows, fine, coarse)
     const recognizedMap: CoarseSenseMap = {}
     const fineMapped = Object.keys(map)
     if (fineMapped.length && sense_keys) {
       const isNLTK = !senseKeySep.test(fineMapped[0])
+      setNLTKLabels(isNLTK)
       const lookup = isNLTK ? NLTKLookup : SenseLookup
       const coarse: Set<String> = new Set()
       let nRecognized = 0
@@ -107,9 +107,10 @@ export function ImportCoarseSenseMap() {
     }
     setMap(recognizedMap)
   }
-  const handleUpload = (rows: string[]) => {
-    if (rows.length > 1) {
-      const header = rows.splice(0, 1)[0].replace(quotes, '').split(sep)
+  const handleUpload = (rawRows: string[]) => {
+    if (rawRows.length > 1) {
+      const header = rawRows.splice(0, 1)[0].replace(quotes, '').split(sep)
+      const rows = rawRows.map(row => row.replace(quotes, '').split(sep))
       setRows(Object.freeze(rows))
       setHeader(header)
       if (header.length > 1) {
@@ -120,8 +121,8 @@ export function ImportCoarseSenseMap() {
     }
   }
   const setCoarseMap = () => {
-    if (store) setStorage('coarse_sense_map', '', map, true, password)
-    senseMapSetter(map)
+    const rawMap = {header, selectedCols, rows, NLTKLabels}
+    senseMapSetter(map, rawMap, store, password)
     clear()
     setMenuOpen(false)
   }

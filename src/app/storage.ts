@@ -2,7 +2,7 @@ import type {HistoryContainer, NumberObject, PasswordRequestCallback, TermTypes}
 import {IDB} from './lib/IDB'
 import {compress, decompress} from './lib/compression'
 import {decrypt, encrypt, keys, parseStoredString} from './lib/encryption'
-import {CoarseSenseMap} from './resources'
+import type {CoarseSenseMap, RawSenseMap} from './resources'
 
 export async function loadResource(name: string) {
   const resource = await IDB.getItem(name, 'resources')
@@ -49,6 +49,7 @@ type getStorageArgs = [
   any
 ]
 const requestQueue: Map<string, getStorageArgs> = new Map()
+const requestManager = {running: ''}
 export async function getStorage(
   name: string,
   prefix: string,
@@ -65,6 +66,7 @@ export async function getStorage(
       resolve(content)
       const nextRequest = requestQueue.keys().next()
       if (nextRequest.value) {
+        requestManager.running = nextRequest.value
         const args = requestQueue.get(nextRequest.value)
         if (args) {
           requestQueue.delete(nextRequest.value)
@@ -72,8 +74,9 @@ export async function getStorage(
         }
       }
     }
-    if (requestQueue.size === 1) {
-      const dbName = key === 'coarse_sense_map' ? key : 'building'
+    if (requestQueue.size === 1) requestManager.running = key
+    if (key === requestManager.running) {
+      const dbName = name === 'coarse_sense_map' ? name : 'building'
       let raw = use_db ? await IDB.getItem(key, key === 'coarse_sense_map' ? key : dbName) : localStorage.getItem(key)
       if (!raw) raw = use_db ? localStorage.getItem(key) : await IDB.getItem(key, dbName)
       if (raw) {
@@ -90,6 +93,7 @@ export async function getStorage(
                 if (content) {
                   complete(content)
                 } else {
+                  requestQueue.delete(key)
                   delete keys[name]
                   throw Error
                 }
@@ -163,8 +167,24 @@ export async function loadDictionary(
   }
 }
 export async function loadSenseMap(
-  setSenseMap: (map: CoarseSenseMap) => void,
+  setSenseMap: (map: CoarseSenseMap, rawMap: RawSenseMap | void, store?: boolean, password?: string) => void,
   requestPass: (name: string, resolve: PasswordRequestCallback) => void
 ) {
-  getStorage('coarse_sense_map', '', map => (map ? setSenseMap(map) : undefined), true, requestPass, {})
+  getStorage(
+    'coarse_sense_map',
+    'original_',
+    mapRaw => {
+      getStorage(
+        'coarse_sense_map',
+        '',
+        map => (map ? setSenseMap(map, mapRaw, false) : undefined),
+        true,
+        requestPass,
+        {}
+      )
+    },
+    true,
+    requestPass,
+    void 0
+  )
 }
