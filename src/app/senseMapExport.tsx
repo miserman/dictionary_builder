@@ -20,7 +20,8 @@ import {ResourceContext} from './resources'
 
 export function ExportCoarseSenseMap() {
   const theme = useTheme()
-  const {senseMap, senseMapRaw, synsetInfo, sense_keys, SenseLookup, NLTKLookup} = useContext(ResourceContext)
+  const {senseMap, senseMapOptions, synsetInfo, sense_keys, SenseLookup, NLTKLookup} = useContext(ResourceContext)
+  const senseMapRaw = senseMapOptions.rawMap
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const [name, setName] = useState('coarse_sense_map')

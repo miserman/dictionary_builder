@@ -17,7 +17,7 @@ import {
 } from '@mui/material'
 import {DataGrid, type GridColDef, GridToolbarQuickFilter, GridRenderEditCellParams} from '@mui/x-data-grid'
 import {type KeyboardEvent, useContext, useMemo, useState, ChangeEvent} from 'react'
-import {type CoarseSenseMap, ResourceContext, SenseMapSetter, type Synset} from './resources'
+import {type CoarseSenseMap, ResourceContext, SenseMapSetter, type Synset, type SenseMapSetterFun} from './resources'
 import {AddSenseMapPair} from './senseMapAddPair'
 import {extractMatches} from './processTerms'
 import {globToRegex, special, wildcards} from './lib/utils'
@@ -140,12 +140,14 @@ function CoarseLabelEdit({
   params,
   labels,
   senseMap,
+  senseMapStore,
   updateSenseMap,
 }: {
   params: GridRenderEditCellParams
   labels: readonly string[]
   senseMap: CoarseSenseMap
-  updateSenseMap: (newMap: CoarseSenseMap) => void
+  senseMapStore: boolean
+  updateSenseMap: SenseMapSetterFun
 }) {
   const [newValue, setNewValue] = useState('')
   return (
@@ -161,7 +163,7 @@ function CoarseLabelEdit({
         } else {
           newMap[fine] = [value]
         }
-        updateSenseMap(newMap)
+        updateSenseMap(newMap, {store: senseMapStore})
         params.api.setEditCellValue({...params, value})
       }}
       inputValue={newValue}
@@ -180,7 +182,8 @@ export function EditSenseMap() {
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
 
-  const {senseMap, synsetInfo, SenseLookup} = useContext(ResourceContext)
+  const {senseMap, senseMapOptions, synsetInfo, SenseLookup} = useContext(ResourceContext)
+  const mapOptions = {store: senseMapOptions.store}
   const setSenseMap = useContext(SenseMapSetter)
   const coarseLabels = useMemo(() => {
     const out: Set<string> = new Set()
@@ -205,7 +208,7 @@ export function EditSenseMap() {
               aria-label="remove term"
               onClick={() => {
                 const {newMap} = parseMapId(params.id as string, senseMap)
-                setSenseMap(newMap)
+                setSenseMap(newMap, mapOptions)
               }}
             >
               <RemoveCircleOutline sx={{fontSize: '.9em'}} />
@@ -231,7 +234,7 @@ export function EditSenseMap() {
                 } else {
                   newMap[newFine] = [coarse]
                 }
-                setSenseMap(newMap)
+                setSenseMap(newMap, mapOptions)
               }}
               multi={false}
               useNLTK={useNLTK}
@@ -249,7 +252,13 @@ export function EditSenseMap() {
         editable: true,
         renderEditCell: (params: GridRenderEditCellParams) => {
           return (
-            <CoarseLabelEdit params={params} labels={coarseLabels} senseMap={senseMap} updateSenseMap={setSenseMap} />
+            <CoarseLabelEdit
+              params={params}
+              labels={coarseLabels}
+              senseMap={senseMap}
+              senseMapStore={senseMapOptions.store}
+              updateSenseMap={setSenseMap}
+            />
           )
         },
       },

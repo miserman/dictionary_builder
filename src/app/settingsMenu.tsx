@@ -52,7 +52,7 @@ export function SettingsMenu() {
   const updateSettings = useContext(SettingEditor)
   const settings = useContext(SettingsContext)
   const senseMapSetter = useContext(SenseMapSetter)
-  const {senseMap} = useContext(ResourceContext)
+  const {senseMap, senseMapOptions} = useContext(ResourceContext)
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const historyStep = useContext(HistoryStepper)
@@ -195,7 +195,8 @@ export function SettingsMenu() {
                       message="The stored coarse sense map will be deleted."
                       onConfirm={() => {
                         removeStorage('coarse_sense_map', '')
-                        senseMapSetter({})
+                        removeStorage('coarse_sense_map', 'original_')
+                        senseMapSetter({}, {store: senseMapOptions.store})
                       }}
                     />
                   </>

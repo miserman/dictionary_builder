@@ -35,6 +35,11 @@ export type Synset = {
 type Synsets = readonly Synset[]
 export type CoarseSenseMap = {[index: string]: string[]}
 export type RawSenseMap = {header: string[]; selectedCols: string[]; rows: readonly string[][]; NLTKLabels: boolean}
+export type SenseMapSetterFun = (
+  map: CoarseSenseMap,
+  options: {rawMap?: RawSenseMap; store: boolean},
+  password?: string
+) => void
 export type TermResources = {
   terms?: readonly string[]
   lemmas?: {[index: string]: number | number[]}
@@ -44,7 +49,7 @@ export type TermResources = {
   sense_keys?: readonly string[]
   synsetInfo?: Synsets
   senseMap: CoarseSenseMap
-  senseMapRaw?: RawSenseMap
+  senseMapOptions: {rawMap?: RawSenseMap; store: boolean}
   SenseLookup: NumberObject
   NLTKLookup: NumberObject
   collapsedSenses: string
@@ -52,13 +57,14 @@ export type TermResources = {
 }
 export const ResourceContext = createContext<TermResources>({
   senseMap: {},
+  senseMapOptions: {store: true},
   SenseLookup: {},
   NLTKLookup: {},
   collapsedSenses: '',
   collapsedNLTK: '',
 })
-export const SenseMapSetter = createContext(
-  (map: CoarseSenseMap, rawMap: RawSenseMap | void, store?: boolean, password?: string) => {}
+export const SenseMapSetter = createContext<SenseMapSetterFun>(
+  (map: CoarseSenseMap, options: {rawMap?: RawSenseMap; store: boolean}, password?: string) => {}
 )
 
 const resources = [
@@ -78,7 +84,7 @@ export function Resources({children}: {children: ReactNode}) {
   const [sense_keys, setSenseKeys] = useState<readonly string[]>()
   const [synsetInfo, setSynsetInfo] = useState<Synsets>()
   const [senseMap, setSenseMap] = useState<CoarseSenseMap>({})
-  const [senseMapRaw, setSenseMapRaw] = useState<RawSenseMap | void>()
+  const [senseMapOptions, setSenseMapOptions] = useState<{rawMap?: RawSenseMap; store: boolean}>({store: true})
   const [SenseLookup, setSenseLookup] = useState<NumberObject>({})
   const [NLTKLookup, setNLTKLookup] = useState<NumberObject>({})
   const [collapsedSenses, setCollapsedSenses] = useState('')
@@ -254,7 +260,7 @@ export function Resources({children}: {children: ReactNode}) {
       sense_keys,
       synsetInfo,
       senseMap,
-      senseMapRaw,
+      senseMapOptions,
       NLTKLookup,
       SenseLookup,
       collapsedSenses,
@@ -269,7 +275,7 @@ export function Resources({children}: {children: ReactNode}) {
     sense_keys,
     synsetInfo,
     senseMap,
-    senseMapRaw,
+    senseMapOptions,
     NLTKLookup,
     SenseLookup,
     collapsedSenses,
@@ -285,14 +291,14 @@ export function Resources({children}: {children: ReactNode}) {
     <ResourceContext.Provider value={Data}>
       {lemmas && synsetInfo ? (
         <SenseMapSetter.Provider
-          value={(map: CoarseSenseMap, rawMap: RawSenseMap | void, store?: boolean, password?: string) => {
+          value={(map: CoarseSenseMap, options: {rawMap?: RawSenseMap; store: boolean}, password?: string) => {
             setSenseMap(map)
-            if (store) {
+            if (options.store) {
               setStorage('coarse_sense_map', '', map, true, password)
             }
-            if (rawMap) {
-              setSenseMapRaw(rawMap)
-              if (store) setStorage('coarse_sense_map', 'original_', rawMap, true, password)
+            if (options.rawMap) {
+              setSenseMapOptions(options)
+              if (options.store) setStorage('coarse_sense_map', 'original_', options.rawMap, true, password)
             }
           }}
         >

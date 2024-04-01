@@ -122,7 +122,7 @@ export function ImportCoarseSenseMap() {
   }
   const setCoarseMap = () => {
     const rawMap = {header, selectedCols, rows, NLTKLabels}
-    senseMapSetter(map, rawMap, store, password)
+    senseMapSetter(map, {rawMap, store}, password)
     clear()
     setMenuOpen(false)
   }

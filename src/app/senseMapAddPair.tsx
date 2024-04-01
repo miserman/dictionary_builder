@@ -20,7 +20,7 @@ export function AddSenseMapPair({coarseLabels, useNLTK}: {coarseLabels: readonly
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen(!menuOpen)
 
-  const {senseMap} = useContext(ResourceContext)
+  const {senseMap, senseMapOptions} = useContext(ResourceContext)
   const setSenseMap = useContext(SenseMapSetter)
 
   const [fines, setFines] = useState<string[]>([])
@@ -90,7 +90,7 @@ export function AddSenseMapPair({coarseLabels, useNLTK}: {coarseLabels: readonly
                   newMap[fine] = coarses
                 }
               })
-              setSenseMap(newMap)
+              setSenseMap(newMap, {store: senseMapOptions.store})
               setFines([])
               setCoarses([])
               toggleMenu()

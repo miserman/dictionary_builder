@@ -2,7 +2,7 @@ import type {HistoryContainer, NumberObject, PasswordRequestCallback, TermTypes}
 import {IDB} from './lib/IDB'
 import {compress, decompress} from './lib/compression'
 import {decrypt, encrypt, keys, parseStoredString} from './lib/encryption'
-import type {CoarseSenseMap, RawSenseMap} from './resources'
+import type {SenseMapSetterFun} from './resources'
 
 export async function loadResource(name: string) {
   const resource = await IDB.getItem(name, 'resources')
@@ -167,17 +167,17 @@ export async function loadDictionary(
   }
 }
 export async function loadSenseMap(
-  setSenseMap: (map: CoarseSenseMap, rawMap: RawSenseMap | void, store?: boolean, password?: string) => void,
+  setSenseMap: SenseMapSetterFun,
   requestPass: (name: string, resolve: PasswordRequestCallback) => void
 ) {
   getStorage(
     'coarse_sense_map',
     'original_',
-    mapRaw => {
+    rawMap => {
       getStorage(
         'coarse_sense_map',
         '',
-        map => (map ? setSenseMap(map, mapRaw, false) : undefined),
+        map => (map ? setSenseMap(map, {rawMap, store: true}) : undefined),
         true,
         requestPass,
         {}
