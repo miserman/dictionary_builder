@@ -35,12 +35,14 @@ export default function Home() {
   const [infoDrawerState, updateInfoDrawerState] = useReducer(manageInfoDrawerState, [])
   const [editorTerm, setEditorTerm] = useState('')
   const updateEditorTerm = (term: string, fromGraph?: boolean) => {
-    if ((!editorTerm && !fromGraph) || !term) {
-      cancelAnimationFrame(resizeAnimationFrame)
-      resizeAnimationFrame = requestAnimationFrame(dispatchResize)
-    }
-    showTableTerm(term)
-    setEditorTerm(term)
+    requestAnimationFrame(() => {
+      if ((!editorTerm && !fromGraph) || !term) {
+        cancelAnimationFrame(resizeAnimationFrame)
+        resizeAnimationFrame = requestAnimationFrame(dispatchResize)
+      }
+      showTableTerm(term)
+      setEditorTerm(term)
+    })
   }
   return (
     <StrictMode>
@@ -49,7 +51,9 @@ export default function Home() {
         <Resources>
           <Building>
             <InfoDrawerContext.Provider value={infoDrawerState}>
-              <InfoDrawerSetter.Provider value={updateInfoDrawerState}>
+              <InfoDrawerSetter.Provider
+                value={(action: InfoDrawerActions) => requestAnimationFrame(() => updateInfoDrawerState(action))}
+              >
                 <EditorTerm.Provider value={editorTerm}>
                   <EditorTermSetter.Provider value={updateEditorTerm}>
                     <Content />

@@ -5,10 +5,10 @@ import {AllCategories, BuildContext, BuildEditContext, SettingsContext, type Ter
 import {InfoDrawer, InfoDrawerContext} from './infoDrawer'
 import AddedTerms from './addedTerms'
 import {EditorTerm, TermEditor} from './termEditor'
-import {AnalyzeMenu} from './analysisMenu'
 import {Nav} from './nav'
 import type {GridCellParams} from '@mui/x-data-grid'
 import {PasswordPrompt} from './passwordPrompt'
+import AnalyzeMenu from './analysisMenu'
 
 const categoryPrefix = /^category_/
 export function Content() {

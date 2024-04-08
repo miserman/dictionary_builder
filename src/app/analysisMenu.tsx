@@ -23,8 +23,8 @@ import {
 } from '@mui/material'
 import {type ChangeEvent, useContext, useEffect, useMemo, useReducer, useState} from 'react'
 import {AllCategories, BuildContext, type NumberObject} from './building'
-import {Results} from './analysisResults'
 import type {FixedTerm} from './term'
+import Results from './analysisResults'
 
 export type TermEntry = {host?: string; term: string; categories: {[index: string]: number}; processed: FixedTerm}
 
@@ -64,7 +64,7 @@ function updateOptions<T>(state: T, action: {key: keyof T; value: boolean | stri
   newState[action.key] = action.value as typeof original
   return newState
 }
-export function AnalyzeMenu() {
+export default function AnalyzeMenu() {
   const dict = useContext(BuildContext)
   const allCategories = useContext(AllCategories)
   const categories = useMemo(() => {

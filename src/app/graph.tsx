@@ -23,7 +23,7 @@ function cancelViewSteppers(chart: slimChartType | null) {
     })
   }
 }
-export function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; options: PlotOptions}) {
+export default function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; options: PlotOptions}) {
   const termEditor = useContext(EditorTermSetter)
   const updateInfoDrawerState = useContext(InfoDrawerSetter)
   const container = useRef<HTMLDivElement>(null)

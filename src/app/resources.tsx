@@ -105,7 +105,7 @@ export function Resources({children}: {children: ReactNode}) {
           setLoadingTerms(false)
         })
       } else {
-        fetch('/dictionary_builder/data/terms.txt')
+        fetch('data/terms.txt')
           .then(res => res.text())
           .then(data => {
             const arr = Object.freeze(data.split(newline))
@@ -143,7 +143,7 @@ export function Resources({children}: {children: ReactNode}) {
           setLoadingTermAssociations(false)
         })
       } else {
-        fetch('/dictionary_builder/data/term_associations.json')
+        fetch('data/term_associations.json')
           .then(res => res.json())
           .then(data => {
             setTermAssociations(data)
@@ -161,7 +161,7 @@ export function Resources({children}: {children: ReactNode}) {
           setLoadingSenseKeys(false)
         })
       } else {
-        fetch('/dictionary_builder/data/sense_keys.txt')
+        fetch('data/sense_keys.txt')
           .then(res => res.text())
           .then(data => {
             const senseKeys = data.split(newline)
@@ -180,7 +180,7 @@ export function Resources({children}: {children: ReactNode}) {
           setLoadingSynsetInfo(false)
         })
       } else {
-        fetch('/dictionary_builder/data/synset_info.json')
+        fetch('data/synset_info.json')
           .then(res => res.json())
           .then(data => {
             const synsetInfo = data.map((d: Synset, i: number) => {

@@ -76,7 +76,7 @@ export function DictionaryMenu() {
   return (
     <>
       <Stack direction="row">
-        <IconButton onClick={toggleMenu}>
+        <IconButton onClick={toggleMenu} aria-label="open dictionary menu">
           <Menu />
         </IconButton>
         <Typography

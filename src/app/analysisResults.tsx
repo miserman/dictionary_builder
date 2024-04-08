@@ -1,13 +1,15 @@
 import {Box, LinearProgress, Stack, Typography} from '@mui/material'
 import type {PlotOptions, ProcessOptions, TermEntry} from './analysisMenu'
 import {useContext, useEffect, useState} from 'react'
-import {Graph} from './graph'
 import {getProcessedTerm} from './processTerms'
 import type {FixedTerm, NetworkLookup} from './term'
 import {ResourceContext} from './resources'
 import {BuildContext, type NumberObject} from './building'
 import {timers} from './addedTerms'
 import type {DictEntry} from './storage'
+import dynamic from 'next/dynamic'
+
+const Graph = dynamic(() => import('./graph'))
 
 export function getIntersects(a: string, b: NetworkLookup) {
   return {
@@ -142,7 +144,7 @@ async function processComparisons(
   }
 }
 
-export function Results({
+export default function Results({
   allTerms,
   catCounts,
   selectedCategories,

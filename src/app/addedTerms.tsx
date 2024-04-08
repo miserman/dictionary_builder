@@ -134,11 +134,11 @@ export default function AddedTerms({
   const [editCategory, setEditCategory] = useState('')
   return (
     <Box component="main" sx={{height: '100%'}}>
-      {!dictTerms.length ? (
+      {!dictTerms.length || !rows.length ? (
         <Typography align="center">Add terms, or import an existing dictionary.</Typography>
       ) : processing ? (
         <Backdrop open={true}>
-          <Stack direction="column" sx={{textAlign: 'center'}}>
+          <Stack sx={{textAlign: 'center'}}>
             <Typography variant="h4">Processing Dictionary</Typography>
             <LinearProgress variant="determinate" value={progress * 100} />
             <Typography variant="caption">{progress ? Math.round(progress * 100) + '%' : 'preparing...'}</Typography>
