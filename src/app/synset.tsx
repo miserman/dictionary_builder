@@ -52,14 +52,11 @@ function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
   const {terms, sense_keys, synsetInfo} = useContext(ResourceContext)
   if (!terms || !sense_keys || !synsetInfo) return <></>
   const linkTerms = (index: number | number[]) => {
-    return terms ? (
-      Array.isArray(index) ? (
-        index.map(i => termListItem(terms[i - 1], dict, editDictionary, updateInfoDrawerState))
-      ) : (
-        termListItem(terms[index - 1], dict, editDictionary, updateInfoDrawerState)
-      )
-    ) : (
-      <></>
+    return (
+      terms &&
+      (Array.isArray(index)
+        ? index.map(i => termListItem(terms[i - 1], dict, editDictionary, updateInfoDrawerState))
+        : termListItem(terms[index - 1], dict, editDictionary, updateInfoDrawerState))
     )
   }
   return (
@@ -86,6 +83,7 @@ function DisplayEntry({name, info}: {name: keyof Synset; info: Synset}) {
 const basicInfo = {
   id: 0,
   index: 0,
+  count: 0,
   ili: 0,
   definition: 0,
   topic: 0,
@@ -94,6 +92,7 @@ const basicInfo = {
   source: 0,
   sense_index: 0,
   nltk_id: 0,
+  babelnet: 0,
 }
 const partsOfSpeech = {a: 'adj', r: 'adv', s: 'adj', n: 'noun', v: 'verb'}
 export function SynsetDisplay({info}: {info: Synset}) {
@@ -106,21 +105,28 @@ export function SynsetDisplay({info}: {info: Synset}) {
       <Stack direction="row" spacing={2}>
         <Box>
           <Typography component="p" variant="caption" sx={{ml: 1}}>
-            Open English WordNet ID: <span className="number">{info.id}</span>
+            Open English WordNet ID:{' '}
+            <Link href={'https://en-word.net/id/oewn-' + info.id} rel="noreferrer" target="_blank">
+              {info.id}
+            </Link>
           </Typography>
-          {info.ili ? (
+          {info.ili && (
             <Typography component="p" variant="caption" sx={{ml: 1}}>
               Interlingual ID: <span className="number">{info.ili}</span>
             </Typography>
-          ) : (
-            <></>
           )}
-          {info.nltk_id ? (
+          {info.nltk_id && (
             <Typography component="p" variant="caption" sx={{ml: 1}}>
               Natural Language Toolkit ID: <span className="number">{info.nltk_id}</span>
             </Typography>
-          ) : (
-            <></>
+          )}
+          {info.babelnet && (
+            <Typography component="p" variant="caption" sx={{ml: 1}}>
+              BabelNet ID:{' '}
+              <Link href={'https://babelnet.org/synset?lang=EN&id=' + info.babelnet} rel="noreferrer" target="_blank">
+                {info.babelnet}
+              </Link>
+            </Typography>
           )}
         </Box>
         <Box>
@@ -133,36 +139,35 @@ export function SynsetDisplay({info}: {info: Synset}) {
           <Typography component="p" variant="caption" sx={{ml: 1}}>
             Topic: <span className="number">{info.topic}</span>
           </Typography>
-          {labels ? (
+          {labels && (
             <Typography component="p" variant="caption" sx={{ml: 1}}>
               Coarse Labels: <span className="number">{'string' === typeof labels ? labels : labels.join(', ')}</span>
             </Typography>
-          ) : (
-            <></>
+          )}
+          {info.count && (
+            <Tooltip title="frequency within the combined SemCor and One Million Sense-Tagged Instances training data">
+              <Typography component="p" variant="caption" sx={{ml: 1}}>
+                SemCor+OMSTI Count: <span className="number">{info.count}</span>
+              </Typography>
+            </Tooltip>
           )}
         </Box>
-        {info.wikidata || info.source ? (
+        {(info.wikidata || info.source) && (
           <Box>
-            {info.source ? (
+            {info.source && (
               <Typography component="p" variant="caption" sx={{ml: 1}}>
                 Source: <span className="number">{info.source}</span>
               </Typography>
-            ) : (
-              <></>
             )}
-            {info.wikidata ? (
+            {info.wikidata && (
               <Typography component="p" variant="caption" sx={{ml: 1}}>
                 Wikidata:{' '}
                 <Link href={'https://www.wikidata.org/wiki/' + info.wikidata} rel="noreferrer" target="_blank">
                   {info.wikidata}
                 </Link>
               </Typography>
-            ) : (
-              <></>
             )}
           </Box>
-        ) : (
-          <></>
         )}
       </Stack>
       <Stack direction="row" sx={{mt: 2}}>

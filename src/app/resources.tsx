@@ -10,11 +10,13 @@ type AssociatedIndices = [number | number[], (number | number[])?][]
 export type Synset = {
   id: string
   index: number
+  count: number
   definition: string
   topic: string
   ili: string
   sense_index: number
   nltk_id: string
+  babelnet: string
   source: string
   wikidata: string
   csi_labels: string | string[]
@@ -105,7 +107,7 @@ export function Resources({children}: {children: ReactNode}) {
           setLoadingTerms(false)
         })
       } else {
-        fetch('data/terms.txt')
+        fetch('/dictionary_builder/data/terms.txt')
           .then(res => res.text())
           .then(data => {
             const arr = Object.freeze(data.split(newline))
@@ -143,7 +145,7 @@ export function Resources({children}: {children: ReactNode}) {
           setLoadingTermAssociations(false)
         })
       } else {
-        fetch('data/term_associations.json')
+        fetch('/dictionary_builder/data/term_associations.json')
           .then(res => res.json())
           .then(data => {
             setTermAssociations(data)
@@ -161,7 +163,7 @@ export function Resources({children}: {children: ReactNode}) {
           setLoadingSenseKeys(false)
         })
       } else {
-        fetch('data/sense_keys.txt')
+        fetch('/dictionary_builder/data/sense_keys.txt')
           .then(res => res.text())
           .then(data => {
             const senseKeys = data.split(newline)
@@ -180,7 +182,7 @@ export function Resources({children}: {children: ReactNode}) {
           setLoadingSynsetInfo(false)
         })
       } else {
-        fetch('data/synset_info.json')
+        fetch('/dictionary_builder/data/synset_info.json')
           .then(res => res.json())
           .then(data => {
             const synsetInfo = data.map((d: Synset, i: number) => {

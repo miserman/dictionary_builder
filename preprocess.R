@@ -215,13 +215,99 @@ if (!file.exists(nltk_ids_file)) {
 }
 nltk_ids <- readLines(nltk_ids_file)
 
+# synset frequencies
+## http://lcl.uniroma1.it/wsdeval/
+unified_framework_dir <- paste0(baseDir, "WSD_Evaluation_Framework")
+unified_framework_freq_file <- paste0(unified_framework_dir, "/counts.csv")
+if (!file.exists(unified_framework_freq_file)) {
+  unified_framework_zip <- paste0(unified_framework_dir, ".zip")
+  if (!file.exists(unified_framework_dir)) {
+    if (!file.exists(unified_framework_zip)) {
+      download.file(
+        "http://lcl.uniroma1.it/wsdeval/data/WSD_Evaluation_Framework.zip",
+        unified_framework_zip
+      )
+    }
+    unzip(unified_framework_zip, exdir = baseDir)
+    unlink(unified_framework_zip)
+  }
+  unified_framework_raw <- paste0(
+    unified_framework_dir, "/Training_Corpora/SemCor+OMSTI/semcor+omsti.gold.key.txt"
+  )
+  counts <- as.data.frame(table(unlist(lapply(
+    readLines(unified_framework_raw), function(e) strsplit(e, " ")[[1]][-1]
+  ))))
+  colnames(counts) <- c("sense_key", "count")
+  write.csv(counts, unified_framework_freq_file, row.names = FALSE)
+}
+unified_framework_freqs <- read.csv(unified_framework_freq_file)
+unified_framework_freqs <- structure(
+  unified_framework_freqs$count,
+  names = unified_framework_freqs$sense_key
+)[synset_keys]
+
+# BabelNet IDs
+## https://sapienzanlp.github.io/xl-wsd/docs/data/
+babelnet_ids_file <- paste0(baseDir, "babelnet_ids.json")
+if (!file.exists(babelnet_ids_file)) {
+  xl_framework_dir <- paste0(baseDir, "xl-wsd")
+  xl_framework_zip <- paste0(xl_framework_dir, ".zip")
+  if (!file.exists(xl_framework_dir)) {
+    if (!file.exists(xl_framework_zip)) {
+      download.file(
+        paste0(
+          "https://drive.usercontent.google.com/download?id=19YTL-Uq95hjiFZfgwEpXRgcYGCR_PQY0",
+          "&export=download&confirm=t&uuid=a408515e-4e07-48b6-9068-860c762eee61"
+        ),
+        xl_framework_zip,
+        mode = "wb"
+      )
+    }
+    unzip(xl_framework_zip, exdir = baseDir)
+    unlink(xl_framework_zip)
+  }
+  unified_framework_raw <- paste0(
+    unified_framework_dir, "/Training_Corpora/SemCor/semcor.gold.key.txt"
+  )
+  xl_framework_raw <- paste0(
+    xl_framework_dir, "/training_datasets/semcor_en/semcor_en.gold.key.txt"
+  )
+  unified <- lapply(
+    readLines(unified_framework_raw), function(e) strsplit(e, " ")[[1]]
+  )
+  names(unified) <- vapply(unified, "[[", "", 1)
+  xl <- lapply(
+    readLines(xl_framework_raw), function(e) strsplit(e, " ")[[1]]
+  )
+  map <- list()
+  for (l in xl) {
+    id <- l[[1]]
+    babelnet <- l[-1]
+    wordnet <- unified[[id]][-1]
+    if (length(babelnet) != length(wordnet)) {
+      stop()
+    }
+    for (i in seq_along(babelnet)) {
+      wid <- wordnet[[i]]
+      map[[wid]] <- unique(c(map[[wid]], babelnet[[i]]))
+    }
+  }
+  jsonlite::write_json(map, babelnet_ids_file, auto_unbox = TRUE)
+}
+babelnet_ids <- jsonlite::read_json(babelnet_ids_file)
+babelnet_ids <- babelnet_ids[synset_keys]
+
 # write synset resources
 synset_ids <- structure(seq_along(by_synset), names = names(by_synset))
 write_json(lapply(seq_along(by_synset), function(i) {
   d <- by_synset[[i]]
   d$csi_labels <- synset_clusters[[i]]
-  nltk_id = nltk_ids[[i]]
-  if (nltk_id != "") d$sense_index = as.integer(sub("^.*\\.", "", nltk_id))
+  nltk_id <- nltk_ids[[i]]
+  if (nltk_id != "") d$sense_index <- as.integer(sub("^.*\\.", "", nltk_id))
+  babelnet_id <- babelnet_ids[[i]]
+  if (!is.null(babelnet_id)) d$babelnet <- babelnet_id
+  count <- unified_framework_freqs[[i]]
+  if (!is.na(count)) d$count <- count
   d$partOfSpeech <- NULL
   d$example <- NULL
   d <- lapply(d, function(e) {
