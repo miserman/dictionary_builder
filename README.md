@@ -22,13 +22,13 @@ As part of _analysis_, the tool will...
 
 # Sources
 
-Similar terms come from the pre-trained embeddings spaces available at [osf.io/489he](https://osf.io/489he/).
+Term associations come from the pre-trained embeddings spaces available at [osf.io/489he](https://osf.io/489he/).
 
 Synsets are from the [Open English WordNet](https://github.com/globalwordnet/english-wordnet), with some added information:
 
-- cluster information from a [Coarse Sense Inventory](https://sapienzanlp.github.io/csi/)
-- frequency information from an [evaluation framework](http://lcl.uniroma1.it/wsdeval/), which come from [SemCor](https://web.eecs.umich.edu/~mihalcea/downloads.html#semcor) and [OMSTI](https://www.comp.nus.edu.sg/~nlp/corpora.html)
-- BabelNet IDs from another [evaluation framwork](https://sapienzanlp.github.io/xl-wsd/docs/data/), as mapped to SemCor tags
+- clusters from a [Coarse Sense Inventory](https://sapienzanlp.github.io/csi/)
+- frequencies from an [evaluation framework](http://lcl.uniroma1.it/wsdeval/), which come from [SemCor](https://web.eecs.umich.edu/~mihalcea/downloads.html#semcor) and [OMSTI](https://www.comp.nus.edu.sg/~nlp/corpora.html)
+- BabelNet IDs from another [evaluation framwork](https://sapienzanlp.github.io/xl-wsd/docs/data/), as mapped from SemCor labels
 
 The [preprocess.R](/preprocess.R) script was used to make the resources from these sources that are used within the app.
 

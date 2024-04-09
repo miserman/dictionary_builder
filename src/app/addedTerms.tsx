@@ -134,7 +134,7 @@ export default function AddedTerms({
   const [editCategory, setEditCategory] = useState('')
   return (
     <Box component="main" sx={{height: '100%'}}>
-      {!dictTerms.length || !rows.length ? (
+      {!dictTerms.length || (!processing && !rows.length) ? (
         <Typography align="center">Add terms, or import an existing dictionary.</Typography>
       ) : processing ? (
         <Backdrop open={true}>

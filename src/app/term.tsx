@@ -114,6 +114,7 @@ export function TermSenseEdit({
           if (term in siblings) score++
           if (term in siblingsExtended) score += 0.01
         })
+        if (synset.count) score += synset.count * 0.001
         if (!synset.csi_labels) synset.csi_labels = 'no category'
         const key = sense_keys[synset.index]
         const cluster = getCoarseSense(key, synset)
@@ -160,6 +161,7 @@ export function TermSenseEdit({
                 <Typography sx={{width: '100%'}}>
                   <span className="number-annotation">{'(' + score.toFixed(2) + ') '}</span>
                   {sense_keys[synset.index]}
+                  {synset.count && <span className="number-annotation">{' ' + synset.count}</span>}
                 </Typography>
               </Tooltip>
             </MenuItem>
@@ -503,15 +505,19 @@ function TermFixed({processed}: {processed: FixedTerm}) {
     processed.forms.sort(sortByLength)
   }
   const synset_clusters: {[index: string]: Synset[]} = {}
+  const clusterMax: {[index: string]: number} = {}
   if (processed.synsets) {
     processed.synsets.map(synset => {
       const key = sense_keys ? sense_keys[synset.index] : ''
       const labels = key in senseMap ? senseMap[key] : synset.csi_labels || 'no category'
       const label = 'string' === typeof labels ? labels : labels[0]
+      const count = synset.count || 0
       if (label in synset_clusters) {
         synset_clusters[label].push(synset)
+        if (count > clusterMax[label]) clusterMax[label] = count
       } else {
         synset_clusters[label] = [synset]
+        clusterMax[label] = count
       }
     })
   }
@@ -569,21 +575,29 @@ function TermFixed({processed}: {processed: FixedTerm}) {
             <Typography>Senses</Typography>
             <Box sx={{...containerStyle, p: 0}}>
               <List subheader={<li />} className="term-sense-list">
-                {Object.keys(synset_clusters).map(cluster => {
-                  const infos = synset_clusters[cluster]
-                  return (
-                    <li key={cluster}>
-                      <ul>
-                        <ListSubheader>{cluster}</ListSubheader>
-                        {infos.map(info => (
-                          <ListItem key={info.index} disablePadding>
-                            <SynsetLink senseKey={sense_keys[info.index]} info={info} />
-                          </ListItem>
-                        ))}
-                      </ul>
-                    </li>
-                  )
-                })}
+                {Object.keys(synset_clusters)
+                  .sort((a, b) => {
+                    return clusterMax[b] - clusterMax[a]
+                  })
+                  .map(cluster => {
+                    const infos = synset_clusters[cluster]
+                    return (
+                      <li key={cluster}>
+                        <ul>
+                          <ListSubheader>{cluster}</ListSubheader>
+                          {infos
+                            .sort((a, b) => {
+                              return (b.count || 0) - (a.count || 0)
+                            })
+                            .map(info => (
+                              <ListItem key={info.index} disablePadding>
+                                <SynsetLink senseKey={sense_keys[info.index]} info={info} />
+                              </ListItem>
+                            ))}
+                        </ul>
+                      </li>
+                    )
+                  })}
               </List>
             </Box>
           </Stack>

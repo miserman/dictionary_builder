@@ -9,13 +9,16 @@ export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
   const updateInfoDrawerState = useContext(InfoDrawerSetter)
   return (
     <Tooltip title={info.definition} placement="right">
-      <Link
-        underline="none"
-        sx={{p: 0, justifyContent: 'flex-start', cursor: 'pointer', display: 'block'}}
-        onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'synset', value: senseKey, info: info}})}
-      >
-        {senseKey}
-      </Link>
+      <Typography>
+        <Link
+          underline="none"
+          sx={{p: 0, justifyContent: 'flex-start', cursor: 'pointer'}}
+          onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'synset', value: senseKey, info: info}})}
+        >
+          {senseKey}
+        </Link>
+        {info.count && <span className="number-annotation">{' ' + info.count}</span>}
+      </Typography>
     </Tooltip>
   )
 }
