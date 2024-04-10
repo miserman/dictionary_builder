@@ -231,11 +231,18 @@ if (!file.exists(unified_framework_freq_file)) {
     unzip(unified_framework_zip, exdir = baseDir)
     unlink(unified_framework_zip)
   }
-  unified_framework_raw <- paste0(
-    unified_framework_dir, "/Training_Corpora/SemCor+OMSTI/semcor+omsti.gold.key.txt"
+  unified_framework_raw <- c(
+    paste0(
+      unified_framework_dir, c(
+        "/Training_Corpora/SemCor+OMSTI/semcor+omsti.gold.key.txt",
+        "/Data_Validation/sample-dataset/semeval2015.gold.key.txt",
+        "/Evaluation_Datasets/ALL/ALL.gold.key.txt"
+      )
+    ),
+    list.files(paste0(unified_framework_dir, "/Output_Systems_ALL"), full.names = TRUE)
   )
   counts <- as.data.frame(table(unlist(lapply(
-    readLines(unified_framework_raw), function(e) strsplit(e, " ")[[1]][-1]
+    unique(unlist(lapply(unified_framework_raw, readLines))), function(e) strsplit(e, " ")[[1]][-1]
   ))))
   colnames(counts) <- c("sense_key", "count")
   write.csv(counts, unified_framework_freq_file, row.names = FALSE)

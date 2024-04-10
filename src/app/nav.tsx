@@ -98,7 +98,7 @@ export function Nav({
                             ? prepareRegex(value)
                             : wildcards.test(value)
                             ? globToRegex(value)
-                            : ';' + value + '[^;]*;',
+                            : ';' + value.replace(special, '\\%&') + '[^;]*;',
                           'g'
                         )
                       } catch {
