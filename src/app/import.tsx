@@ -343,7 +343,7 @@ export function ImportMenu() {
               <Button onClick={clear}>clear</Button>
             </Tooltip>
           </Stack>
-          <Button variant="contained" disabled={encrypt ? !password : false} onClick={addDict}>
+          <Button variant="contained" disabled={(encrypt ? !password : false) || !name} onClick={addDict}>
             Add
           </Button>
         </DialogActions>
