@@ -290,7 +290,7 @@ export function EditSenseMap() {
   }, [senseMap, synsetInfo, useNLTK])
   return (
     <>
-      <Button variant="outlined" onClick={toggleMenu}>
+      <Button variant="outlined" aria-label="edit coarse sense map" onClick={toggleMenu}>
         Edit
       </Button>
       <Dialog open={menuOpen} onClose={toggleMenu}>

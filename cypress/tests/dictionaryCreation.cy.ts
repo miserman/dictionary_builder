@@ -9,9 +9,7 @@ describe('new default dictionary', () => {
   before(() => cy.clearIndexedDb('dictionary_builder_building'))
   beforeEach(() => cy.visit('/'))
   it('adds terms', () => {
-    const input = cy.get('.MuiAppBar-root input', {timeout: 15000})
-    cy.get('.MuiTypography-root')
-    input.type('frog{enter}').type('ants*{enter}')
+    cy.get('.MuiAppBar-root input', {timeout: 15000}).type('frog{enter}ants*{enter}')
     cy.get('.MuiDataGrid-main').should('contain.text', 'frog').should('contain.text', 'ants*')
   })
   it('shows info', () => {
@@ -23,13 +21,11 @@ describe('new default dictionary', () => {
   it('adds a category', () => {
     dictionaryMenu().within(() => cy.get('.MuiCardContent-root input').type('animal{enter}{esc}'))
     cy.get('[data-colindex="8"]').first().dblclick().type('1{enter}')
-    cy.get('[data-colindex="8"]').last().dblclick().type('1{enter}')
+    cy.get('[data-colindex="8"]', {timeout: 7000}).last().dblclick().type('1{enter}')
   })
   it('exports', () => {
     dictionaryMenu().within(() => cy.contains('Export').click())
-    cy.get('textarea').should(content => {
-      expect(content).to.contain('%\n1\tanimal\n%\nfrog\t1\nants*\t1')
-    })
+    cy.get('textarea').should('have.text', '%\n1\tanimal\n%\nfrog\t1\nants*\t1')
   })
 })
 
@@ -47,8 +43,6 @@ describe('new named dictionary', () => {
     cy.get('.MuiMenu-list').should('have.text', 'defaultgeneric')
     cy.get('li').contains('generic').click()
     cy.contains('Export').click()
-    cy.get('textarea').should(content => {
-      expect(content).to.contain('%\n1\tcat\n%\nword\t1\nterm*\t1')
-    })
+    cy.get('textarea').should('have.text', '%\n1\tcat\n%\nword\t1\nterm*\t1')
   })
 })

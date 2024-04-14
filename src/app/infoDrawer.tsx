@@ -29,10 +29,10 @@ function TermContent({term}: {term: string}) {
   const isInDict = term in Dict
   return (
     <>
-      <CardContent sx={{overflowY: 'auto', pb: 0, pt: 0}}>
+      <CardContent sx={{overflowY: 'auto', pb: 0, pt: 0, height: '100%'}}>
         <TermDisplay term={term} />
       </CardContent>
-      <CardActions sx={{justifyContent: 'flex-end', mt: 'auto'}}>
+      <CardActions sx={{justifyContent: 'flex-end', p: 0}}>
         <Button
           onClick={() => {
             editDictionary(isInDict ? {type: 'remove', term_id: term} : {type: 'add', term, term_type: 'fixed'})
@@ -63,7 +63,7 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
   const state = useContext(InfoDrawerContext)
   const resize = useCallback(
     (e: MouseEvent) => {
-      const value = Math.max(16.2, Math.min(Math.ceil((1 - e.y / window.innerHeight) * 100), 87))
+      const value = Math.max(18, Math.min(Math.ceil((1 - e.y / window.innerHeight) * 100), 87))
       if (value !== height) {
         cancelAnimationFrame(resizeAnimationFrame)
         resizeAnimationFrame = requestAnimationFrame(() => {
@@ -77,7 +77,7 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
   const startResize = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault()
-      document.body.style.cursor = 'row-resize'
+      document.body.style.cursor = 'ns-resize'
       window.addEventListener('mousemove', resize)
     },
     [resize]
@@ -90,7 +90,7 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
         resizeAnimationFrame = -1
         document.body.style.cursor = 'default'
         window.removeEventListener('mousemove', resize)
-        const value = Math.max(16.2, Math.min(Math.ceil((1 - e.y / window.innerHeight) * 100), 87))
+        const value = Math.max(18, Math.min(Math.ceil((1 - e.y / window.innerHeight) * 100), 87))
         setHeight(value)
         settings.info_drawer_height = value
         updateSettings({...settings})
@@ -124,10 +124,18 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
     >
       <Card>
         <Box
-          sx={{backgroundColor: '#757575', height: '3px', width: '100%', position: 'absolute', cursor: 'row-resize'}}
+          sx={{
+            width: '100%',
+            backgroundColor: '#515151',
+            height: '1px',
+            position: 'absolute',
+            cursor: 'ns-resize',
+            '&:hover': {border: 'solid 2px #dab4ff'},
+          }}
           onMouseDownCapture={startResize}
         ></Box>
         <CardHeader
+          sx={{p: 1}}
           action={
             <IconButton aria-label="Close info drawer" onClick={close} className="close-button">
               <Close />

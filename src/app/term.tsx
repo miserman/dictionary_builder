@@ -278,7 +278,7 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
   const data = useContext(ResourceContext)
 
   const [page, setPage] = useState(0)
-  const [perPage, setPerPage] = useState(5)
+  const [perPage, setPerPage] = useState(10)
   const [sortCol, setSortCol] = useState({column: 'Frequency', asc: false})
   const cols = useMemo(
     () => [
@@ -342,84 +342,74 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
     })
     processed.common_matches = extractExpanded(root, ';;' + processed.matches.join(';;') + ';;')
   }
-  return (
-    <Box sx={{height: '100%', overflowY: 'auto'}}>
-      {nMatches ? (
-        <TableContainer sx={{height: '100%'}}>
-          <Table
-            stickyHeader
-            size="small"
-            sx={{
-              width: '100%',
-              '& .MuiTableCell-root:first-of-type': {pl: 1},
-            }}
-          >
-            <TableHead>
-              <TableRow>{cols}</TableRow>
-            </TableHead>
-            <TableBody>
-              {pageMatches.map((processedMatch, index) => {
-                const match = processedMatch.term
-                return (
-                  <TableRow key={match + index} sx={{height: 33}} hover>
-                    <TableCell sx={{p: 0}}>
-                      {processedMatch.in_dict ? (
-                        <IconButton
-                          aria-label="remove"
-                          size="small"
-                          edge="start"
-                          sx={{p: 0, opacity: 0.6}}
-                          onClick={() => {
-                            editDictionary({type: 'remove', term_id: match})
-                          }}
-                        >
-                          <Remove />
-                        </IconButton>
-                      ) : (
-                        <IconButton
-                          aria-label="add"
-                          size="small"
-                          edge="start"
-                          sx={{p: 0, opacity: 0.6}}
-                          onClick={() => {
-                            editDictionary({type: 'add', term_id: match, term: match, term_type: 'fixed'})
-                          }}
-                        >
-                          <Add />
-                        </IconButton>
-                      )}
-                    </TableCell>
-                    <TableCell>{<TermLink term={match}></TermLink>}</TableCell>
-                    <TableCell align="right">
-                      {(processedMatch.frequency && processedMatch.frequency.toFixed(2)) || '0.00'}
-                    </TableCell>
-                    <TableCell align="right">{processedMatch.synsets.length}</TableCell>
-                    <TableCell align="right">{processedMatch.related.length}</TableCell>
-                    <TableCell align="right">{processedMatch.in_dict ? 'yes' : 'no'}</TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-          <TablePagination
-            component="div"
-            rowsPerPageOptions={[5, 10, 50, 100, 1000]}
-            count={nMatches}
-            rowsPerPage={perPage}
-            page={page}
-            onPageChange={(e: unknown, page: number) => {
-              setPage(page)
-            }}
-            onRowsPerPageChange={(e: ChangeEvent<HTMLInputElement>) => {
-              setPerPage(parseInt(e.target.value))
-              setPage(0)
-            }}
-          />
-        </TableContainer>
-      ) : (
-        <Typography>No matches</Typography>
-      )}
-    </Box>
+  return nMatches ? (
+    <TableContainer sx={{height: '100%', position: 'relative'}}>
+      <Table stickyHeader size="small">
+        <TableHead>
+          <TableRow>{cols}</TableRow>
+        </TableHead>
+        <TableBody>
+          {pageMatches.map((processedMatch, index) => {
+            const match = processedMatch.term
+            return (
+              <TableRow key={match + index} sx={{height: 33}} hover>
+                <TableCell sx={{p: 0}}>
+                  {processedMatch.in_dict ? (
+                    <IconButton
+                      aria-label="remove"
+                      size="small"
+                      edge="start"
+                      sx={{p: 0, opacity: 0.6}}
+                      onClick={() => {
+                        editDictionary({type: 'remove', term_id: match})
+                      }}
+                    >
+                      <Remove />
+                    </IconButton>
+                  ) : (
+                    <IconButton
+                      aria-label="add"
+                      size="small"
+                      edge="start"
+                      sx={{p: 0, opacity: 0.6}}
+                      onClick={() => {
+                        editDictionary({type: 'add', term_id: match, term: match, term_type: 'fixed'})
+                      }}
+                    >
+                      <Add />
+                    </IconButton>
+                  )}
+                </TableCell>
+                <TableCell>{<TermLink term={match}></TermLink>}</TableCell>
+                <TableCell align="right">
+                  {(processedMatch.frequency && processedMatch.frequency.toFixed(2)) || '0.00'}
+                </TableCell>
+                <TableCell align="right">{processedMatch.synsets.length}</TableCell>
+                <TableCell align="right">{processedMatch.related.length}</TableCell>
+                <TableCell align="right">{processedMatch.in_dict ? 'yes' : 'no'}</TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+      <TablePagination
+        sx={{width: '100%', bottom: '-1px', position: 'sticky', backgroundColor: '#1e1e1e'}}
+        component="div"
+        rowsPerPageOptions={[10, 20, 50, 100, 1000]}
+        count={nMatches}
+        rowsPerPage={perPage}
+        page={page}
+        onPageChange={(e: unknown, page: number) => {
+          setPage(page)
+        }}
+        onRowsPerPageChange={(e: ChangeEvent<HTMLInputElement>) => {
+          setPerPage(parseInt(e.target.value))
+          setPage(0)
+        }}
+      />
+    </TableContainer>
+  ) : (
+    <Typography>No matches</Typography>
   )
 }
 

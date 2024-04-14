@@ -30,7 +30,7 @@ export function ExportCoarseSenseMap() {
   const content = useMemo(() => {
     const rows = [originalFormat && senseMapRaw ? senseMapRaw.header.join(',') : '"fine_sense","coarse_sense"']
     const fine_senses = Object.keys(senseMap)
-    if (fine_senses.length > 1 && sense_keys && synsetInfo) {
+    if (fine_senses.length && sense_keys && synsetInfo) {
       if (originalFormat && senseMapRaw) {
         const {header, selectedCols, rows: originalRows, NLTKLabels} = senseMapRaw
         const fine_col = header.indexOf(selectedCols[0])

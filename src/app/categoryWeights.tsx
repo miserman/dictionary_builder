@@ -311,8 +311,7 @@ export function CategoryWeights({
                 const subset = toAllTerms ? dict : current
                 const appliedWeights: NumberObject = {}
                 Object.keys(subset).forEach(id => {
-                  const term = dict[id].term || id
-                  if (term in reWeighted) appliedWeights[id] = reWeighted[term]
+                  if (id in reWeighted) appliedWeights[id] = reWeighted[id]
                 })
                 edit({type: 'reweight_category', name, weights: appliedWeights})
                 toggleMenu()

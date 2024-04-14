@@ -128,7 +128,7 @@ export function ImportCoarseSenseMap() {
   }
   return (
     <>
-      <Button variant="outlined" onClick={toggleMenu}>
+      <Button variant="outlined" aria-label="import coarse sense map" onClick={toggleMenu}>
         Import
       </Button>
       <Dialog

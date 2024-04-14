@@ -119,9 +119,16 @@ export function SettingsMenu() {
                 <Close />
               </IconButton>
             }
+            sx={{p: 1}}
           />
           <CardContent
-            sx={{alignContent: 'left', mb: 'auto', p: 0, '& .MuiPaper-root': {ml: 0.5, mr: 0.5, mb: 1, p: 0.5}}}
+            sx={{
+              alignContent: 'left',
+              mb: 'auto',
+              p: 0,
+              overflowY: 'auto',
+              '& .MuiPaper-root': {ml: 0.5, mr: 0.5, mb: 1, p: 0.5},
+            }}
           >
             <Typography fontWeight="bold">Storage</Typography>
             <Paper elevation={3}>
