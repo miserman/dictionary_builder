@@ -84,7 +84,6 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
   )
   useEffect(() => {
     const endResize = (e: MouseEvent) => {
-      e.preventDefault()
       if (resizeAnimationFrame !== -1) {
         cancelAnimationFrame(resizeAnimationFrame)
         resizeAnimationFrame = -1
@@ -107,65 +106,67 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
   }
   const currentState = state[0]
   return (
-    <Drawer
-      open={currentState.value !== ''}
-      onClose={close}
-      variant="permanent"
-      hideBackdrop={true}
-      anchor="bottom"
-      sx={{
-        '& .MuiPaper-root': {
-          height: height + 'vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-        },
-      }}
-    >
-      <Card>
-        <Box
-          sx={{
-            width: '100%',
-            backgroundColor: '#515151',
-            height: '1px',
-            position: 'absolute',
-            cursor: 'ns-resize',
-            '&:hover': {border: 'solid 2px #dab4ff'},
-          }}
-          onMouseDownCapture={startResize}
-        ></Box>
-        <CardHeader
-          sx={{p: 1}}
-          action={
-            <IconButton aria-label="Close info drawer" onClick={close} className="close-button">
-              <Close />
-            </IconButton>
-          }
-          title={
-            <Stack direction="row">
-              {state.length > 1 ? (
-                <Button onClick={() => edit({type: 'back'})} sx={{opacity: 0.8}}>
-                  {state[1].value}
-                </Button>
-              ) : (
-                <></>
-              )}
-              {currentState.value in dict ? (
-                <Button sx={{textTransform: 'none', p: 0}} onClick={() => setEditorTerm(currentState.value)}>
+    currentState.value && (
+      <Drawer
+        open={true}
+        onClose={close}
+        variant="permanent"
+        hideBackdrop={true}
+        anchor="bottom"
+        sx={{
+          '& .MuiPaper-root': {
+            height: height + 'vh',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          },
+        }}
+      >
+        <Card>
+          <Box
+            sx={{
+              width: '100%',
+              backgroundColor: '#515151',
+              height: '1px',
+              position: 'absolute',
+              cursor: 'ns-resize',
+              '&:hover': {border: 'solid 2px #dab4ff'},
+            }}
+            onMouseDownCapture={startResize}
+          ></Box>
+          <CardHeader
+            sx={{p: 1}}
+            action={
+              <IconButton aria-label="Close info drawer" onClick={close} className="close-button">
+                <Close />
+              </IconButton>
+            }
+            title={
+              <Stack direction="row">
+                {state.length > 1 ? (
+                  <Button onClick={() => edit({type: 'back'})} sx={{opacity: 0.8}}>
+                    {state[1].value}
+                  </Button>
+                ) : (
+                  <></>
+                )}
+                {currentState.value in dict ? (
+                  <Button sx={{textTransform: 'none', p: 0}} onClick={() => setEditorTerm(currentState.value)}>
+                    <Typography variant="h3">{currentState.value}</Typography>
+                  </Button>
+                ) : (
                   <Typography variant="h3">{currentState.value}</Typography>
-                </Button>
-              ) : (
-                <Typography variant="h3">{currentState.value}</Typography>
-              )}
-            </Stack>
-          }
-        />
-        {currentState.type === 'term' ? (
-          <TermContent term={currentState.value} />
-        ) : (
-          <SynsetContent info={currentState.info} />
-        )}
-      </Card>
-    </Drawer>
+                )}
+              </Stack>
+            }
+          />
+          {currentState.type === 'term' ? (
+            <TermContent term={currentState.value} />
+          ) : (
+            <SynsetContent info={currentState.info} />
+          )}
+        </Card>
+      </Drawer>
+    )
   )
 }

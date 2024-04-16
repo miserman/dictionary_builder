@@ -70,10 +70,8 @@ export function Content() {
         }}
       >
         {asTable ? <AddedTerms editFromEvent={editFromEvent} /> : <AnalyzeMenu />}
-        {showTermEditor ? (
+        {showTermEditor && (
           <TermEditor categories={Cats} editor={editFromEvent} width={settings.term_editor_width || 200} />
-        ) : (
-          <></>
         )}
         <InfoDrawer height={infoDrawerHeight} setHeight={setInfoDrawerHeight} />
       </Box>

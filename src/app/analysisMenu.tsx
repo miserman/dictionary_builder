@@ -13,7 +13,6 @@ import {
   ListSubheader,
   MenuItem,
   Select,
-  SelectChangeEvent,
   Stack,
   Switch,
   TextField,
@@ -21,7 +20,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {type ChangeEvent, useContext, useEffect, useMemo, useReducer, useState} from 'react'
+import {useContext, useEffect, useMemo, useReducer, useState} from 'react'
 import {AllCategories, BuildContext, type NumberObject} from './building'
 import type {FixedTerm} from './term'
 import Results from './analysisResults'
@@ -59,10 +58,7 @@ const processOptions: ProcessOptions = {
   min_sim: 0.001,
 }
 function updateOptions<T>(state: T, action: {key: keyof T; value: boolean | string | number}) {
-  const newState = {...state}
-  const original = state[action.key]
-  newState[action.key] = action.value as typeof original
-  return newState
+  return {...state, [action.key]: action.value}
 }
 export default function AnalyzeMenu() {
   const dict = useContext(BuildContext)
@@ -200,7 +196,7 @@ export default function AnalyzeMenu() {
                   type="number"
                   size="small"
                   label="Similarity Threshold"
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setProcOpts({key: 'min_sim', value: e.target.value})}
+                  onChange={e => setProcOpts({key: 'min_sim', value: e.target.value})}
                 ></TextField>
               </Tooltip>
             </Stack>
@@ -238,89 +234,61 @@ export default function AnalyzeMenu() {
                   type="number"
                   size="small"
                   label="Label Threshold"
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setPlotOpts({key: 'label_threshold', value: e.target.value})
-                  }
+                  onChange={e => setPlotOpts({key: 'label_threshold', value: e.target.value})}
                 ></TextField>
               </Tooltip>
-              {/* <FormControl fullWidth>
-                      <InputLabel id="plot_type_select">Type</InputLabel>
-                      <Select
-                        labelId="plot_type_select"
-                        label="Type"
-                        size="small"
-                        value={plotOpts.type || 'graph'}
-                        onChange={(e: SelectChangeEvent) => {
-                          setPlotOpts({key: 'type', value: e.target.value})
-                        }}
-                      >
-                        <MenuItem value="graph">Graph</MenuItem>
-                        <MenuItem value="distribution">Distribution</MenuItem>
-                      </Select>
-                    </FormControl> */}
-              {plotOpts.type === 'graph' ? (
+              <FormControl fullWidth>
+                <InputLabel id="graph_layout_select">Layout</InputLabel>
+                <Select
+                  labelId="graph_layout_select"
+                  label="Layout"
+                  size="small"
+                  value={plotOpts.layout || 'force'}
+                  onChange={e => {
+                    setPlotOpts({key: 'layout', value: e.target.value})
+                  }}
+                >
+                  <ListSubheader>Canvas</ListSubheader>
+                  <MenuItem value="none">Random</MenuItem>
+                  <MenuItem value="circular">Circular</MenuItem>
+                  <MenuItem value="force">Force</MenuItem>
+                  <ListSubheader>WebGL</ListSubheader>
+                  <MenuItem value="forceAtlas2">ForceAtlas2</MenuItem>
+                </Select>
+              </FormControl>
+              {plotOpts.layout === 'force' && (
                 <>
-                  <FormControl fullWidth>
-                    <InputLabel id="graph_layout_select">Layout</InputLabel>
-                    <Select
-                      labelId="graph_layout_select"
-                      label="Layout"
+                  <Tooltip title="Repulsion factor between nodes." placement="right">
+                    <TextField
+                      value={plotOpts.repulsion}
+                      type="number"
                       size="small"
-                      value={plotOpts.layout || 'force'}
-                      onChange={(e: SelectChangeEvent) => {
-                        setPlotOpts({key: 'layout', value: e.target.value})
+                      label="Repulsion"
+                      onChange={e => setPlotOpts({key: 'repulsion', value: e.target.value})}
+                    ></TextField>
+                  </Tooltip>
+                  <Tooltip title="Nodes' strength of attraction to the center." placement="right">
+                    <TextField
+                      value={plotOpts.gravity}
+                      type="number"
+                      size="small"
+                      label="Gravity"
+                      onChange={e => {
+                        console.log(e)
+                        setPlotOpts({key: 'gravity', value: e.target.value})
                       }}
-                    >
-                      <ListSubheader>Canvas</ListSubheader>
-                      <MenuItem value="none">Random</MenuItem>
-                      <MenuItem value="circular">Circular</MenuItem>
-                      <MenuItem value="force">Force</MenuItem>
-                      <ListSubheader>WebGL</ListSubheader>
-                      <MenuItem value="forceAtlas2">ForceAtlas2</MenuItem>
-                    </Select>
-                  </FormControl>
-                  {plotOpts.layout === 'force' ? (
-                    <>
-                      <Tooltip title="Repulsion factor between nodes." placement="right">
-                        <TextField
-                          value={plotOpts.repulsion}
-                          type="number"
-                          size="small"
-                          label="Repulsion"
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setPlotOpts({key: 'repulsion', value: e.target.value})
-                          }
-                        ></TextField>
-                      </Tooltip>
-                      <Tooltip title="Nodes' strength of attraction to the center." placement="right">
-                        <TextField
-                          value={plotOpts.gravity}
-                          type="number"
-                          size="small"
-                          label="Gravity"
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setPlotOpts({key: 'gravity', value: e.target.value})
-                          }
-                        ></TextField>
-                      </Tooltip>
-                      <Tooltip title="Base distance between nodes." placement="right">
-                        <TextField
-                          value={plotOpts.edge_length}
-                          type="number"
-                          size="small"
-                          label="Edge Length"
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setPlotOpts({key: 'edge_length', value: e.target.value})
-                          }
-                        ></TextField>
-                      </Tooltip>
-                    </>
-                  ) : (
-                    <></>
-                  )}
+                    ></TextField>
+                  </Tooltip>
+                  <Tooltip title="Base distance between nodes." placement="right">
+                    <TextField
+                      value={plotOpts.edge_length}
+                      type="number"
+                      size="small"
+                      label="Edge Length"
+                      onChange={e => setPlotOpts({key: 'edge_length', value: e.target.value})}
+                    ></TextField>
+                  </Tooltip>
                 </>
-              ) : (
-                <></>
               )}
             </Stack>
           </Box>
