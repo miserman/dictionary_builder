@@ -149,7 +149,7 @@ const collapsedPrefixes = ';(?:' + commonPrefixes.join('|') + ')?-?'
 const collapsedSuffixes = '-?(?:' + commonSuffixes.join('|') + ')?(?:' + addableSuffixes.join('|') + ')?;'
 
 const shortPrefixes = ';(?:de|un|re)?-?'
-const shortSuffixes = "-?(?:'|d|ed|er|en|ing|s|y)?;"
+const shortSuffixes = "-?(?:'|d|ed|er|en|ing|n|r|s|y)?;"
 
 const terminalVowels = /[aeiouy]$/
 export function extractExpanded(term: string, collapsed: string) {
@@ -158,7 +158,7 @@ export function extractExpanded(term: string, collapsed: string) {
   const termLength = term.length
   let termPattern: RegExp | undefined
   try {
-    if (termLength > 3) {
+    if (termLength > 4) {
       termPattern = new RegExp(
         collapsedPrefixes + term + (terminalVowels.test(term) ? '*' : '+') + collapsedSuffixes,
         'g'

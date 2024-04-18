@@ -35,10 +35,24 @@ function retrieveSynsets(indices: number | string | (number | string)[], synsetI
     ? [synsetInfo[indices - 1]]
     : []
 }
+const synsetRelationships = {
+  attribute: true,
+  domain_topic: true,
+  similar: true,
+  also: true,
+  domain_region: true,
+  exemplifies: true,
+  mero_part: true,
+  hypernym: true,
+  mero_member: true,
+  mero_substance: true,
+  entails: true,
+  causes: true,
+}
 export function unpackSynsetMembers(synset: Synset, terms: readonly string[], synsetInfo: readonly Synset[]) {
   const members: Set<string> = new Set(retrieveTerms(synset.members, terms))
   Object.keys(synset).forEach(k => {
-    if (k !== 'members' && k !== 'index') {
+    if (k in synsetRelationships) {
       retrieveSynsets(synset[k as keyof Synset], synsetInfo).forEach(s => {
         retrieveTerms(s.members, terms).forEach(sm => members.add(sm))
       })

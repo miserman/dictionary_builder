@@ -28,7 +28,7 @@ export type Synset = {
   domain_region: number | number[]
   exemplifies: number | number[]
   mero_part: number | number[]
-  instance_hypernym: number | number[]
+  hypernym: number | number[]
   mero_member: number | number[]
   mero_substance: number | number[]
   entails: number | number[]
