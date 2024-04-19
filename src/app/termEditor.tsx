@@ -18,6 +18,7 @@ import {BuildContext, BuildEditContext} from './building'
 import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
 import type {DictEntry} from './storage'
+import type {GridCell, GridRow} from './table'
 
 export const EditorTerm = createContext('')
 export const EditorTermSetter = createContext((term: string, fromGraph?: boolean) => {})
@@ -28,7 +29,7 @@ export function TermEditor({
   width,
 }: {
   categories: string[]
-  editor: (value: string | number, params: GridCellParams) => void
+  editor: (value: string | number, row: GridCell) => void
   width: number
 }) {
   const data = useContext(ResourceContext)
@@ -49,10 +50,10 @@ export function TermEditor({
         width: 65,
         editable: true,
         hideable: false,
-        valueParser: (value: any, params?: GridCellParams) => {
+        valueParser: (value: any, row: GridRow, params) => {
           const parsed = +value || ''
           if (params) {
-            editor(parsed, params)
+            editor(parsed, {...row, field: params.field})
           }
           return parsed
         },
@@ -126,7 +127,7 @@ export function TermEditor({
                   if (e.key === 'Delete' || e.key === 'Backspace') {
                     const stringValue = '' + params.value
                     const newValue = params.cellMode === 'view' ? 0 : +stringValue.substring(0, stringValue.length - 1)
-                    editor(newValue, params)
+                    editor(newValue, {...params.row, field: params.field})
                     if (!newValue) e.preventDefault()
                   }
                 }}

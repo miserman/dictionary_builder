@@ -324,7 +324,7 @@ export function EditSenseMap() {
               pageSizeOptions={[100]}
               density="compact"
               editMode="row"
-              slots={{toolbar: GridToolbarQuickFilter}}
+              slots={{toolbar: () => <GridToolbarQuickFilter />}}
             />
             <AddSenseMapPair coarseLabels={coarseLabels} useNLTK={useNLTK} />
           </Stack>

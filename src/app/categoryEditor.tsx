@@ -20,6 +20,7 @@ import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
 import {CategoryWeights} from './categoryWeights'
 import type {DictEntry} from './storage'
+import type {GridCell, GridRow} from './table'
 
 export function CategoryEditor({category, onClose}: {category: string; onClose: () => void}) {
   const [showEmptyTerms, setShowEmptyTerms] = useState(false)
@@ -37,19 +38,18 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
   }, [lastViewed, setNewName])
   const editDictionary = useContext(BuildEditContext)
   const editFromEvent = useCallback(
-    (value: string | number, params: GridCellParams) => {
-      const {field, row} = params
-      const {processed, dictEntry} = row
+    (value: string | number, row: GridCell) => {
+      const {field, processed, dictEntry} = row
       if (field) {
         const cats = {...dictEntry.categories}
         if (category in cats && !value) {
           delete cats[category]
         } else if (value) {
-          cats[category] = value
+          cats[category] = +value
         }
         editDictionary({
           type: 'update',
-          term_id: params.id as string,
+          term_id: row.id as string,
           term: processed.term,
           term_type: processed.term_type,
           categories: cats,
@@ -98,10 +98,10 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
       width: 95,
       editable: true,
       hideable: false,
-      valueParser: (value: any, params?: GridCellParams) => {
+      valueParser: (value: any, row: GridRow, params) => {
         const parsed = +value || ''
         if (params) {
-          editFromEvent(parsed, params)
+          editFromEvent(parsed, {...row, field: params.field})
         }
         return parsed
       },
@@ -167,10 +167,10 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
               disableColumnMenu
               pageSizeOptions={[100]}
               density="compact"
-              slots={{toolbar: GridToolbarQuickFilter}}
+              slots={{toolbar: () => <GridToolbarQuickFilter />}}
               onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
                 if ((e.key === 'Delete' || e.key === 'Backspace') && params.cellMode === 'view') {
-                  editFromEvent(0, params)
+                  editFromEvent(0, {...params.row, field: params.field})
                 }
               }}
             />

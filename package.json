@@ -11,23 +11,23 @@
     "test": "cypress run"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.15.6",
-    "@mui/material": "^5.15.6",
-    "@mui/x-data-grid": "^6.19.2",
-    "echarts": "^5.5.0",
-    "echarts-gl": "^2.0.9",
-    "next": "^14.0.4",
-    "react": "^18.2.0"
+    "@emotion/react": "latest",
+    "@emotion/styled": "latest",
+    "@mui/icons-material": "latest",
+    "@mui/material": "latest",
+    "@mui/x-data-grid": "latest",
+    "echarts": "latest",
+    "echarts-gl": "latest",
+    "next": "latest",
+    "react": "latest"
   },
   "devDependencies": {
-    "@this-dot/cypress-indexeddb": "^2.0.1",
-    "@types/echarts": "^4.9.22",
-    "@types/node": "^20.11.10",
-    "@types/react": "^18.2.48",
-    "cypress": "^13.7.3",
-    "eslint": "^8.56.0",
-    "typescript": "^5"
+    "@this-dot/cypress-indexeddb": "latest",
+    "@types/echarts": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "cypress": "latest",
+    "eslint": "latest",
+    "typescript": "latest"
   }
 }

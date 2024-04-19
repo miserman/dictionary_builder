@@ -4,10 +4,10 @@ import {RemoveCircleOutline} from '@mui/icons-material'
 import {TermLink, TermSenseEdit} from './term'
 import {ResourceContext} from './resources'
 import {AllCategories, BuildContext, BuildEditContext} from './building'
-import type {GridColDef, GridRenderEditCellParams, GridCellParams} from '@mui/x-data-grid'
+import type {GridColDef, GridRenderEditCellParams} from '@mui/x-data-grid'
 import {makeRows} from './processTerms'
 import {CategoryEditor} from './categoryEditor'
-import {type GridRow, Table} from './table'
+import {type GridRow, Table, type GridCell} from './table'
 
 export const timers: {dictionary: number | NodeJS.Timeout; comparisons: number | NodeJS.Timeout} = {
   dictionary: 0,
@@ -19,7 +19,7 @@ function byTime(a: GridRow, b: GridRow) {
 export default function AddedTerms({
   editFromEvent,
 }: {
-  editFromEvent: (value: number | string, params: GridCellParams) => void
+  editFromEvent: (value: number | string, params: GridCell) => void
 }) {
   const Data = useContext(ResourceContext)
   const Dict = useContext(BuildContext)
@@ -105,10 +105,10 @@ export default function AddedTerms({
         field: 'category_' + cat,
         headerName: cat,
         editable: true,
-        valueParser: (value: any, params?: GridCellParams) => {
+        valueParser: (value: any, row: GridRow, params) => {
           const parsed = +value || ''
           if (params) {
-            editFromEvent(parsed, params)
+            editFromEvent(parsed, {...row, field: params.field})
           }
           return parsed
         },

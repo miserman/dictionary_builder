@@ -23,6 +23,7 @@ import {globToRegex, special, wildcards} from './lib/utils'
 import {extractMatches, getProcessedTerm} from './processTerms'
 import {getIntersects} from './analysisResults'
 import type {FixedTerm, NetworkLookup} from './term'
+import type {DictEntry} from './storage'
 
 export function CategoryWeights({
   name,
@@ -297,7 +298,7 @@ export function CategoryWeights({
                   })
                   if (scale)
                     Object.keys(reWeighted).forEach(
-                      term => (reWeighted[term] = (reWeighted[term] - range[0]) / (range[1] - range[0]))
+                      term => (reWeighted[term] = Math.max((reWeighted[term] - range[0]) / (range[1] - range[0]), 1e-5))
                     )
                 } else {
                   if (toAllTerms) {
@@ -311,7 +312,14 @@ export function CategoryWeights({
                 const subset = toAllTerms ? dict : current
                 const appliedWeights: NumberObject = {}
                 Object.keys(subset).forEach(id => {
-                  if (id in reWeighted) appliedWeights[id] = reWeighted[id]
+                  if (id in reWeighted) {
+                    appliedWeights[id] = reWeighted[id]
+                  } else if (toAllTerms) {
+                    const {term} = subset[id] as DictEntry
+                    if (term && term in reWeighted) {
+                      appliedWeights[id] = reWeighted[term]
+                    }
+                  }
                 })
                 edit({type: 'reweight_category', name, weights: appliedWeights})
                 toggleMenu()

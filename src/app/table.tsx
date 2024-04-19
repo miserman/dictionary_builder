@@ -1,5 +1,5 @@
 import {IconButton, ListItemIcon, ListItemText, MenuItem, Stack} from '@mui/material'
-import {useContext, type KeyboardEvent, createContext, type MutableRefObject, type MouseEvent} from 'react'
+import {useContext, type KeyboardEvent, createContext, type MutableRefObject, type MouseEvent, useMemo} from 'react'
 import {Edit, FirstPage, ChevronLeft, ChevronRight, LastPage} from '@mui/icons-material'
 import type {FixedTerm, FuzzyTerm} from './term'
 import {
@@ -9,6 +9,8 @@ import {
   GridToolbarQuickFilter,
   GridColumnMenu,
   useGridApiRef,
+  type GridColumnGroupingModel,
+  type GridColumnMenuProps,
 } from '@mui/x-data-grid'
 import type {DictEntry} from './storage'
 import {EditorTermSetter} from './termEditor'
@@ -34,6 +36,7 @@ export type GridRow = {
       related: number
     }
 )
+export type GridCell = GridRow & {field: string; term_id?: string}
 
 const tableAPI: {ref: MutableRefObject<GridApiCommunity> | undefined} = {ref: undefined}
 export function showTableTerm(term: string) {
@@ -90,25 +93,58 @@ export function Table({
   columns: GridColDef[]
   isCategory: (name: string) => boolean
   setEditCategory: (name: string) => void
-  editFromEvent: (index: number, params: GridCellParams) => void
+  editFromEvent: (index: number, row: GridCell) => void
 }) {
   const setEditorTerm = useContext(EditorTermSetter)
   const api = useGridApiRef()
   tableAPI.ref = api
+  const columnGroups: GridColumnGroupingModel = useMemo(() => {
+    const categoryGroup: {field: string}[] = []
+    columns.forEach(({field}) => {
+      if (field.substring(0, 9) === 'category_') {
+        categoryGroup.push({field})
+      }
+    })
+    return [
+      {
+        groupId: 'term',
+        headerName: 'Entry',
+        description: 'Term definition.',
+        headerClassName: 'column-group',
+        children: [{field: 'remove'}, {field: 'term'}, {field: 'sense'}],
+      },
+      {
+        groupId: 'descriptives',
+        headerName: 'Statistics',
+        description: 'Term descriptive statistics.',
+        headerClassName: 'column-group',
+        children: [{field: 'frequency'}, {field: 'matches'}, {field: 'senses'}, {field: 'related'}, {field: 'ncats'}],
+      },
+      {
+        groupId: 'categories',
+        headerName: 'Categories',
+        description: 'Added dictionary categories.',
+        headerClassName: 'column-group',
+        children: categoryGroup,
+      },
+    ]
+  }, [columns])
   return (
     <DataGrid
       apiRef={api}
       className="bottom-search"
       rows={rows}
       columns={columns}
+      columnGroupingModel={columnGroups}
       showCellVerticalBorder
       disableDensitySelector
       pageSizeOptions={[100]}
       density="compact"
+      sx={{'& .column-group': {backgroundColor: '#1f1f1f', maxHeight: '2em'}}}
       slots={{
-        toolbar: GridToolbarQuickFilter,
-        columnMenu: props => {
-          const name = props.colDef.headerName
+        toolbar: () => <GridToolbarQuickFilter />,
+        columnMenu: (props: GridColumnMenuProps) => {
+          const name = props.colDef.headerName || ''
           return isCategory(name) ? (
             <GridColumnMenu
               {...props}
@@ -146,7 +182,7 @@ export function Table({
       }}
       onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
-          editFromEvent(0, params)
+          editFromEvent(0, {...params.row, field: params.field})
         }
       }}
       onRowClick={({row}: {row: GridRow}) => {

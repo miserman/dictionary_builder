@@ -6,9 +6,9 @@ import {InfoDrawer, InfoDrawerContext} from './infoDrawer'
 import AddedTerms from './addedTerms'
 import {EditorTerm, TermEditor} from './termEditor'
 import {Nav} from './nav'
-import type {GridCellParams} from '@mui/x-data-grid'
 import {PasswordPrompt} from './passwordPrompt'
 import AnalyzeMenu from './analysisMenu'
+import type {GridCell} from './table'
 
 const categoryPrefix = /^category_/
 export function Content() {
@@ -18,9 +18,8 @@ export function Content() {
   const {terms} = useContext(ResourceContext)
   const editDictionary = useContext(BuildEditContext)
   const editFromEvent = useCallback(
-    (value: string | number, params: GridCellParams) => {
-      const {field, row} = params
-      const {processed, dictEntry} = row
+    (value: string | number, row: GridCell) => {
+      const {field, processed, dictEntry} = row
       const fromEditor = field === 'from_term_editor'
       if (field && (fromEditor || field.startsWith('category_'))) {
         const cats = {...dictEntry.categories}
@@ -28,7 +27,7 @@ export function Content() {
         if (cat in cats && !value) {
           delete cats[cat]
         } else if (value) {
-          cats[cat] = value
+          cats[cat] = +value
         }
         editDictionary({
           type: 'update',

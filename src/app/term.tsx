@@ -399,7 +399,7 @@ function TermFuzzy({processed}: {processed: FuzzyTerm}) {
         count={nMatches}
         rowsPerPage={perPage}
         page={page}
-        onPageChange={(e: unknown, page: number) => {
+        onPageChange={(_, page: number) => {
           setPage(page)
         }}
         onRowsPerPageChange={(e: ChangeEvent<HTMLInputElement>) => {
