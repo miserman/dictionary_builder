@@ -67,9 +67,7 @@ export function CategoryWeights({
   }
   return (
     <>
-      <Button onClick={toggleMenu} fullWidth>
-        Fill Weights
-      </Button>
+      <Button onClick={toggleMenu}>Fill Weights</Button>
       {menuOpen && (
         <Dialog open={menuOpen} onClose={toggleMenu}>
           <DialogTitle>Category Weight Filler</DialogTitle>
@@ -294,12 +292,14 @@ export function CategoryWeights({
                       if (range[0] > totalSim) range[0] = totalSim
                       if (range[1] < totalSim) range[1] = totalSim
                     }
-                    reWeighted[term] = totalSim
+                    if (totalSim) reWeighted[term] = totalSim
                   })
-                  if (scale)
-                    Object.keys(reWeighted).forEach(
-                      term => (reWeighted[term] = Math.max((reWeighted[term] - range[0]) / (range[1] - range[0]), 1e-5))
-                    )
+                  if (scale) {
+                    const top = range[1] - range[0]
+                    Object.keys(reWeighted).forEach(term => {
+                      reWeighted[term] = Math.max((reWeighted[term] - range[0]) / top, 0.0001)
+                    })
+                  }
                 } else {
                   if (toAllTerms) {
                     Object.keys(dict).forEach(term => (reWeighted[term] = value))

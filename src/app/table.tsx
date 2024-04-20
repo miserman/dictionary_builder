@@ -15,6 +15,7 @@ import {
 import type {DictEntry} from './storage'
 import {EditorTermSetter} from './termEditor'
 import type {GridApiCommunity} from '@mui/x-data-grid/internals'
+import {CategoryAdder} from './categoryAdder'
 
 export const TableAPIContext = createContext<MutableRefObject<GridApiCommunity> | null>(null)
 
@@ -118,13 +119,21 @@ export function Table({
         headerName: 'Statistics',
         description: 'Term descriptive statistics.',
         headerClassName: 'column-group',
+        renderHeaderGroup: () => {
+          return (
+            <div>
+              <span>Statistics</span>
+              <CategoryAdder />
+            </div>
+          )
+        },
         children: [{field: 'frequency'}, {field: 'matches'}, {field: 'senses'}, {field: 'related'}, {field: 'ncats'}],
       },
       {
         groupId: 'categories',
         headerName: 'Categories',
         description: 'Added dictionary categories.',
-        headerClassName: 'column-group',
+        headerClassName: 'column-group categories-column',
         children: categoryGroup,
       },
     ]
@@ -140,7 +149,11 @@ export function Table({
       disableDensitySelector
       pageSizeOptions={[100]}
       density="compact"
-      sx={{'& .column-group': {backgroundColor: '#1f1f1f', maxHeight: '2em'}}}
+      sx={{
+        '& .MuiDataGrid-columnHeaderTitleContainer': {overflow: 'visible'},
+        '& .column-group': {backgroundColor: '#1f1f1f', maxHeight: '2em'},
+        '& .categories-column .MuiDataGrid-columnHeaderTitleContainerContent': {pl: 2.3},
+      }}
       slots={{
         toolbar: () => <GridToolbarQuickFilter />,
         columnMenu: (props: GridColumnMenuProps) => {

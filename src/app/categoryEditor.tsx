@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import {DataGrid, type GridCellParams, type GridColDef, GridToolbarQuickFilter} from '@mui/x-data-grid'
 import {type ChangeEvent, type KeyboardEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
-import {AllCategories, BuildContext, BuildEditContext, type NumberObject} from './building'
+import {AllCategories, BuildContext, BuildEditContext, CategoryEditContext, type NumberObject} from './building'
 import type {FixedTerm, FuzzyTerm} from './term'
 import {getProcessedTerm} from './processTerms'
 import {ResourceContext} from './resources'
@@ -28,6 +28,7 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
   const categories = useContext(AllCategories)
   const data = useContext(ResourceContext)
   const dict = useContext(BuildContext)
+  const editCategories = useContext(CategoryEditContext)
   const [newName, setNewName] = useState(category)
   const [lastViewed, setLastViewed] = useState(category)
   useEffect(() => {
@@ -132,7 +133,7 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
               onChange={(e: ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
               size="small"
             />
-            {newName !== category ? (
+            {newName !== category && (
               <Button
                 variant="contained"
                 onClick={() => {
@@ -141,8 +142,6 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
               >
                 Rename
               </Button>
-            ) : (
-              <></>
             )}
           </Stack>
           <Stack direction="column" spacing={1} sx={{mt: 2, height: '100%'}}>
@@ -178,7 +177,20 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <CategoryWeights name={category} current={catWeights} edit={editDictionary} />
+        <Stack direction="row" sx={{justifyContent: 'space-between', width: '100%'}}>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => {
+              editDictionary({type: 'remove_category', name: category})
+              editCategories({type: 'remove', cat: category})
+              onClose()
+            }}
+          >
+            Delete
+          </Button>
+          <CategoryWeights name={category} current={catWeights} edit={editDictionary} />
+        </Stack>
       </DialogActions>
     </Dialog>
   )

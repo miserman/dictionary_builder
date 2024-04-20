@@ -21,7 +21,7 @@ export function Content() {
     (value: string | number, row: GridCell) => {
       const {field, processed, dictEntry} = row
       const fromEditor = field === 'from_term_editor'
-      if (field && (fromEditor || field.startsWith('category_'))) {
+      if (dictEntry && (fromEditor || field.startsWith('category_'))) {
         const cats = {...dictEntry.categories}
         const cat = fromEditor ? row.id : field.replace(categoryPrefix, '')
         if (cat in cats && !value) {
