@@ -275,15 +275,17 @@ export function EditSenseMap() {
       Object.keys(senseMap).forEach((fine, index) => {
         const coarses = senseMap[fine]
         const info = synsetInfo[SenseLookup[fine]]
-        coarses.forEach(coarse => {
-          out.push({
-            id: fine + '||' + coarse + '||' + index,
-            fine: useNLTK ? info.nltk_id : fine,
-            definition: info.definition,
-            coarse,
-            info,
+        if (info) {
+          coarses.forEach(coarse => {
+            out.push({
+              id: fine + '||' + coarse + '||' + index,
+              fine: useNLTK ? info.nltk_id : fine,
+              definition: info.definition,
+              coarse,
+              info,
+            })
           })
-        })
+        }
       })
     }
     return out
