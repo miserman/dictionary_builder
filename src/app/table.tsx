@@ -155,7 +155,7 @@ export function Table({
         '& .categories-column .MuiDataGrid-columnHeaderTitleContainerContent': {pl: 2.3},
       }}
       slots={{
-        toolbar: () => <GridToolbarQuickFilter />,
+        toolbar: () => <GridToolbarQuickFilter sx={{width: '200px'}} />,
         columnMenu: (props: GridColumnMenuProps) => {
           const name = props.colDef.headerName || ''
           return isCategory(name) ? (

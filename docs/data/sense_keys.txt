@@ -1834,7 +1834,7 @@ central%3:00:01::
 amidship%5:00:00:central:01
 bicentric%5:00:00:central:01
 bifocal%5:00:00:central:01
-midway%5:00:00:central:01
+middle%5:00:01:central:01
 centred%5:00:01:central:01
 centrical%5:00:00:central:01
 focal%5:00:00:central:01
@@ -2002,7 +2002,7 @@ owned%3:00:00::
 closely-held%5:00:00:owned:00
 unowned%3:00:00::
 chaste%3:00:00::
-continent%5:00:00:chaste:00
+celibate%5:00:00:chaste:00
 virtuous%5:00:00:chaste:00
 unchaste%3:00:00::
 cyprian%5:00:00:unchaste:00
@@ -4486,7 +4486,7 @@ earless%3:00:00::
 early%3:00:00::
 primordial%5:00:00:early:00
 beforehand%5:00:00:early:00
-archean%5:00:00:early:00
+archaean%5:00:00:early:00
 archeozoic%5:00:00:early:00
 azoic%5:00:00:early:00
 earliest%5:00:00:early:00
@@ -4538,7 +4538,7 @@ eastside%5:00:00:east:00
 west%3:00:00::
 westward%5:00:00:west:00
 western%5:00:00:west:00
-western%5:00:01:west:00
+westerly%5:00:01:west:00
 westmost%5:00:00:west:00
 westside%5:00:00:west:00
 western%3:00:01::
@@ -6448,7 +6448,7 @@ windburnt%5:00:00:unhealthy:00
 dry%3:00:06::
 phlegmy%3:00:00::
 heavenly%3:00:00::
-ambrosian%5:00:00:heavenly:00
+ambrosial%5:00:00:heavenly:00
 supernal%5:00:00:heavenly:00
 godly%5:00:00:heavenly:00
 godlike%5:00:00:heavenly:00
@@ -6631,7 +6631,7 @@ last%5:00:00:high:02
 soaring%5:00:00:high:02
 low%3:00:02::
 devalued%5:00:00:low:02
-down%5:00:00:low:02
+depressed%5:00:00:low:02
 low-level%5:00:00:low:02
 rock-bottom%5:00:00:low:02
 high-pitched%3:00:00::
@@ -7083,7 +7083,7 @@ disciplinary%5:00:00:nonindulgent:00
 monkish%5:00:00:nonindulgent:00
 self-denying%5:00:00:nonindulgent:00
 self-restraining%5:00:00:nonindulgent:00
-spartan%5:00:00:nonindulgent:00
+severe%5:00:02:nonindulgent:00
 industrial%3:00:00::
 highly-developed%5:00:00:industrial:00
 industrialized%5:00:00:industrial:00
@@ -7979,7 +7979,7 @@ hardened%3:00:06::
 soft%3:00:06::
 loveable%3:00:00::
 lovely%5:00:00:lovable:00
-sweet%5:00:00:lovable:00
+seraphic%5:00:00:lovable:00
 cuddly%5:00:00:lovable:00
 hateful%3:00:00::
 odious%5:00:00:hateful:00
@@ -8404,7 +8404,7 @@ nonmetamorphic%3:00:00::
 ametabolic%5:00:00:nonmetamorphic:00
 moderate%3:00:00::
 medium%5:00:00:moderate:00
-conservative%5:00:00:moderate:00
+cautious%5:00:00:moderate:00
 reasonable%5:00:00:moderate:00
 indifferent%5:00:00:moderate:00
 limited%5:00:00:moderate:00
@@ -8751,8 +8751,8 @@ supranormal%5:00:00:paranormal:00
 north%3:00:00::
 northward%5:00:00:north:00
 north-central%5:00:00:north:00
-northern%5:00:01:north:00
-northern%5:00:02:north:00
+northerly%5:00:01:north:00
+northerly%5:00:02:north:00
 northmost%5:00:00:north:00
 northeastern%5:00:00:north:00
 northeasterly%5:00:02:north:00
@@ -8769,7 +8769,7 @@ southmost%5:00:00:south:00
 southeastern%5:00:00:south:00
 southeasterly%5:00:02:south:00
 southeastward%5:00:00:south:00
-southwestern%5:00:00:south:00
+southwesterly%5:00:01:south:00
 southwesterly%5:00:02:south:00
 southwestward%5:00:00:south:00
 northern%3:00:01::
@@ -9246,7 +9246,7 @@ unorthodox%3:00:00::
 recusant%5:00:00:unorthodox:00
 heterodox%5:00:00:unorthodox:00
 iconoclastic%5:00:00:unorthodox:00
-nonconformist%5:00:00:unorthodox:00
+nonconforming%5:00:00:unorthodox:00
 reformed%5:00:00:unorthodox:00
 outside%3:00:04::
 open-air%5:00:00:outdoor:00
@@ -9450,7 +9450,6 @@ nonparticulate%3:00:00::
 passable%3:00:00::
 navigable%5:00:00:passable:00
 negotiable%5:00:00:passable:00
-surmountable%5:00:00:passable:00
 traversable%5:00:00:passable:00
 unpassable%3:00:00::
 unsurmountable%5:00:00:impassable:00
@@ -9831,7 +9830,7 @@ yellow-marked%5:00:00:patterned:00
 yellow-spotted%5:00:00:patterned:00
 yellow-striped%5:00:00:patterned:00
 plain%3:00:01::
-stern%5:00:00:plain:01
+stark%5:00:00:plain:01
 simple%5:00:02:plain:01
 chaste%5:00:00:plain:01
 dry%5:00:01:plain:01
@@ -10186,7 +10185,7 @@ tributary%5:00:00:secondary:01
 utility%5:00:00:secondary:01
 vicarious%5:00:00:secondary:01
 basic%3:00:00::
-base%5:00:00:basic:00
+basal%5:00:00:basic:00
 primary%5:00:00:basic:00
 underlying%5:00:00:basic:00
 grassroots%5:00:00:basic:00
@@ -11128,7 +11127,7 @@ far_left%5:00:00:left:02
 leftish%5:00:00:left:02
 leftist%5:00:00:left:02
 liberal%5:00:00:left:02
-centre%3:00:01::
+center%3:00:00::
 middle-of-the-road%5:00:00:center:00
 right%3:00:00::
 far%5:00:00:right:00
@@ -11263,7 +11262,7 @@ rustproofed%5:00:00:rustless:00
 rust-resistant%5:00:00:rustless:00
 undersealed%5:00:00:rustless:00
 holy%3:00:00::
-blessed%5:00:01:holy:00
+beatified%5:00:00:holy:00
 blessed%5:00:02:holy:00
 sanctified%5:00:00:holy:00
 sacred%5:00:02:holy:00
@@ -11407,7 +11406,7 @@ failing%5:00:00:unsatisfactory:00
 off%5:00:00:unsatisfactory:00
 unacceptable%5:00:00:unsatisfactory:00
 scalable%3:00:00::
-climbable%5:00:00:scalable:00
+surmountable%5:00:01:scalable:00
 unscalable%3:00:00::
 scholarly%3:00:00::
 pedantic%5:00:00:scholarly:00
@@ -14445,6 +14444,7 @@ metrosexual%3:00:01::
 undecideable%5:00:01:impossible:00
 complicit%5:00:01:involved:00
 cumulus%3:00:01::
+sunny%5:00:01:light:06
 expressive%3:00:01::
 lower%3:00:01::
 oriental%5:00:01:eastern:01
@@ -17172,7 +17172,7 @@ nacreous%3:01:00::
 normative%3:01:00::
 north_african%3:01:00::
 ordinal%3:01:00::
-palatine%3:01:02::
+palatal%3:01:00::
 paleozoic%3:01:00::
 parabolical%3:01:00::
 pharyngeal%3:01:00::
@@ -17843,7 +17843,7 @@ postganglionic%3:01:00::
 postictal%3:01:00::
 postmillennial%3:01:00::
 postural%3:01:00::
-pretorian%3:01:00::
+pretorial%3:01:00::
 pre-raphaelite%3:01:00::
 prepositional%3:01:00::
 primiparous%3:01:00::
@@ -19505,7 +19505,7 @@ intensely%4:02:00::
 et_alibi%4:02:00::
 et_alii%4:02:00::
 cf.%4:02:00::
-ie%4:02:00::
+id_est%4:02:00::
 continuously%4:02:00::
 reflexly%4:02:00::
 spontaneously%4:02:00::
@@ -21006,8 +21006,8 @@ nutritionally%4:02:00::
 numerically%4:02:00::
 numbly%4:02:00::
 to_no_degree%4:02:00::
-northeast%4:02:00::
-northwest%4:02:00::
+north-east%4:02:00::
+north-west%4:02:00::
 north-northeast%4:02:00::
 north-northwest%4:02:00::
 objectively%4:02:00::
@@ -21383,8 +21383,8 @@ sorely%4:02:01::
 sorrowfully%4:02:01::
 all_together%4:02:00::
 sottishly%4:02:00::
-southeast%4:02:00::
-southwest%4:02:00::
+south-east%4:02:00::
+south-west%4:02:00::
 south-southeast%4:02:00::
 south-southwest%4:02:00::
 soullessly%4:02:00::
@@ -21718,7 +21718,6 @@ in_full%4:02:00::
 expansively%4:02:01::
 homogeneously%4:02:00::
 on_the_wing%4:02:00::
-only_when%4:02:00::
 tight%4:02:02::
 naturally%4:02:03::
 by_rights%4:02:00::
@@ -22147,7 +22146,7 @@ propitiation%1:04:01::
 reparation%1:04:00::
 release%1:04:01::
 jail_delivery%1:04:00::
-reformation%1:04:01::
+reclamation%1:04:00::
 salvage%1:04:00::
 salvage%1:04:01::
 salvation%1:04:02::
@@ -22346,7 +22345,7 @@ line-drive_single%1:04:00::
 line-drive_double%1:04:00::
 line-drive_triple%1:04:00::
 plunker%1:04:00::
-homer%1:04:00::
+home_run%1:04:00::
 solo_homer%1:04:00::
 single%1:04:00::
 two-baser%1:04:00::
@@ -23311,7 +23310,7 @@ yachting%1:04:00::
 bareboating%1:04:00::
 commuting%1:04:00::
 displacement%1:04:03::
-transportation%1:04:00::
+transport%1:04:01::
 transshipment%1:04:00::
 lift%1:04:04::
 berlin_airlift%1:04:00::
@@ -23676,7 +23675,7 @@ parcellation%1:04:00::
 cleavage%1:04:00::
 bisection%1:04:00::
 quartering%1:04:00::
-split%1:04:00::
+schism%1:04:00::
 cutting%1:04:01::
 dissection%1:04:01::
 scission%1:04:00::
@@ -24537,7 +24536,7 @@ card_trick%1:04:00::
 sleight_of_hand%1:04:00::
 liveliness%1:04:00::
 brouhaha%1:04:00::
-circus%1:04:01::
+carnival%1:04:02::
 disorganization%1:04:00::
 perturbation%1:04:00::
 dislocation%1:04:00::
@@ -24621,7 +24620,7 @@ get%1:04:00::
 backhand_drive%1:04:00::
 two-handed_backhand%1:04:00::
 ground_stroke%1:04:00::
-service%1:04:02::
+serve%1:04:00::
 ace%1:04:00::
 fault%1:04:01::
 net_ball%1:04:01::
@@ -25482,7 +25481,7 @@ centerfield%1:04:00::
 rightfield%1:04:00::
 steal%1:04:00::
 forward%1:04:00::
-centre%1:04:04::
+center%1:04:01::
 guard%1:04:00::
 back%1:04:00::
 lineman%1:04:00::
@@ -25492,13 +25491,13 @@ fullback%1:04:00::
 halfback%1:04:00::
 tailback%1:04:00::
 wingback%1:04:00::
-centre%1:04:05::
+center%1:04:02::
 guard%1:04:02::
 tackle%1:04:02::
 end%1:04:02::
 mid-off%1:04:00::
 mid-on%1:04:00::
-centre%1:04:06::
+center%1:04:03::
 schoolwork%1:04:00::
 classroom_project%1:04:00::
 classwork%1:04:00::
@@ -25973,8 +25972,8 @@ secondary_censorship%1:04:00::
 national_censorship%1:04:00::
 safeguard%1:04:00::
 security_measures%1:04:00::
-defense%1:04:01::
-defense%1:04:03::
+defence%1:04:01::
+defence%1:04:03::
 vaccination%1:04:00::
 vaccinating%1:04:00::
 ring_vaccination%1:04:00::
@@ -27435,7 +27434,7 @@ truck_farming%1:04:00::
 construction%1:04:01::
 jerry-building%1:04:00::
 slating%1:04:00::
-transportation%1:04:01::
+transport%1:04:00::
 air_transportation%1:04:00::
 navigation%1:04:02::
 trucking%1:04:00::
@@ -27653,7 +27652,7 @@ countercoup%1:04:00::
 restraint%1:04:00::
 leash%1:04:00::
 damper%1:04:00::
-curb%1:04:00::
+check%1:04:01::
 immobilizing%1:04:00::
 confinement%1:04:00::
 internment%1:04:00::
@@ -28495,6 +28494,7 @@ roll_out%1:04:01::
 social_distancing%1:04:01::
 four-card_monte%1:04:01::
 peck%1:04:01::
+waterskiing%1:04:01::
 peck%1:04:02::
 crowdfunding%1:04:01::
 dabbing%1:04:01::
@@ -29608,7 +29608,7 @@ kiwi%1:05:00::
 rheiformes%1:05:00::
 rheidae%1:05:00::
 genus_rhea%1:05:00::
-rhea%1:05:01::
+rhea_americana%1:05:00::
 pterocnemia%1:05:00::
 rhea%1:05:02::
 order_aepyorniformes%1:05:00::
@@ -30749,7 +30749,7 @@ suborder_nothosauria%1:05:00::
 genus_nothosaurus%1:05:00::
 nothosaur%1:05:00::
 suborder_serpentes%1:05:00::
-snake%1:05:00::
+serpent%1:05:00::
 family_colubridae%1:05:00::
 colubrid_snake%1:05:00::
 hoop_snake%1:05:00::
@@ -31075,7 +31075,7 @@ cockerel%1:05:00::
 capon%1:05:00::
 hen%1:05:01::
 cackler%1:05:01::
-sitter%1:05:00::
+setting_hen%1:05:00::
 mother_hen%1:05:00::
 layer%1:05:01::
 pullet%1:05:00::
@@ -33047,7 +33047,7 @@ fossa_cat%1:05:00::
 genus_fossa%1:05:00::
 fanaloka%1:05:00::
 genus_genetta%1:05:00::
-genet%1:05:00::
+genetta_genetta%1:05:00::
 hemigalus%1:05:00::
 hemigalus_hardwickii%1:05:00::
 herpestes%1:05:00::
@@ -34507,7 +34507,7 @@ percheron%1:05:00::
 farm_horse%1:05:00::
 shire_horse%1:05:00::
 poler%1:05:00::
-wheeler%1:05:00::
+wheel_horse%1:05:00::
 poster%1:05:00::
 coach_horse%1:05:00::
 pacer%1:05:01::
@@ -36884,7 +36884,7 @@ wheelbarrow%1:06:00::
 bar_soap%1:06:00::
 bascule%1:06:00::
 stand%1:06:00::
-base%1:06:02::
+bag%1:06:03::
 base%1:06:03::
 base_of_operations%1:06:00::
 base%1:06:05::
@@ -36991,7 +36991,7 @@ bb_gun%1:06:00::
 beachball%1:06:00::
 beach_house%1:06:00::
 beach_towel%1:06:00::
-wagon%1:06:01::
+waggon%1:06:01::
 beachwear%1:06:00::
 pharos%1:06:00::
 bead%1:06:00::
@@ -37649,7 +37649,7 @@ bunker%1:06:02::
 guided_bomb_unit-28%1:06:00::
 etna%1:06:00::
 bunting%1:06:00::
-burr%1:06:02::
+bur%1:06:00::
 burberry%1:06:00::
 burette%1:06:00::
 burglar_alarm%1:06:00::
@@ -38005,8 +38005,8 @@ cassette_tape%1:06:00::
 cassock%1:06:00::
 casting%1:06:01::
 plaster_cast%1:06:00::
-castor%1:06:01::
-castor%1:06:02::
+caster%1:06:00::
+caster%1:06:01::
 castile_soap%1:06:00::
 castle%1:06:00::
 rook%1:06:00::
@@ -38025,7 +38025,7 @@ stop%1:06:00::
 catchall%1:06:00::
 catcher's_mask%1:06:00::
 catchment%1:06:00::
-cat%1:06:01::
+caterpillar%1:06:00::
 gut%1:06:00::
 cathedra%1:06:00::
 cathedral%1:06:00::
@@ -38084,10 +38084,10 @@ sellotape%1:06:00::
 celtic_cross%1:06:00::
 empty_tomb%1:06:00::
 thurible%1:06:00::
-centre%1:06:00::
+center%1:06:00::
 centre_bit%1:06:00::
 sliding_keel%1:06:00::
-centre%1:06:12::
+centerfield%1:06:00::
 centrepiece%1:06:00::
 center_punch%1:06:00::
 centigrade_thermometer%1:06:00::
@@ -38939,7 +38939,7 @@ wrecking_bar%1:06:00::
 crown%1:06:00::
 diadem%1:06:00::
 crown%1:06:02::
-crown%1:06:03::
+crest%1:06:01::
 jacket_crown%1:06:00::
 crown_jewel%1:06:00::
 crown_jewels%1:06:00::
@@ -39953,7 +39953,7 @@ facing%1:06:01::
 veneer%1:06:00::
 fax%1:06:00::
 facsimile%1:06:01::
-mill%1:06:01::
+manufacturing_plant%1:06:00::
 factory_ship%1:06:00::
 factory_whistle%1:06:00::
 fag_end%1:06:00::
@@ -40189,7 +40189,7 @@ flagstone%1:06:00::
 treble_recorder%1:06:00::
 flagging%1:06:00::
 flagon%1:06:00::
-flagstaff%1:06:00::
+flagpole%1:06:00::
 flagship%1:06:00::
 flagship%1:06:01::
 flail%1:06:00::
@@ -40914,7 +40914,7 @@ trough%1:06:00::
 gutter%1:06:01::
 guy_wire%1:06:00::
 guy%1:06:01::
-gymnasium%1:06:00::
+gym%1:06:00::
 gymnastic_apparatus%1:06:00::
 tennis_shoe%1:06:00::
 gym_suit%1:06:00::
@@ -42229,7 +42229,7 @@ smoking_jacket%1:06:00::
 lounging_pyjama%1:06:00::
 loungewear%1:06:00::
 loupe%1:06:00::
-louvre%1:06:00::
+louver%1:06:00::
 louvered_window%1:06:00::
 louvre_museum%1:06:00::
 mevacor%1:06:00::
@@ -45576,7 +45576,7 @@ socle%1:06:00::
 soda_can%1:06:00::
 soda_fountain%1:06:00::
 soda_fountain%1:06:01::
-soddy%1:06:00::
+sod_house%1:06:00::
 sodium_salicylate%1:06:00::
 sodium_thiopental%1:06:00::
 sodium-vapour_lamp%1:06:00::
@@ -46693,7 +46693,7 @@ tinsel%1:06:01::
 tintack%1:06:00::
 tinware%1:06:00::
 tippet%1:06:00::
-tyre%1:06:00::
+tire%1:06:00::
 tire_chain%1:06:00::
 tire_tool%1:06:00::
 tissue_plasminogen_activator%1:06:00::
@@ -47084,7 +47084,7 @@ typewriter%1:06:00::
 typewriter_carriage%1:06:00::
 typewriter_keyboard%1:06:00::
 tyrocidine%1:06:00::
-tyrolean%1:06:00::
+tirolean%1:06:00::
 tyrosine_kinase_inhibitor%1:06:00::
 tyrothricin%1:06:00::
 ukulele%1:06:00::
@@ -47302,7 +47302,7 @@ vox_humana%1:06:00::
 waders%1:06:00::
 wading_pool%1:06:00::
 waffle_iron%1:06:00::
-wagon%1:06:00::
+waggon%1:06:00::
 wagon%1:06:04::
 wagon_tire%1:06:00::
 wagon_wheel%1:06:00::
@@ -48403,7 +48403,7 @@ strictness%1:07:01::
 puritanism%1:07:00::
 stiffness%1:07:03::
 good_nature%1:07:00::
-grace%1:07:03::
+goodwill%1:07:00::
 patience%1:07:00::
 easygoingness%1:07:00::
 risibility%1:07:00::
@@ -49265,7 +49265,7 @@ roughness%1:07:02::
 uncouthness%1:07:00::
 splashiness%1:07:00::
 tastelessness%1:07:01::
-tat%1:07:00::
+tackiness%1:07:00::
 tawdriness%1:07:00::
 understandability%1:07:00::
 readability%1:07:01::
@@ -49331,7 +49331,7 @@ ruthlessness%1:07:00::
 relentlessness%1:07:00::
 generousness%1:07:00::
 charitableness%1:07:00::
-bounty%1:07:01::
+bounteousness%1:07:00::
 bigheartedness%1:07:00::
 liberalness%1:07:00::
 openhandedness%1:07:00::
@@ -50816,7 +50816,7 @@ shortfall%1:07:00::
 oxygen_deficit%1:07:00::
 thinness%1:07:04::
 teemingness%1:07:00::
-bounty%1:07:02::
+bountifulness%1:07:00::
 plenty%1:07:00::
 richness%1:07:03::
 wealth%1:07:00::
@@ -53201,7 +53201,7 @@ epididymis%1:08:00::
 rete_testis%1:08:00::
 vasa_efferentia%1:08:00::
 vas_deferens%1:08:00::
-phallus%1:08:00::
+penis%1:08:00::
 tool%1:08:00::
 microphallus%1:08:00::
 prepuce%1:08:00::
@@ -54880,7 +54880,7 @@ magnet%1:09:00::
 badge%1:09:00::
 centrepiece%1:09:00::
 contour%1:09:00::
-excellency%1:09:00::
+excellence%1:09:00::
 external%1:09:00::
 peculiarity%1:09:00::
 calling_card%1:09:00::
@@ -57603,7 +57603,7 @@ epigraph%1:10:00::
 epitaph%1:10:00::
 epitaph%1:10:01::
 festschrift%1:10:00::
-ms%1:10:01::
+manuscript%1:10:00::
 autograph%1:10:00::
 manuscript%1:10:01::
 leaf-book%1:10:00::
@@ -57734,7 +57734,7 @@ paraphrasis%1:10:00::
 translation%1:10:01::
 sacred_writing%1:10:00::
 screed%1:10:00::
-scripture%1:10:01::
+sacred_scripture%1:10:00::
 canon%1:10:02::
 guru_granth_sahib%1:10:01::
 zend-avesta%1:10:00::
@@ -59010,7 +59010,7 @@ confidence%1:10:00::
 esoterica%1:10:00::
 qabalah%1:10:00::
 open_secret%1:10:00::
-word%1:10:05::
+watchword%1:10:00::
 trade_secret%1:10:00::
 propaganda%1:10:00::
 agitprop%1:10:00::
@@ -59291,7 +59291,7 @@ statement%1:10:00::
 statement%1:10:05::
 amendment%1:10:00::
 thing%1:10:00::
-truth%1:10:00::
+true_statement%1:10:00::
 gospel_truth%1:10:00::
 antinomy%1:10:00::
 paradox%1:10:00::
@@ -59711,7 +59711,7 @@ drumbeat%1:10:00::
 telling%1:10:03::
 tattoo%1:10:00::
 telegraphic_signal%1:10:00::
-dot%1:10:00::
+dit%1:10:00::
 dash%1:10:00::
 whistling%1:10:00::
 high_sign%1:10:00::
@@ -60033,10 +60033,10 @@ solmization%1:10:00::
 tonic_solfa%1:10:00::
 solfa_syllable%1:10:00::
 ut%1:10:00::
-re%1:10:00::
+ray%1:10:00::
 mi%1:10:00::
 fa%1:10:00::
-sol%1:10:00::
+soh%1:10:00::
 lah%1:10:00::
 ti%1:10:00::
 segno%1:10:00::
@@ -61260,7 +61260,7 @@ hillbilly_music%1:10:00::
 square-dance_music%1:10:00::
 zydeco%1:10:00::
 jazz%1:10:00::
-bop%1:10:00::
+bebop%1:10:00::
 boogie-woogie%1:10:00::
 cool_jazz%1:10:00::
 funk%1:10:00::
@@ -61565,7 +61565,7 @@ scatology%1:10:00::
 swearword%1:10:00::
 croaking%1:10:00::
 exclamation%1:10:00::
-dickens%1:10:00::
+deuce%1:10:00::
 interjection%1:10:00::
 expostulation%1:10:01::
 expletive%1:10:02::
@@ -62025,7 +62025,7 @@ notice%1:10:03::
 warning%1:10:02::
 pink_slip%1:10:00::
 revelation%1:10:01::
-revelation%1:10:02::
+revealing%1:10:00::
 display%1:10:02::
 histrionics%1:10:01::
 production%1:10:01::
@@ -62357,7 +62357,7 @@ milestone%1:10:01::
 variable%1:10:00::
 placeholder%1:10:00::
 unknown_quantity%1:10:00::
-pin%1:10:05::
+peg%1:10:04::
 spot%1:10:02::
 logotype%1:10:00::
 label%1:10:00::
@@ -62426,10 +62426,13 @@ zinger%1:10:00::
 das_kapital%1:10:00::
 erewhon%1:10:00::
 utopia%1:10:00::
+good_evening%1:10:01::
 candian_english_orthography%1:10:01::
 canadian_english%1:10:01::
+email_message%1:10:01::
 uk_english%1:10:01::
 python%1:10:01::
+email_address%1:10:01::
 australian_spelling%1:10:01::
 satire%1:10:01::
 new_zealand_spelling%1:10:01::
@@ -62909,16 +62912,16 @@ success%1:11:00::
 barnburner%1:11:00::
 godspeed%1:11:00::
 miscarriage%1:11:00::
-miss%1:11:00::
+misfire%1:11:01::
 issue%1:11:00::
 eruption%1:11:02::
-nativity%1:11:00::
+nascency%1:11:00::
 delivery%1:11:00::
 live_birth%1:11:00::
 happy_event%1:11:00::
 posthumous_birth%1:11:00::
 posthumous_birth%1:11:01::
-renascence%1:11:00::
+reincarnation%1:11:00::
 transmigration%1:11:00::
 cycle_of_rebirth%1:11:00::
 moksa%1:11:00::
@@ -62936,7 +62939,7 @@ theophany%1:11:00::
 word_of_god%1:11:00::
 origination%1:11:00::
 germination%1:11:00::
-genesis%1:11:00::
+generation%1:11:00::
 ground_floor%1:11:00::
 outgrowth%1:11:00::
 rise%1:11:00::
@@ -62960,7 +62963,7 @@ parameter%1:11:00::
 unknown_quantity%1:11:00::
 wild_card%1:11:00::
 producer%1:11:00::
-creation%1:11:00::
+conception%1:11:00::
 alpha%1:11:00::
 opening_night%1:11:00::
 start-off%1:11:00::
@@ -64524,7 +64527,7 @@ caramel%1:13:00::
 chocolate%1:13:00::
 cooking_chocolate%1:13:00::
 chocolate_candy%1:13:00::
-centre%1:13:00::
+center%1:13:00::
 chocolate_liquor%1:13:00::
 cocoa_butter%1:13:00::
 cocoa_powder%1:13:00::
@@ -65061,7 +65064,7 @@ walnut_oil%1:13:00::
 sausage%1:13:00::
 sausage_meat%1:13:00::
 blood_sausage%1:13:00::
-bologna%1:13:00::
+bologna_sausage%1:13:00::
 chipolata%1:13:00::
 chorizo%1:13:00::
 wienerwurst%1:13:00::
@@ -65114,7 +65117,7 @@ loaf_of_bread%1:13:00::
 heel%1:13:00::
 french_loaf%1:13:00::
 unleavened_bread%1:13:00::
-nan%1:13:00::
+naan%1:13:00::
 onion_bread%1:13:00::
 raisin_bread%1:13:00::
 quick_bread%1:13:00::
@@ -65307,7 +65310,7 @@ mad_apple%1:13:00::
 rhubarb%1:13:00::
 cruciferous_vegetable%1:13:00::
 mustard_greens%1:13:00::
-chou%1:13:01::
+cabbage%1:13:00::
 kale%1:13:00::
 collards%1:13:00::
 celery_cabbage%1:13:00::
@@ -66413,7 +66416,7 @@ sukiyaki%1:13:00::
 sashimi%1:13:00::
 sushi%1:13:00::
 swiss_steak%1:13:00::
-tamale%1:13:00::
+tamal%1:13:00::
 tamale_pie%1:13:00::
 tempura%1:13:00::
 teriyaki%1:13:00::
@@ -66485,7 +66488,7 @@ hydromel%1:13:00::
 oenomel%1:13:00::
 near_beer%1:13:00::
 ginger_beer%1:13:00::
-saki%1:13:00::
+sake%1:13:00::
 nipa%1:13:00::
 wine%1:13:00::
 vintage%1:13:00::
@@ -67557,7 +67560,7 @@ second_string%1:14:00::
 squad%1:14:02::
 powerhouse%1:14:00::
 offense%1:14:00::
-defense%1:14:01::
+defending_team%1:14:00::
 religion%1:14:00::
 christianity%1:14:02::
 church%1:14:00::
@@ -68006,7 +68009,7 @@ laurel_and_hardy%1:14:00::
 underclass%1:14:00::
 middle_class%1:14:00::
 booboisie%1:14:00::
-commons%1:14:00::
+commonalty%1:14:00::
 petty_bourgeoisie%1:14:00::
 peasantry%1:14:00::
 crowd%1:14:00::
@@ -68063,7 +68066,7 @@ task_force%1:14:00::
 army_unit%1:14:00::
 regular_army%1:14:00::
 naval_unit%1:14:00::
-navy%1:14:00::
+naval_forces%1:14:00::
 united_states_navy%1:14:00::
 coastguard%1:14:00::
 united_states_coast_guard%1:14:00::
@@ -68409,7 +68412,7 @@ gironde%1:14:00::
 green_party%1:14:00::
 greenback_party%1:14:00::
 kuomintang%1:14:00::
-labour_party%1:14:00::
+labor_party%1:14:00::
 australian_labor_party%1:14:00::
 labour_party%1:14:01::
 liberal_democrat_party%1:14:00::
@@ -68804,7 +68807,7 @@ rota%1:14:00::
 star_chamber%1:14:00::
 superior_court%1:14:00::
 united_states_supreme_court%1:14:00::
-supreme_court%1:14:01::
+state_supreme_court%1:14:00::
 traffic_court%1:14:00::
 trial_court%1:14:00::
 repertory%1:14:01::
@@ -69205,7 +69208,7 @@ bevy%1:14:01::
 firing_line%1:14:00::
 immigrant_class%1:14:00::
 left_wing%1:14:00::
-centre%1:14:07::
+center%1:14:00::
 right_wing%1:14:00::
 religious_right%1:14:00::
 hard_right%1:14:00::
@@ -69488,7 +69491,7 @@ host%1:14:01::
 pool%1:14:01::
 typing_pool%1:14:00::
 shipper%1:14:00::
-centre%1:14:08::
+center%1:14:01::
 diaspora%1:14:00::
 wing%1:14:01::
 head%1:14:00::
@@ -69750,7 +69753,7 @@ bourne%1:15:00::
 marchland%1:15:00::
 narco-state%1:15:00::
 property%1:15:00::
-centre%1:15:03::
+center%1:15:02::
 colony%1:15:02::
 nerve_centre%1:15:00::
 circumference%1:15:00::
@@ -69836,7 +69839,7 @@ coats_land%1:15:00::
 commune%1:15:00::
 zone%1:15:02::
 climatic_zone%1:15:00::
-commons%1:15:01::
+common_land%1:15:00::
 commonwealth%1:15:00::
 meeting%1:15:00::
 congressional_district%1:15:00::
@@ -70072,8 +70075,8 @@ shooting_preserve%1:15:00::
 school_district%1:15:00::
 shire%1:15:00::
 industrial_park%1:15:00::
-interior%1:15:00::
-interior%1:15:01::
+inside%1:15:00::
+inside%1:15:01::
 belly%1:15:00::
 midland%1:15:00::
 thick%1:15:00::
@@ -70361,7 +70364,7 @@ wold%1:15:00::
 safari_park%1:15:00::
 sanctum_sanctorum%1:15:00::
 sandlot%1:15:00::
-savannah%1:15:01::
+savanna%1:15:00::
 scene%1:15:00::
 light%1:15:00::
 shadow%1:15:00::
@@ -70538,7 +70541,7 @@ western_united_states%1:15:00::
 wild_west%1:15:00::
 wheatfield%1:15:00::
 whereabouts%1:15:00::
-wilderness%1:15:00::
+wild%1:15:00::
 winner's_circle%1:15:00::
 tape%1:15:00::
 wire%1:15:00::
@@ -73753,7 +73756,7 @@ main%1:17:00::
 mainland%1:17:00::
 makalu%1:17:00::
 mantle%1:17:00::
-maria%1:17:00::
+mare%1:17:00::
 mare_clausum%1:17:00::
 mare_liberum%1:17:00::
 mare_nostrum%1:17:00::
@@ -74088,7 +74091,7 @@ tear%1:17:00::
 riparian_forest%1:17:00::
 ripple_mark%1:17:00::
 river%1:17:00::
-riverside%1:17:00::
+riverbank%1:17:00::
 riverbed%1:17:00::
 river_boulder%1:17:00::
 streamlet%1:17:00::
@@ -76506,7 +76509,7 @@ bedesman%1:18:00::
 bean_counter%1:18:00::
 bear%1:18:00::
 beard%1:18:00::
-wolf%1:18:01::
+wildcat%1:18:00::
 beater%1:18:00::
 beatnik%1:18:00::
 cosmetician%1:18:01::
@@ -76537,7 +76540,7 @@ exotic_dancer%1:18:03::
 sweetie%1:18:01::
 belt_maker%1:18:00::
 bench_warmer%1:18:00::
-benedict%1:18:01::
+benedick%1:18:00::
 donee%1:18:00::
 berber%1:18:00::
 bereaved_person%1:18:00::
@@ -76710,7 +76713,7 @@ broadcaster%1:18:00::
 broadcast_journalist%1:18:00::
 broker-dealer%1:18:00::
 broth_of_a_man%1:18:00::
-brother%1:18:00::
+blood_brother%1:18:00::
 brother%1:18:01::
 brother%1:18:02::
 comrade%1:18:02::
@@ -76890,8 +76893,8 @@ censor%1:18:01::
 enumerator%1:18:00::
 centenarian%1:18:00::
 snapper%1:18:00::
-centre%1:18:10::
-centre%1:18:11::
+center%1:18:01::
+center%1:18:02::
 moderationist%1:18:00::
 centurion%1:18:00::
 certified_public_accountant%1:18:00::
@@ -76906,7 +76909,7 @@ chameleon%1:18:00::
 paladin%1:18:00::
 title-holder%1:18:00::
 chancellor%1:18:01::
-prime_minister%1:18:00::
+premier%1:18:01::
 premier%1:18:00::
 chancellor_of_the_exchequer%1:18:00::
 chandler%1:18:00::
@@ -77124,7 +77127,7 @@ councillor%1:18:00::
 councilwoman%1:18:00::
 commodore%1:18:00::
 communicant%1:18:00::
-communist%1:18:00::
+commie%1:18:00::
 communist%1:18:01::
 commuter%1:18:00::
 fellow%1:18:02::
@@ -77565,7 +77568,7 @@ ex-wife%1:18:00::
 divorce_lawyer%1:18:00::
 docent%1:18:00::
 physician%1:18:00::
-doctor%1:18:01::
+dr.%1:18:01::
 doctor_of_the_church%1:18:00::
 dodderer%1:18:00::
 slyboots%1:18:00::
@@ -78067,7 +78070,7 @@ foster-nurse%1:18:00::
 foster-parent%1:18:00::
 foster-sister%1:18:00::
 foster-son%1:18:00::
-founding_father%1:18:00::
+founder%1:18:00::
 founding_father%1:18:01::
 founder%1:18:01::
 foundling%1:18:00::
@@ -78100,7 +78103,7 @@ french_teacher%1:18:00::
 freshman%1:18:00::
 freudian%1:18:00::
 mendicant%1:18:01::
-monk%1:18:00::
+monastic%1:18:00::
 benedictine%1:18:00::
 friend%1:18:00::
 mountain_man%1:18:00::
@@ -78245,7 +78248,7 @@ godmother%1:18:00::
 godparent%1:18:00::
 godson%1:18:00::
 gofer%1:18:00::
-gopher%1:18:00::
+goffer%1:18:00::
 gog_and_magog%1:18:00::
 whizz-kid%1:18:00::
 goldbeater%1:18:00::
@@ -78641,7 +78644,7 @@ hyperope%1:18:00::
 hypertensive%1:18:00::
 mesmerizer%1:18:00::
 hypochondriac%1:18:00::
-pretender%1:18:01::
+phony%1:18:00::
 hypotensive%1:18:00::
 hysteric%1:18:00::
 iberian%1:18:00::
@@ -78656,7 +78659,7 @@ monozygous_twin%1:18:00::
 ideologue%1:18:00::
 retard%1:18:00::
 idiot_savant%1:18:00::
-loafer%1:18:00::
+layabout%1:18:00::
 matinee_idol%1:18:00::
 idolizer%1:18:00::
 idolatress%1:18:00::
@@ -78809,10 +78812,10 @@ joiner%1:18:00::
 joiner%1:18:01::
 jokester%1:18:00::
 turkey%1:18:00::
-jonah%1:18:01::
+jinx%1:18:00::
 journalist%1:18:00::
 judas%1:18:01::
-justice%1:18:00::
+jurist%1:18:01::
 judge_advocate%1:18:00::
 judge_advocate%1:18:01::
 judge_advocate_general%1:18:00::
@@ -78834,7 +78837,7 @@ juror%1:18:00::
 justice_of_the_peace%1:18:00::
 justiciary%1:18:00::
 kachina%1:18:01::
-kafir%1:18:00::
+kaffir%1:18:00::
 kalon_tripa%1:18:00::
 kamikaze%1:18:00::
 kaiser%1:18:00::
@@ -78945,7 +78948,7 @@ latinist%1:18:00::
 latitudinarian%1:18:00::
 jehovah's_witness%1:18:00::
 mormon%1:18:02::
-lauder%1:18:00::
+laudator%1:18:00::
 laugher%1:18:00::
 laureate%1:18:00::
 law_agent%1:18:00::
@@ -78973,7 +78976,7 @@ southpaw%1:18:00::
 legal_representative%1:18:00::
 official_emissary%1:18:00::
 legatee%1:18:00::
-legionnaire%1:18:00::
+legionary%1:18:00::
 legionnaire%1:18:01::
 legislator%1:18:00::
 loaner%1:18:00::
@@ -79234,11 +79237,11 @@ tar%1:18:00::
 sharpshooter%1:18:00::
 maroon%1:18:00::
 marquess%1:18:00::
-marquis%1:18:00::
+marquess%1:18:01::
 marrano%1:18:00::
 married%1:18:00::
-marshall%1:18:00::
-marshall%1:18:01::
+marshal%1:18:00::
+marshal%1:18:01::
 moralist%1:18:01::
 sufferer%1:18:01::
 martyr%1:18:01::
@@ -79752,7 +79755,7 @@ operator%1:18:03::
 ophthalmologist%1:18:00::
 opium_taker%1:18:00::
 self-seeker%1:18:00::
-opposition%1:18:01::
+opposite%1:18:00::
 oppressor%1:18:00::
 optician%1:18:00::
 optimist%1:18:00::
@@ -79928,7 +79931,7 @@ peacekeeper%1:18:01::
 peanut%1:18:00::
 pearler%1:18:00::
 provincial%1:18:00::
-tyke%1:18:02::
+tike%1:18:02::
 peasant%1:18:03::
 pedaller%1:18:00::
 scholastic%1:18:00::
@@ -80140,7 +80143,7 @@ popinjay%1:18:00::
 vulgarizer%1:18:01::
 pork_butcher%1:18:00::
 pornographer%1:18:00::
-porter%1:18:01::
+pullman_porter%1:18:00::
 porter%1:18:00::
 portrayer%1:18:00::
 portwatcher%1:18:00::
@@ -80319,7 +80322,7 @@ provost%1:18:00::
 provost_marshal%1:18:00::
 stalker%1:18:02::
 proxy%1:18:00::
-puritan%1:18:01::
+prude%1:18:00::
 trimmer%1:18:00::
 psalmist%1:18:00::
 psephologist%1:18:00::
@@ -80792,7 +80795,7 @@ screen_actor%1:18:00::
 screener%1:18:00::
 screenwriter%1:18:00::
 screwballer%1:18:00::
-scribe%1:18:00::
+scribbler%1:18:01::
 scrimshanker%1:18:00::
 scriptwriter%1:18:00::
 scrubber%1:18:00::
@@ -80907,7 +80910,7 @@ sexpot%1:18:00::
 sex_object%1:18:00::
 sex_offender%1:18:00::
 sex_symbol%1:18:00::
-sexton%1:18:00::
+sacristan%1:18:00::
 shadow%1:18:01::
 shah_of_iran%1:18:00::
 shaheed%1:18:00::
@@ -81019,7 +81022,7 @@ sirrah%1:18:00::
 sister%1:18:02::
 sister%1:18:01::
 beguine%1:18:00::
-sister%1:18:00::
+sis%1:18:00::
 stepsister%1:18:00::
 sissy%1:18:00::
 waverer%1:18:00::
@@ -81977,7 +81980,7 @@ voicer%1:18:00::
 voicer%1:18:01::
 volleyball_player%1:18:00::
 volunteer%1:18:00::
-volunteer%1:18:01::
+voluntary%1:18:00::
 voluptuary%1:18:00::
 vomiter%1:18:00::
 votary%1:18:02::
@@ -85844,7 +85847,7 @@ cloud%1:19:01::
 cold_wave%1:19:00::
 cold_weather%1:19:00::
 coriolis_force%1:19:00::
-frost%1:19:00::
+freeze%1:19:00::
 corona%1:19:02::
 st._elmo's_fire%1:19:00::
 cosmic_microwave_background_radiation%1:19:00::
@@ -88589,7 +88592,7 @@ mentzelia_livicaulis%1:20:00::
 mentzelia_lindleyi%1:20:00::
 achene%1:20:00::
 samara%1:20:00::
-burr%1:20:00::
+bur%1:20:00::
 family_campanulaceae%1:20:00::
 genus_campanula%1:20:00::
 campanula%1:20:00::
@@ -89045,7 +89048,7 @@ timothy%1:20:00::
 phragmites%1:20:00::
 phragmites_communis%1:20:00::
 poa%1:20:00::
-bluegrass%1:20:00::
+blue_grass%1:20:00::
 meadowgrass%1:20:00::
 poa_pratensis%1:20:00::
 wood_meadowgrass%1:20:00::
@@ -90321,7 +90324,7 @@ jackfruit_tree%1:20:00::
 marang_tree%1:20:00::
 genus_ficus%1:20:00::
 fig_tree%1:20:00::
-fig%1:20:00::
+ficus_carica%1:20:00::
 ficus_carica_sylvestris%1:20:00::
 wild_fig%1:20:02::
 indian_banyan%1:20:00::
@@ -90731,7 +90734,7 @@ mysore_thorn%1:20:00::
 pernambuco_wood%1:20:00::
 brazilwood%1:20:02::
 caesalpinia_ferrea%1:20:00::
-poinciana%1:20:02::
+poinciana_gilliesii%1:20:00::
 pride_of_barbados%1:20:00::
 genus_acrocarpus%1:20:00::
 shingle_tree%1:20:00::
@@ -93834,7 +93837,7 @@ drupelet%1:20:00::
 pome%1:20:00::
 seedpod%1:20:00::
 loment%1:20:00::
-pyxis%1:20:00::
+pyxidium%1:20:00::
 husk%1:20:00::
 cornhusk%1:20:00::
 hull%1:20:01::
@@ -95023,7 +95026,7 @@ earnest_money%1:21:00::
 recognizance%1:21:00::
 pledge%1:21:02::
 pawn%1:21:00::
-bond%1:21:03::
+bail_bond%1:21:00::
 security_deposit%1:21:00::
 brokerage_account%1:21:00::
 cash_account%1:21:00::
@@ -95339,7 +95342,7 @@ quittance%1:21:01::
 record%1:21:00::
 balance_sheet%1:21:00::
 expense_record%1:21:00::
-leger%1:21:00::
+ledger%1:21:00::
 cost_ledger%1:21:00::
 general_ledger%1:21:00::
 subsidiary_ledger%1:21:00::
@@ -96534,7 +96537,7 @@ hogshead%1:23:01::
 chaldron%1:23:00::
 cubic_millimetre%1:23:00::
 ml%1:23:00::
-cl%1:23:00::
+centilitre%1:23:00::
 dl%1:23:00::
 litre%1:23:00::
 dkl%1:23:00::
@@ -96616,7 +96619,7 @@ international_ampere%1:23:00::
 daraf%1:23:00::
 gamma%1:23:00::
 oersted%1:23:00::
-maxwell%1:23:00::
+mx%1:23:00::
 weber%1:23:00::
 microgauss%1:23:00::
 gauss%1:23:00::
@@ -96631,7 +96634,7 @@ luminous_intensity_unit%1:23:00::
 exposure%1:23:00::
 footcandle%1:23:00::
 lambert%1:23:00::
-lx%1:23:01::
+lux%1:23:00::
 phot%1:23:00::
 nit%1:23:00::
 ft-l%1:23:00::
@@ -96661,7 +96664,7 @@ volt-ampere%1:23:00::
 kilovolt-ampere%1:23:00::
 millicurie%1:23:00::
 curie%1:23:00::
-gray%1:23:00::
+gy%1:23:00::
 roentgen%1:23:00::
 rutherford%1:23:00::
 rem%1:23:00::
@@ -96733,14 +96736,14 @@ light_minute%1:23:00::
 light_second%1:23:00::
 astronomical_unit%1:23:00::
 secpar%1:23:00::
-fermi%1:23:00::
+femtometre%1:23:00::
 picometre%1:23:00::
 angstrom_unit%1:23:00::
-nm%1:23:00::
+nanometre%1:23:00::
 micron%1:23:00::
 mm%1:23:00::
-cm%1:23:00::
-dm%1:23:00::
+centimetre%1:23:00::
+decimetre%1:23:00::
 metre%1:23:00::
 dkm%1:23:00::
 hm%1:23:00::
@@ -96780,7 +96783,7 @@ ghanian_monetary_unit%1:23:00::
 cedi%1:23:00::
 pesewa%1:23:00::
 costa_rican_monetary_unit%1:23:00::
-colon%1:23:00::
+costa_rican_colon%1:23:00::
 el_salvadoran_monetary_unit%1:23:00::
 el_salvadoran_colon%1:23:00::
 brazilian_monetary_unit%1:23:00::
@@ -96896,10 +96899,10 @@ kip%1:23:00::
 at%1:23:00::
 czech_monetary_unit%1:23:00::
 koruna%1:23:00::
-heller%1:23:00::
+haler%1:23:00::
 slovakian_monetary_unit%1:23:00::
 koruna%1:23:01::
-heller%1:23:01::
+haler%1:23:01::
 icelandic_monetary_unit%1:23:00::
 krona%1:23:01::
 eyrir%1:23:00::
@@ -97228,7 +97231,7 @@ gramme%1:23:00::
 gram-atomic_weight%1:23:00::
 mole%1:23:00::
 dkg%1:23:00::
-hg%1:23:00::
+hectogram%1:23:00::
 kilogram%1:23:00::
 key%1:23:00::
 myriagram%1:23:00::
@@ -98044,7 +98047,7 @@ imaginative_comparison%1:24:00::
 standard_of_measurement%1:24:00::
 baseline%1:24:00::
 norm%1:24:00::
-opposition%1:24:02::
+oppositeness%1:24:00::
 antipode%1:24:00::
 antithesis%1:24:00::
 conflict%1:24:00::
@@ -98349,7 +98352,7 @@ cup%1:25:00::
 slit%1:25:00::
 incisure%1:25:00::
 notch%1:25:00::
-scotch%1:25:00::
+score%1:25:00::
 sag%1:25:00::
 wrinkle%1:25:00::
 laugh_line%1:25:00::
@@ -99847,7 +99850,7 @@ lysogeny%1:26:00::
 hypothrombinemia%1:26:00::
 hypervolemia%1:26:00::
 hypovolemia%1:26:00::
-anemia%1:26:00::
+anaemia%1:26:00::
 thalassemia%1:26:00::
 thalassemia_major%1:26:00::
 leukocytosis%1:26:00::
@@ -100887,7 +100890,7 @@ looseness_of_the_bowels%1:26:00::
 the_trots%1:26:00::
 montezuma's_revenge%1:26:00::
 vertigo%1:26:00::
-anemia%1:26:01::
+anaemia%1:26:01::
 wheeziness%1:26:00::
 withdrawal_symptom%1:26:00::
 thrombus%1:26:00::
@@ -101129,7 +101132,7 @@ disjuncture%1:26:00::
 separability%1:26:00::
 incoherency%1:26:00::
 disjointedness%1:26:00::
-union%1:26:00::
+unification%1:26:00::
 fusion%1:26:00::
 confederation%1:26:00::
 federalization%1:26:00::
@@ -101158,7 +101161,7 @@ twilight%1:26:01::
 wreck%1:26:00::
 reformation%1:26:00::
 counterreformation%1:26:00::
-restoration%1:26:00::
+renovation%1:26:00::
 maturity%1:26:00::
 adulthood%1:26:00::
 manhood%1:26:00::
@@ -105719,7 +105722,7 @@ january%1:28:00::
 mid-january%1:28:00::
 february%1:28:00::
 mid-february%1:28:00::
-march%1:28:00::
+mar%1:28:00::
 mid-march%1:28:00::
 april%1:28:00::
 mid-april%1:28:00::
@@ -105939,7 +105942,7 @@ ephemera%1:28:00::
 period%1:28:03::
 geological_era%1:28:00::
 epoch%1:28:01::
-era%1:28:00::
+epoch%1:28:00::
 caliphate%1:28:00::
 common_era%1:28:00::
 day%1:28:05::
@@ -106106,7 +106109,7 @@ oftenness%1:28:00::
 gigahertz%1:28:00::
 rate_of_growth%1:28:00::
 isometry%1:28:00::
-hertz%1:28:00::
+hz%1:28:00::
 rate_of_inflation%1:28:00::
 jerk%1:28:00::
 knot%1:28:00::
@@ -106338,7 +106341,7 @@ twitch%2:29:00::
 fibrillate%2:29:00::
 move_reflexively%2:29:00::
 act_reflexively%2:29:00::
-do%2:29:09::
+deport%2:29:02::
 fall_over_backwards%2:29:00::
 presume%2:29:00::
 vulgarize%2:29:00::
@@ -107141,7 +107144,7 @@ scavenge%2:30:00::
 hypophysectomize%2:30:00::
 degas%2:30:00::
 shell%2:30:06::
-burr%2:30:00::
+bur%2:30:00::
 clear_off%2:30:00::
 unclutter%2:30:00::
 clutter_up%2:30:00::
@@ -110409,7 +110412,7 @@ claw%2:32:00::
 pick_at%2:32:00::
 nitpick%2:32:00::
 trash%2:32:00::
-sully%2:32:00::
+smirch%2:32:00::
 assassinate%2:32:00::
 blackwash%2:32:00::
 disgrace%2:32:00::
@@ -111352,7 +111355,7 @@ bay%2:32:01::
 yip%2:32:00::
 bleat%2:32:00::
 bleat%2:32:01::
-bellow%2:32:00::
+bawl%2:32:00::
 roar%2:32:05::
 squawk%2:32:01::
 chirk%2:32:00::
@@ -113424,7 +113427,7 @@ swing%2:35:08::
 whore%2:35:00::
 wench%2:35:00::
 tread%2:35:02::
-service%2:35:00::
+serve%2:35:01::
 stand%2:35:10::
 ruin%2:35:02::
 seduce%2:35:00::
@@ -114334,7 +114337,7 @@ knuckle%2:35:01::
 knuckle%2:35:00::
 mantle%2:35:00::
 ooze_through%2:35:00::
-sop%2:35:02::
+soak_through%2:35:00::
 wash_out%2:35:00::
 lock%2:35:03::
 fortify%2:35:00::
@@ -115535,7 +115538,7 @@ drive_up%2:38:00::
 move%2:38:01::
 work%2:38:02::
 take_back%2:38:00::
-centre%2:38:00::
+center%2:38:00::
 re-enter%2:38:00::
 pump%2:38:00::
 pump%2:38:03::
@@ -115744,7 +115747,7 @@ carom%2:38:00::
 glance%2:38:00::
 toss%2:38:00::
 turtle%2:38:00::
-flip%2:38:01::
+flick%2:38:00::
 twitch%2:38:00::
 snap%2:38:00::
 stir%2:38:00::
@@ -115755,7 +115758,7 @@ dance%2:38:01::
 glissade%2:38:00::
 sashay%2:38:02::
 capriole%2:38:00::
-bop%2:38:00::
+bebop%2:38:00::
 bump%2:38:00::
 twist%2:38:02::
 waltz_around%2:38:00::
@@ -116462,7 +116465,7 @@ volley%2:38:01::
 break_up%2:38:00::
 diffract%2:38:00::
 dissolve%2:38:00::
-split%2:38:00::
+separate%2:38:00::
 scatter%2:38:01::
 break%2:38:10::
 disband%2:38:01::
@@ -116612,7 +116615,7 @@ fidget%2:38:00::
 linger%2:38:00::
 trail%2:38:02::
 step_on_it%2:38:00::
-rush%2:38:10::
+race%2:38:10::
 rush_off%2:38:00::
 rush%2:38:01::
 trail%2:38:01::
@@ -116897,7 +116900,7 @@ shipwreck%2:39:00::
 refract%2:39:00::
 expose%2:39:02::
 ventilate%2:39:00::
-sun%2:39:00::
+solarize%2:39:00::
 air_out%2:39:00::
 overexpose%2:39:00::
 underexpose%2:39:00::
@@ -117897,7 +117900,7 @@ disown%2:40:00::
 resign%2:40:04::
 yield%2:40:01::
 give%2:40:03::
-grant%2:40:05::
+give%2:40:11::
 charge%2:40:01::
 pay_cash%2:40:00::
 impoverish%2:40:00::
@@ -118285,7 +118288,7 @@ hobnob%2:41:00::
 hang_out%2:41:00::
 initiate%2:41:01::
 readmit%2:41:01::
-crown%2:41:00::
+coronate%2:41:00::
 throne%2:41:00::
 dethrone%2:41:00::
 unseat%2:41:00::
@@ -118988,7 +118991,7 @@ come_of_age%2:41:00::
 foster%2:41:01::
 wait_on%2:41:00::
 valet%2:41:00::
-service%2:41:00::
+serve%2:41:00::
 represent%2:41:00::
 represent%2:41:02::
 speak_for%2:41:00::
@@ -119141,7 +119144,7 @@ set_up%2:41:01::
 rip_off%2:41:00::
 bunk%2:41:00::
 whipsaw%2:41:00::
-welsh%2:41:00::
+welch%2:41:00::
 victimize%2:41:01::
 chisel%2:41:00::
 cozen%2:41:00::

@@ -30,6 +30,8 @@ Synsets are from the [Open English WordNet](https://github.com/globalwordnet/eng
 - frequencies from an [evaluation framework](http://lcl.uniroma1.it/wsdeval/), which come from [SemCor](https://web.eecs.umich.edu/~mihalcea/downloads.html#semcor) and [OMSTI](https://www.comp.nus.edu.sg/~nlp/corpora.html)
 - BabelNet IDs from another [evaluation framwork](https://sapienzanlp.github.io/xl-wsd/docs/data/), as mapped from SemCor labels
 
+Additional associated terms are from [ConceptNet](https://github.com/commonsense/conceptnet5).
+
 The [preprocess.R](/preprocess.R) script was used to make the resources from these sources that are used within the app.
 
 Some background to this tool is discussed in [Introduction to Dictionary Creation](https://miserman.github.io/lingmatch/articles/dictionary_creation.html).

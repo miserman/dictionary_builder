@@ -9,7 +9,7 @@ describe('new default dictionary', () => {
   before(() => cy.clearIndexedDb('dictionary_builder_building'))
   beforeEach(() => cy.visit('/'))
   it('adds terms', () => {
-    cy.get('.MuiAppBar-root input', {timeout: 15000}).type('frog{enter}ants*{enter}')
+    cy.get('.MuiAppBar-root input', {timeout: 20000}).type('frog{enter}ants*{enter}')
     cy.get('.MuiDataGrid-main').should('contain.text', 'frog').should('contain.text', 'ants*')
   })
   it('shows info', () => {

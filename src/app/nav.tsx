@@ -98,11 +98,11 @@ export function Nav({
                             ? prepareRegex(value)
                             : wildcards.test(value)
                             ? globToRegex(value)
-                            : ';' + value.replace(special, '\\%&') + '[^;]*;',
+                            : ';' + value.replace(special, '\\$&') + '[^;]*;',
                           'g'
                         )
                       } catch {
-                        ex = new RegExp(';' + value.replace(special, '\\%&') + ';', 'g')
+                        ex = new RegExp(';' + value.replace(special, '\\$&') + ';', 'g')
                       }
                       extractMatches('', ex, collapsedTerms, suggestions, 100)
                     }

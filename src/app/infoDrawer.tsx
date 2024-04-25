@@ -10,7 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import {createContext, useCallback, useContext, useEffect} from 'react'
+import {createContext, useCallback, useContext, useEffect, useState} from 'react'
 import {BuildContext, BuildEditContext, SettingEditor, SettingsContext} from './building'
 import {TermDisplay} from './term'
 import {Close} from '@mui/icons-material'
@@ -74,8 +74,10 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
     },
     [setHeight]
   )
+  const [resizing, setResizing] = useState(false)
   const startResize = useCallback(
     (e: React.MouseEvent) => {
+      setResizing(true)
       e.preventDefault()
       document.body.style.cursor = 'ns-resize'
       window.addEventListener('mousemove', resize)
@@ -86,6 +88,7 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
     const endResize = (e: MouseEvent) => {
       if (resizeAnimationFrame !== -1) {
         cancelAnimationFrame(resizeAnimationFrame)
+        setResizing(false)
         resizeAnimationFrame = -1
         document.body.style.cursor = 'default'
         window.removeEventListener('mousemove', resize)
@@ -130,6 +133,7 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
               height: '1px',
               position: 'absolute',
               cursor: 'ns-resize',
+              border: resizing ? 'solid 2px #dab4ff' : '',
               '&:hover': {border: 'solid 2px #dab4ff'},
             }}
             onMouseDownCapture={startResize}

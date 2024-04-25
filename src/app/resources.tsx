@@ -7,6 +7,10 @@ import type {NumberObject} from './building'
 import {decompress} from './lib/compression'
 
 type AssociatedIndices = [number | number[], (number | number[])?][]
+type ConceptNet = {
+  terms: {[index: string]: {[index: string]: number | number[]}}
+  links: {[index: string]: string | string[]}
+}
 export type Synset = {
   id: string
   index: number
@@ -29,10 +33,33 @@ export type Synset = {
   exemplifies: number | number[]
   mero_part: number | number[]
   hypernym: number | number[]
+  instance_hypernym: number | number[]
   mero_member: number | number[]
   mero_substance: number | number[]
   entails: number | number[]
   causes: number | number[]
+  derivation: number | number[]
+  pertainym: number | number[]
+  adjposition: number | number[]
+  agent: number | number[]
+  antonym: number | number[]
+  body_part: number | number[]
+  by_means_of: number | number[]
+  destination: number | number[]
+  event: number | number[]
+  instrument: number | number[]
+  location: number | number[]
+  material: number | number[]
+  participle: number | number[]
+  property: number | number[]
+  result: number | number[]
+  state: number | number[]
+  undergoer: number | number[]
+  uses: number | number[]
+  vehicle: number | number[]
+  hyponym: number[]
+  instance_hyponym: number[]
+  domain_topic_members: number[]
 }
 type Synsets = readonly Synset[]
 export type CoarseSenseMap = {[index: string]: string[]}
@@ -48,6 +75,7 @@ export type TermResources = {
   termLookup?: {[index: string]: number}
   collapsedTerms?: {[index: string]: string}
   termAssociations?: AssociatedIndices
+  conceptNet?: ConceptNet
   sense_keys?: readonly string[]
   synsetInfo?: Synsets
   senseMap: CoarseSenseMap
@@ -72,9 +100,31 @@ export const SenseMapSetter = createContext<SenseMapSetterFun>(
 const resources = [
   {key: 'terms', label: 'Terms'},
   {key: 'termAssociations', label: 'Term Associations'},
+  {key: 'conceptNet', label: 'ConceptNet'},
   {key: 'sense_keys', label: 'Sense Keys'},
   {key: 'synsetInfo', label: 'Synset Info'},
 ] as const
+
+function backLink(
+  entry: 'hypernym' | 'instance_hypernym' | 'domain_topic',
+  targetEntry: 'hyponym' | 'instance_hyponym' | 'domain_topic_members',
+  synset: Synset,
+  synsets: Partial<Synset>[]
+) {
+  if (entry in synset) {
+    const sourceEntry = synset[entry]
+    const targets = 'number' === typeof sourceEntry ? [sourceEntry] : sourceEntry
+    targets.forEach(ti => {
+      const target = synsets[ti]
+      const out = target[targetEntry]
+      if (out) {
+        out.push(synset.index + 1)
+      } else {
+        target[targetEntry] = [synset.index + 1]
+      }
+    })
+  }
+}
 
 const wordSep = /[\s-]+/g
 export function Resources({children}: {children: ReactNode}) {
@@ -83,6 +133,7 @@ export function Resources({children}: {children: ReactNode}) {
   const [termLookup, setTermLookup] = useState<{[index: string]: number}>()
   const [collapsedTerms, setCollapsedTerms] = useState<{[index: string]: string}>()
   const [termAssociations, setTermAssociations] = useState<AssociatedIndices>()
+  const [conceptNet, setConceptNet] = useState<ConceptNet>()
   const [sense_keys, setSenseKeys] = useState<readonly string[]>()
   const [synsetInfo, setSynsetInfo] = useState<Synsets>()
   const [senseMap, setSenseMap] = useState<CoarseSenseMap>({})
@@ -94,6 +145,7 @@ export function Resources({children}: {children: ReactNode}) {
 
   const [loadingTerms, setLoadingTerms] = useState(true)
   const [loadingTermAssociations, setLoadingTermAssociations] = useState(true)
+  const [loadingConceptNet, setLoadingConceptNet] = useState(true)
   const [loadingSenseKeys, setLoadingSenseKeys] = useState(true)
   const [loadingSynsetInfo, setLoadingSynsetInfo] = useState(true)
 
@@ -108,8 +160,8 @@ export function Resources({children}: {children: ReactNode}) {
         })
       } else {
         fetch('/dictionary_builder/data/terms.txt')
-          .then(res => res.text())
-          .then(data => {
+          .then(async res => {
+            const data = await res.text()
             const arr = Object.freeze(data.split(newline))
             setTerms(arr)
             const collapsed: {[index: string]: string} = {
@@ -146,12 +198,30 @@ export function Resources({children}: {children: ReactNode}) {
         })
       } else {
         fetch('/dictionary_builder/data/term_associations.json')
-          .then(res => res.json())
-          .then(data => {
+          .then(async res => {
+            const data = await res.json()
             setTermAssociations(data)
             saveResource('term_associations', data)
           })
           .finally(() => setLoadingTermAssociations(false))
+      }
+    })
+  }, [setLoadingTermAssociations])
+  useEffect(() => {
+    loadResource('conceptnet').then(res => {
+      if (res && res.content) {
+        decompress(res.content).then(data => {
+          setConceptNet(data)
+          setLoadingConceptNet(false)
+        })
+      } else {
+        fetch('/dictionary_builder/data/conceptnet.json')
+          .then(async res => {
+            const data = await res.json()
+            setConceptNet(data)
+            saveResource('conceptnet', data)
+          })
+          .finally(() => setLoadingConceptNet(false))
       }
     })
   }, [setLoadingTermAssociations])
@@ -164,8 +234,8 @@ export function Resources({children}: {children: ReactNode}) {
         })
       } else {
         fetch('/dictionary_builder/data/sense_keys.txt')
-          .then(res => res.text())
-          .then(data => {
+          .then(async res => {
+            const data = await res.text()
             const senseKeys = data.split(newline)
             setSenseKeys(Object.freeze(senseKeys))
             saveResource('sense_keys', senseKeys)
@@ -183,10 +253,13 @@ export function Resources({children}: {children: ReactNode}) {
         })
       } else {
         fetch('/dictionary_builder/data/synset_info.json')
-          .then(res => res.json())
-          .then(data => {
+          .then(async res => {
+            const data = await res.json()
             const synsetInfo = data.map((d: Synset, i: number) => {
               d.index = i
+              backLink('hypernym', 'hyponym', d, data)
+              backLink('instance_hypernym', 'instance_hyponym', d, data)
+              backLink('domain_topic', 'domain_topic_members', d, data)
               return d
             })
             setSynsetInfo(synsetInfo)
@@ -259,6 +332,7 @@ export function Resources({children}: {children: ReactNode}) {
       termLookup,
       collapsedTerms,
       termAssociations,
+      conceptNet,
       sense_keys,
       synsetInfo,
       senseMap,
@@ -274,6 +348,7 @@ export function Resources({children}: {children: ReactNode}) {
     termLookup,
     collapsedTerms,
     termAssociations,
+    conceptNet,
     sense_keys,
     synsetInfo,
     senseMap,
@@ -286,6 +361,7 @@ export function Resources({children}: {children: ReactNode}) {
   const loading = {
     terms: loadingTerms,
     termAssociations: loadingTermAssociations,
+    conceptNet: loadingConceptNet,
     sense_keys: loadingSenseKeys,
     synsetInfo: loadingSynsetInfo,
   }

@@ -9,7 +9,7 @@ export function SynsetLink({senseKey, info}: {senseKey: string; info: Synset}) {
   const updateInfoDrawerState = useContext(InfoDrawerSetter)
   return (
     <Tooltip title={info.definition} placement="right">
-      <Typography>
+      <Typography sx={{display: 'flex', '& span': {pl: 0.5}}}>
         <Link
           underline="none"
           sx={{p: 0, justifyContent: 'flex-start', cursor: 'pointer'}}
@@ -44,18 +44,40 @@ const synsetRelationships = {
   exemplifies: true,
   mero_part: true,
   hypernym: true,
+  instance_hypernym: true,
   mero_member: true,
   mero_substance: true,
   entails: true,
   causes: true,
+  derivation: true,
+  pertainym: true,
+  adjposition: true,
+  agent: true,
+  antonym: true,
+  body_part: true,
+  by_means_of: true,
+  destination: true,
+  event: true,
+  instrument: true,
+  location: true,
+  material: true,
+  participle: true,
+  property: true,
+  result: true,
+  state: true,
+  undergoer: true,
+  uses: true,
+  vehicle: true,
+  hyponym: true,
+  instance_hyponym: true,
+  domain_topic_members: true,
 }
 export function unpackSynsetMembers(synset: Synset, terms: readonly string[], synsetInfo: readonly Synset[]) {
   const members: Set<string> = new Set(retrieveTerms(synset.members, terms))
   Object.keys(synset).forEach(k => {
     if (k in synsetRelationships) {
-      retrieveSynsets(synset[k as keyof Synset], synsetInfo).forEach(s => {
-        retrieveTerms(s.members, terms).forEach(sm => members.add(sm))
-      })
+      const related = retrieveSynsets(synset[k as keyof Synset], synsetInfo)
+      related.forEach(s => retrieveTerms(s.members, terms).forEach(sm => members.add(sm)))
     }
   })
   return Array.from(members)

@@ -1,6 +1,6 @@
 type storedItem = {name: string; encrypted?: boolean; content: Blob}
 type DBName = 'resources' | 'building' | 'coarse_sense_map'
-const DBVersions = {resources: 5, building: 1, coarse_sense_map: 1}
+const DBVersions = {resources: 6, building: 1, coarse_sense_map: 1}
 function openDB(name: DBName): Promise<IDBDatabase | undefined> {
   return new Promise(resolve => {
     const req = indexedDB.open('dictionary_builder_' + name, DBVersions[name])

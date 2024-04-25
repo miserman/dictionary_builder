@@ -92,11 +92,10 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
   }, [data, dict, ids, showEmptyTerms, catWeights])
   if (!category || !categories.includes(category)) return <></>
   const cols: GridColDef[] = [
-    {field: 'term', headerName: 'Term', width: 170},
+    {field: 'term', headerName: 'Term'},
     {
       field: 'weight',
       headerName: 'Weight',
-      width: 95,
       editable: true,
       hideable: false,
       valueParser: (value: any, row: GridRow, params) => {
@@ -123,7 +122,7 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
       >
         <Close />
       </IconButton>
-      <DialogContent sx={{p: 1, minWidth: '300px', height: '500px'}}>
+      <DialogContent sx={{p: 1, width: '400px', maxWidth: '100%', height: '500px'}}>
         <Stack sx={{height: '100%'}}>
           <Stack direction="row">
             <TextField
@@ -166,7 +165,7 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
               disableColumnMenu
               pageSizeOptions={[100]}
               density="compact"
-              slots={{toolbar: () => <GridToolbarQuickFilter />}}
+              slots={{toolbar: () => <GridToolbarQuickFilter sx={{width: '200px'}} />}}
               onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
                 if ((e.key === 'Delete' || e.key === 'Backspace') && params.cellMode === 'view') {
                   editFromEvent(0, {...params.row, field: params.field})

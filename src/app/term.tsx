@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemIcon,
@@ -481,12 +482,27 @@ export function termListItem(
     </ListItem>
   )
 }
+function formatLink(id: string) {
+  switch (id.substring(0, 1)) {
+    case 'd':
+      return 'https://wikidata.org/wiki/' + id.substring(2)
+    case 'p':
+      return 'https://dbpedia.org/resource/' + id.substring(2)
+    case 'w':
+      return 'https://en.wiktionary.org/wiki/' + id.substring(2)
+  }
+}
+const linkNames = {d: 'Wikidata', p: 'DBpedia', w: 'Wiktionary'}
+function formatLinkName(id: string) {
+  return linkNames[id.substring(0, 1) as 'd' | 'p' | 'w'] + ': ' + id.substring(2)
+}
+const capitalLetter = /([A-Z])/g
 function TermFixed({processed}: {processed: FixedTerm}) {
-  const containerStyle = {p: 1, pl: 0, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden'}
+  const containerStyle = {p: 1, pl: 0, maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden', whiteSpace: 'nowrap'}
   const dict = useContext(BuildContext)
   const editDictionary = useContext(BuildEditContext)
   const updateInfoDrawerState = useContext(InfoDrawerSetter)
-  const {terms, senseMap, termLookup, collapsedTerms, sense_keys} = useContext(ResourceContext)
+  const {terms, senseMap, conceptNet, termLookup, collapsedTerms, sense_keys} = useContext(ResourceContext)
   const byIndex = useCallback(termLookup ? (a: string, b: string) => termLookup[a] - termLookup[b] : () => 0, [
     termLookup,
   ])
@@ -511,17 +527,54 @@ function TermFixed({processed}: {processed: FixedTerm}) {
       }
     })
   }
+  const concept = conceptNet && conceptNet.terms['' + (processed.index + 1)]
+  const links = conceptNet && conceptNet.links['' + (processed.index + 1)]
   return (
-    <Stack direction="row" spacing={4} sx={{height: '100%'}}>
+    <Stack direction="row" spacing={2} sx={{height: '100%', pb: 1}}>
       <Stack>
         <Tooltip title="100 - index / n terms * 100; terms are loosely sorted by frequency and space coverage">
-          <Typography>Relative Frequency</Typography>
+          <Typography>Frequency</Typography>
         </Tooltip>
         <Box sx={{p: 1}}>
           <span className="number">{relativeFrequency(processed.index, terms && terms.length).toFixed(2)}</span>
         </Box>
+        {(!!concept || !!processed.synsets.length || !!links) && (
+          <>
+            <Typography>Sources</Typography>
+            <Box sx={{p: 1}}>
+              <List sx={{p: 0, fontSize: '.8em', whiteSpace: 'nowrap', '& a': {cursor: 'pointer'}}}>
+                {!!concept && (
+                  <ListItem disableGutters disablePadding>
+                    <Link
+                      href={'https://conceptnet.io/c/en/' + processed.term.replace(' ', '_')}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      ConceptNet
+                    </Link>
+                  </ListItem>
+                )}
+                {!!processed.synsets.length && (
+                  <ListItem disableGutters disablePadding>
+                    <Link href={'https://en-word.net/lemma/' + processed.term} target="_blank" rel="noreferrer">
+                      OEWordNet
+                    </Link>
+                  </ListItem>
+                )}
+                {links &&
+                  ('string' === typeof links ? [links] : links).map(link => (
+                    <ListItem key={link} disableGutters disablePadding>
+                      <Link href={formatLink(link)} target="_blank" rel="noreferrer">
+                        {formatLinkName(link)}
+                      </Link>
+                    </ListItem>
+                  ))}
+              </List>
+            </Box>
+          </>
+        )}
       </Stack>
-      {terms && processed.lemma.length ? (
+      {terms && !!processed.lemma.length && (
         <Stack>
           <Typography>Lemmatizer</Typography>
           <Box sx={containerStyle}>
@@ -532,10 +585,8 @@ function TermFixed({processed}: {processed: FixedTerm}) {
             </List>
           </Box>
         </Stack>
-      ) : (
-        <></>
       )}
-      {processed.forms.length ? (
+      {!!processed.forms.length && (
         <Stack>
           <Typography>Expansion</Typography>
           <Box sx={containerStyle}>
@@ -544,10 +595,8 @@ function TermFixed({processed}: {processed: FixedTerm}) {
             </List>
           </Box>
         </Stack>
-      ) : (
-        <></>
       )}
-      {processed.related.length ? (
+      {!!processed.related.length && (
         <Stack>
           <Typography>Related Terms</Typography>
           <Box sx={containerStyle}>
@@ -556,10 +605,8 @@ function TermFixed({processed}: {processed: FixedTerm}) {
             </List>
           </Box>
         </Stack>
-      ) : (
-        <></>
       )}
-      {sense_keys && processed.synsets.length ? (
+      {sense_keys && !!processed.synsets.length && (
         <>
           <Stack>
             <Typography>Senses</Typography>
@@ -591,9 +638,9 @@ function TermFixed({processed}: {processed: FixedTerm}) {
               </List>
             </Box>
           </Stack>
-          {processed.synset_terms.length ? (
+          {!!processed.synset_terms.length && (
             <Stack>
-              <Typography>Extended Synset Members</Typography>
+              <Typography sx={{whiteSpace: 'nowrap'}}>Extended Synset Members</Typography>
               <Box sx={containerStyle}>
                 <List disablePadding sx={{p: 0}}>
                   {processed.synset_terms
@@ -602,12 +649,34 @@ function TermFixed({processed}: {processed: FixedTerm}) {
                 </List>
               </Box>
             </Stack>
-          ) : (
-            <></>
           )}
         </>
-      ) : (
-        <></>
+      )}
+      {concept && terms && (
+        <Stack direction="row" spacing={2}>
+          {Object.keys(concept)
+            .sort((a, b) => {
+              const ca = concept[a]
+              const cb = concept[b]
+              return ('number' === typeof cb ? 1 : cb.length) - ('number' === typeof ca ? 1 : ca.length)
+            })
+            .map(k => {
+              const entry = concept[k]
+              const conceptTerms = 'number' === typeof entry ? [entry] : entry
+              return (
+                <Stack key={k}>
+                  <Typography sx={{whiteSpace: 'nowrap'}}>{k.replace(capitalLetter, ' $&').trimStart()}</Typography>
+                  <Box sx={containerStyle}>
+                    <List disablePadding sx={{p: 0}}>
+                      {conceptTerms.map(index =>
+                        termListItem(terms[index - 1], dict, editDictionary, updateInfoDrawerState)
+                      )}
+                    </List>
+                  </Box>
+                </Stack>
+              )
+            })}
+        </Stack>
       )}
     </Stack>
   )
@@ -619,7 +688,7 @@ export function TermLink({term}: {term: string}) {
     <Button
       fullWidth
       variant="text"
-      sx={{p: 0, justifyContent: 'flex-start', textTransform: 'none'}}
+      sx={{p: 0, justifyContent: 'flex-start', textTransform: 'none', whiteSpace: 'nowrap'}}
       onClick={() => updateInfoDrawerState({type: 'add', state: {type: 'term', value: term}})}
     >
       {term}
