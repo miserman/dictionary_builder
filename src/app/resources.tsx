@@ -40,7 +40,6 @@ export type Synset = {
   causes: number | number[]
   derivation: number | number[]
   pertainym: number | number[]
-  adjposition: number | number[]
   agent: number | number[]
   antonym: number | number[]
   body_part: number | number[]

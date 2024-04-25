@@ -131,7 +131,7 @@ export function DictionaryMenu() {
                   ))}
                 </Select>
               </FormControl>
-              <ImportMenu />
+              <ImportMenu>New</ImportMenu>
             </Stack>
             <CardContent sx={{alignContent: 'left', mb: 'auto', pt: 0, pb: 1, height: '100%', overflow: 'hidden'}}>
               <Stack spacing={1} sx={{height: '100%', overflowY: 'auto'}}>

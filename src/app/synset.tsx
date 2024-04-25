@@ -51,7 +51,6 @@ const synsetRelationships = {
   causes: true,
   derivation: true,
   pertainym: true,
-  adjposition: true,
   agent: true,
   antonym: true,
   body_part: true,

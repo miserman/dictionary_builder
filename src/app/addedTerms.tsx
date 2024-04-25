@@ -8,6 +8,7 @@ import type {GridColDef, GridRenderEditCellParams} from '@mui/x-data-grid'
 import {makeRows} from './processTerms'
 import {CategoryEditor} from './categoryEditor'
 import {type GridRow, Table, type GridCell} from './table'
+import {ImportMenu} from './import'
 
 export const timers: {dictionary: number | NodeJS.Timeout; comparisons: number | NodeJS.Timeout} = {
   dictionary: 0,
@@ -135,7 +136,12 @@ export default function AddedTerms({
   return (
     <Box component="main" sx={{height: '100%'}}>
       {!dictTerms.length || (!processing && !rows.length) ? (
-        <Typography align="center">Add terms, or import an existing dictionary.</Typography>
+        <Stack sx={{p: 3}}>
+          <Typography align="center">Add terms, or import an existing dictionary.</Typography>
+          <Box sx={{m: 'auto', p: 1}}>
+            <ImportMenu>Import</ImportMenu>
+          </Box>
+        </Stack>
       ) : processing ? (
         <Backdrop open={true}>
           <Stack sx={{textAlign: 'center'}}>

@@ -17,7 +17,7 @@ import {
   styled,
   useTheme,
 } from '@mui/material'
-import {type ChangeEvent, type DragEvent, type KeyboardEvent, useContext, useState} from 'react'
+import {type ChangeEvent, type DragEvent, type KeyboardEvent, useContext, useState, type ReactNode} from 'react'
 import {ManageDictionaries, type NumberObject} from './building'
 import {fileBaseName, newline} from './lib/utils'
 import {CopyDictionary} from './copyDictionary'
@@ -183,7 +183,7 @@ function parseDict(raw: string, detectRegex: boolean) {
   return parsed
 }
 
-export function ImportMenu() {
+export function ImportMenu({children}: {children: ReactNode}) {
   const theme = useTheme()
   const manageDictionaries = useContext(ManageDictionaries)
   const [name, setName] = useState('')
@@ -210,7 +210,7 @@ export function ImportMenu() {
   return (
     <>
       <Button variant="outlined" onClick={toggleMenu}>
-        New
+        {children}
       </Button>
       <Dialog
         open={menuOpen}

@@ -126,7 +126,7 @@ export function Nav({
             </IconButton>
           </Tooltip>
           <Button
-            sx={{display: {sm: 'block', xs: 'none'}}}
+            sx={{width: '6.7em', display: {sm: 'block', xs: 'none'}}}
             variant="outlined"
             disabled={!inputTerm}
             onClick={() => {
