@@ -2,6 +2,7 @@ import {
   Autocomplete,
   Box,
   Button,
+  CircularProgress,
   IconButton,
   Link,
   List,
@@ -22,7 +23,7 @@ import {
   Typography,
 } from '@mui/material'
 import {relativeFrequency, sortByLength} from './lib/utils'
-import {type ChangeEvent, useContext, useState, useMemo, useCallback} from 'react'
+import {type ChangeEvent, useContext, useState, useMemo, useCallback, useEffect, Fragment} from 'react'
 import {ResourceContext, type Synset} from './resources'
 import {BuildContext, BuildEditContext, type DictionaryActions, termsByCategory, type NumberObject} from './building'
 import {InfoDrawerActions, InfoDrawerSetter} from './infoDrawer'
@@ -100,56 +101,68 @@ export function TermSenseEdit({
     const labels = key in senseMap ? senseMap[key] : synset.csi_labels
     return 'string' === typeof labels ? labels : labels[0]
   }
-  const rankedSynsets = useMemo(() => {
-    if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
-      const siblings = termsByCategory(Object.keys(dictEntry.categories), Dict)
-      const siblingsExtended: {[index: string]: boolean} = {}
-      Object.keys(siblings).forEach(id => {
-        const processed = getProcessedTerm(id, data, Dict, true) as FixedTerm
-        if (processed.lookup) processed.lookup.map.forEach((_, ext) => (siblingsExtended[ext] = true))
-      })
-      const clusterRanks: NumberObject = {}
-      const out = processed.synsets.map(synset => {
-        let score = 0
-        unpackSynsetMembers(synset, terms, synsetInfo).forEach(term => {
-          if (term in siblings) score++
-          if (term in siblingsExtended) score += 0.01
+  const [open, setOpen] = useState(false)
+  const [rankedSynsets, setRankedSynsets] = useState<{key: string; score: number; synset: Synset}[]>([])
+  const loading = open && !rankedSynsets.length
+  useEffect(() => {
+    if (open && terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
+      const getRanked = async () => {
+        const siblings = termsByCategory(Object.keys(dictEntry.categories), Dict)
+        const siblingsExtended: {[index: string]: boolean} = {}
+        Object.keys(siblings).forEach(id => {
+          const processed = getProcessedTerm(id, data, Dict, true) as FixedTerm
+          if (processed.lookup) processed.lookup.map.forEach((_, ext) => (siblingsExtended[ext] = true))
         })
-        if (synset.count) score += synset.count * 0.001
-        if (!synset.csi_labels) synset.csi_labels = 'no category'
-        const key = sense_keys[synset.index]
-        const cluster = getCoarseSense(key, synset)
-        if (!(cluster in clusterRanks) || clusterRanks[cluster] < score) {
-          clusterRanks[cluster] = score
-        }
-        return {key, score, synset}
-      })
-      const synsetCategories = out.map(({key, synset}) => getCoarseSense(key, synset)).sort()
-      synsetCategories
-      return out.sort((a, b) => {
-        const clusterA = getCoarseSense(a.key, a.synset)
-        const clusterRankA = clusterRanks[clusterA]
-        const clusterNameA = -synsetCategories.indexOf(clusterA)
-        const clusterB = getCoarseSense(b.key, b.synset)
-        const clusterRankB = clusterRanks[clusterB]
-        const clusterNameB = -synsetCategories.indexOf(clusterB)
-        return (
-          clusterRankB * 100 +
-          clusterNameB * 0.1 +
-          b.score * 0.01 -
-          (clusterRankA * 100 + clusterNameA * 0.1 + a.score * 0.01)
+        const clusterRanks: NumberObject = {}
+        const out = processed.synsets.map(synset => {
+          let score = 0
+          unpackSynsetMembers(synset, terms, synsetInfo).forEach(term => {
+            if (term in siblings) score++
+            if (term in siblingsExtended) score += 0.01
+          })
+          if (synset.count) score += synset.count * 0.001
+          if (!synset.csi_labels) synset.csi_labels = 'no category'
+          const key = sense_keys[synset.index]
+          const cluster = getCoarseSense(key, synset)
+          if (!(cluster in clusterRanks) || clusterRanks[cluster] < score) {
+            clusterRanks[cluster] = score
+          }
+          return {key, score, synset}
+        })
+        const synsetCategories = out.map(({key, synset}) => getCoarseSense(key, synset)).sort()
+        synsetCategories
+        setRankedSynsets(
+          out.sort((a, b) => {
+            const clusterA = getCoarseSense(a.key, a.synset)
+            const clusterRankA = clusterRanks[clusterA]
+            const clusterNameA = -synsetCategories.indexOf(clusterA)
+            const clusterB = getCoarseSense(b.key, b.synset)
+            const clusterRankB = clusterRanks[clusterB]
+            const clusterNameB = -synsetCategories.indexOf(clusterB)
+            return (
+              clusterRankB * 100 +
+              clusterNameB * 0.1 +
+              b.score * 0.01 -
+              (clusterRankA * 100 + clusterNameA * 0.1 + a.score * 0.01)
+            )
+          })
         )
-      })
+      }
+      setTimeout(getRanked, 150)
     } else {
-      return []
+      setRankedSynsets([])
     }
-  }, [terms, senseMap, sense_keys, synsetInfo, processed, Dict, data, dictEntry])
+  }, [open, terms, senseMap, sense_keys, synsetInfo, processed, Dict, data, dictEntry])
   if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
     return (
       <Autocomplete
         size="small"
         componentsProps={{popper: {className: 'synset-select'}}}
         options={rankedSynsets}
+        loading={loading}
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
         value={dictEntry.sense}
         groupBy={rank => getCoarseSense(rank.key, rank.synset)}
         getOptionLabel={option => ('string' === typeof option ? option : option.key)}
@@ -168,7 +181,21 @@ export function TermSenseEdit({
             </MenuItem>
           )
         }}
-        renderInput={params => <TextField label={label} {...params}></TextField>}
+        renderInput={params => (
+          <TextField
+            label={label}
+            {...params}
+            InputProps={{
+              ...params.InputProps,
+              endAdornment: (
+                <Fragment>
+                  {loading && <CircularProgress size={20} />}
+                  {params.InputProps.endAdornment}
+                </Fragment>
+              ),
+            }}
+          ></TextField>
+        )}
         ListboxProps={{
           style: {cursor: 'pointer'},
           onClick: e => {

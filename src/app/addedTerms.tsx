@@ -143,8 +143,8 @@ export default function AddedTerms({
           </Box>
         </Stack>
       ) : processing ? (
-        <Backdrop open={true}>
-          <Stack sx={{textAlign: 'center'}}>
+        <Backdrop open={processing} sx={{alignItems: 'baseline'}}>
+          <Stack sx={{textAlign: 'center', mt: 12}}>
             <Typography variant="h4">Processing Dictionary</Typography>
             <LinearProgress variant="determinate" value={progress * 100} />
             <Typography variant="caption">{progress ? Math.round(progress * 100) + '%' : 'preparing...'}</Typography>

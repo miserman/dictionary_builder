@@ -49,13 +49,13 @@ function makeLookups({lemma, related, synset_terms, lookup}: FixedTerm) {
   })
 }
 type LogicalObject = {[index: string]: boolean}
-function objectAppend(any: LogicalObject, to: LogicalObject, from: Map<string, boolean>) {
+async function objectAppend(any: LogicalObject, to: LogicalObject, from: Map<string, boolean>) {
   from.forEach((_, k) => {
     any[k] = true
     to[k] = true
   })
 }
-function makeExpandedLookups(processed: FixedTerm, data: TermResources) {
+async function makeExpandedLookups(processed: FixedTerm, data: TermResources) {
   const lookup = processed.lookup
   const any = lookup.any
   processed.lemma.forEach(term => {
