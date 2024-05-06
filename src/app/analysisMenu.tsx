@@ -273,10 +273,7 @@ export default function AnalyzeMenu() {
                       type="number"
                       size="small"
                       label="Gravity"
-                      onChange={e => {
-                        console.log(e)
-                        setPlotOpts({key: 'gravity', value: e.target.value})
-                      }}
+                      onChange={e => setPlotOpts({key: 'gravity', value: e.target.value})}
                     ></TextField>
                   </Tooltip>
                   <Tooltip title="Base distance between nodes." placement="right">

@@ -35,3 +35,19 @@ Additional associated terms are from [ConceptNet](https://github.com/commonsense
 The [preprocess.R](/preprocess.R) script was used to make the resources from these sources that are used within the app.
 
 Some background to this tool is discussed in [Introduction to Dictionary Creation](https://miserman.github.io/lingmatch/articles/dictionary_creation.html).
+
+# Testing
+
+Tests depend on a running dev server, which can be started with the `test-serve` command:
+
+```sh
+npm run test-serve
+```
+
+After the this has been compiled, the test had be run:
+
+```sh
+npm run test
+```
+
+Note: visit `http://localhost:3000/dictionary_builder` to compile before running tests.

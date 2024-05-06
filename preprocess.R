@@ -353,6 +353,7 @@ synset_info <- lapply(seq_along(by_synset), function(i) {
   d$example <- NULL
   d$subcat <- NULL
   d$sent <- NULL
+  d$adjposition <- NULL
   d <- Filter(length, lapply(d, function(e) {
     if (length(e)) {
       if (any(grepl("^\\d+-\\w$", e))) {

@@ -7,7 +7,7 @@ describe('single terms are processed', () => {
   })
   beforeEach(() => cy.visit('/'))
   it('can add and terms of all types and edit senses', () => {
-    cy.get('.MuiAppBar-root input', {timeout: 15000}).type('fixed{enter}glob*{enter}')
+    cy.get('.MuiAppBar-root input', {timeout: 20000}).type('fixed{enter}glob*{enter}')
     // data ids start at 1 when running in dev due to double runs
     cy.get('div[data-id="glob*1"]').should('have.text', 'glob*990')
     cy.get('div[data-id="fixed1"]').should('have.text', 'fixed98.451450')

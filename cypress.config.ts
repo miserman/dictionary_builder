@@ -4,7 +4,10 @@ export default defineConfig({
   e2e: {
     baseUrl: 'http://localhost:3000/dictionary_builder',
     specPattern: 'cypress/tests/**/*.cy.ts',
-    supportFile: false,
-    setupNodeEvents(on, config) {},
+    supportFile: 'cypress/support/e2e.ts',
+    setupNodeEvents(on, config) {
+      require('@cypress/code-coverage/task')(on, config)
+      return config
+    },
   },
 })

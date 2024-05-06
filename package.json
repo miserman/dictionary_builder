@@ -3,12 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build && touch ./docs/.nojekyll",
-    "start": "next start",
+    "dev": "sh utils/use_swc.sh && next dev",
+    "build": "sh utils/use_swc.sh && next build && touch ./docs/.nojekyll",
     "lint": "next lint",
     "cypress:open": "cypress open",
+    "test-serve": "sh utils/use_babel.sh && next dev",
     "test": "cypress run"
+  },
+  "nyc": {
+    "report-dir": "public/coverage",
+    "reporter": [
+      "html"
+    ]
   },
   "dependencies": {
     "@emotion/react": "latest",
@@ -22,10 +28,12 @@
     "react": "latest"
   },
   "devDependencies": {
+    "@cypress/code-coverage": "latest",
     "@this-dot/cypress-indexeddb": "latest",
     "@types/echarts": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
+    "babel-plugin-istanbul": "latest",
     "cypress": "latest",
     "eslint": "latest",
     "typescript": "latest"
