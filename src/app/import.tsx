@@ -101,7 +101,7 @@ function parseDict(raw: string, detectRegex: boolean) {
                   if (index in categories) cats[categories[index]] = 1
                 })
                 const [term, sense] = fullterm.split(senseSep)
-                parsed[makeId(term)] = makeDictEntry(term, cats, sense, lastTime - n + i, detectRegex)
+                parsed[makeId(term)] = makeDictEntry(term, cats, sense, lastTime + n - i, detectRegex)
               }
             }
           }
@@ -127,7 +127,7 @@ function parseDict(raw: string, detectRegex: boolean) {
                   if (id in parsed) {
                     parsed[id].categories[cat] = 1
                   } else {
-                    parsed[id] = makeDictEntry(term, {[cat]: 1}, sense, lastTime - n + i, detectRegex)
+                    parsed[id] = makeDictEntry(term, {[cat]: 1}, sense, lastTime + n - i, detectRegex)
                   }
                 }
               })
@@ -140,7 +140,7 @@ function parseDict(raw: string, detectRegex: boolean) {
                   if (id in parsed) {
                     parsed[id].categories[cat] = terms[fullterm]
                   } else {
-                    parsed[id] = makeDictEntry(term, {[cat]: terms[term]}, sense, lastTime - n + i, detectRegex)
+                    parsed[id] = makeDictEntry(term, {[cat]: terms[term]}, sense, lastTime + n - i, detectRegex)
                   }
                 }
               })
@@ -174,7 +174,7 @@ function parseDict(raw: string, detectRegex: boolean) {
                 }
               }
             })
-            parsed[makeId(term)] = makeDictEntry(term, cats, sense, lastTime - n + i, detectRegex)
+            parsed[makeId(term)] = makeDictEntry(term, cats, sense, lastTime + n - i, detectRegex)
           }
         })
       }
