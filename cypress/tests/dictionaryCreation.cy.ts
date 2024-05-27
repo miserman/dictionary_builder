@@ -36,6 +36,8 @@ describe('new named dictionary', () => {
     cy.get('.MuiDialog-paper').within(() => {
       cy.get('input').first().type('generic')
       cy.get('textarea').type('%\n1\tcat\n%\nword\t1\nterm*\t1')
+      cy.get('.MuiSwitch-input').last().click()
+      cy.get('input[type="password"]').type('123')
       cy.get('button').contains('Add').click()
     })
     cy.get('.MuiList-root').first().should('have.text', 'cat')
@@ -44,5 +46,8 @@ describe('new named dictionary', () => {
     cy.get('li').contains('generic').click()
     cy.contains('Export').click()
     cy.get('textarea').should('have.text', '%\n1\tcat\n%\nword\t1\nterm*\t1')
+    cy.visit('/')
+    cy.get('input[type="password"]', {timeout: 7000}).type('123')
+    cy.get('button').contains('Decrypt').click()
   })
 })

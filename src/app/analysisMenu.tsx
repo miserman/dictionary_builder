@@ -63,19 +63,11 @@ function updateOptions<T>(state: T, action: {key: keyof T; value: boolean | stri
 export default function AnalyzeMenu() {
   const dict = useContext(BuildContext)
   const allCategories = useContext(AllCategories)
-  const categories = useMemo(() => {
-    const out = [...allCategories]
-    if (!out.includes('no categories')) out.push('no categories')
-    return out
-  }, [allCategories])
 
   const [plotOpts, setPlotOpts] = useReducer(updateOptions<PlotOptions>, plotOptions)
   const [procOpts, setProcOpts] = useReducer(updateOptions<ProcessOptions>, processOptions)
 
   const [selected, setSelected] = useState<string[]>([])
-  useEffect(() => {
-    setSelected(selected.filter(cat => categories.includes(cat)))
-  }, [categories])
   const {allTerms, catCounts} = useMemo(() => {
     const catCounts: NumberObject = {}
     const allTerms = new Map(
@@ -93,6 +85,14 @@ export default function AnalyzeMenu() {
     )
     return {catCounts, allTerms}
   }, [dict])
+  const categories = useMemo(() => {
+    const out = [...allCategories]
+    if ('no categories' in catCounts && !out.includes('no categories')) out.push('no categories')
+    return out
+  }, [allCategories, catCounts])
+  useEffect(() => {
+    setSelected(selected.filter(cat => categories.includes(cat)))
+  }, [categories])
   return (
     <Stack direction="row" sx={{height: '100%'}}>
       <Box

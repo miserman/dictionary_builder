@@ -44,7 +44,7 @@ Tests depend on a running dev server, which can be started with the `test-serve`
 npm run test-serve
 ```
 
-After the this has been compiled, the test had be run:
+After the site has been compiled, the tests can be run:
 
 ```sh
 npm run test
