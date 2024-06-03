@@ -195,6 +195,7 @@ export default function AnalyzeMenu() {
                   value={procOpts.min_sim}
                   type="number"
                   size="small"
+                  inputProps={{min: 0, max: 1, step: 0.01}}
                   label="Similarity Threshold"
                   onChange={e => setProcOpts({key: 'min_sim', value: e.target.value})}
                 ></TextField>
@@ -234,6 +235,7 @@ export default function AnalyzeMenu() {
                   type="number"
                   size="small"
                   label="Label Threshold"
+                  inputProps={{min: 0, step: 0.5}}
                   onChange={e => setPlotOpts({key: 'label_threshold', value: e.target.value})}
                 ></TextField>
               </Tooltip>
@@ -264,6 +266,7 @@ export default function AnalyzeMenu() {
                       type="number"
                       size="small"
                       label="Repulsion"
+                      inputProps={{min: 0}}
                       onChange={e => setPlotOpts({key: 'repulsion', value: e.target.value})}
                     ></TextField>
                   </Tooltip>
@@ -273,6 +276,7 @@ export default function AnalyzeMenu() {
                       type="number"
                       size="small"
                       label="Gravity"
+                      inputProps={{min: 0, step: 0.1}}
                       onChange={e => setPlotOpts({key: 'gravity', value: e.target.value})}
                     ></TextField>
                   </Tooltip>
@@ -282,6 +286,7 @@ export default function AnalyzeMenu() {
                       type="number"
                       size="small"
                       label="Edge Length"
+                      inputProps={{min: 0}}
                       onChange={e => setPlotOpts({key: 'edge_length', value: e.target.value})}
                     ></TextField>
                   </Tooltip>

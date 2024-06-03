@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">45.45% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>5/11</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">25% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/4</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">20% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>5/10</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -168,11 +168,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">326x</span>
-<span class="cline-any cline-yes">326x</span>
-<span class="cline-any cline-yes">326x</span>
-<span class="cline-any cline-yes">326x</span>
-<span class="cline-any cline-yes">326x</span>
+<span class="cline-any cline-yes">406x</span>
+<span class="cline-any cline-yes">406x</span>
+<span class="cline-any cline-yes">406x</span>
+<span class="cline-any cline-yes">406x</span>
+<span class="cline-any cline-yes">406x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -197,19 +197,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -253,7 +253,7 @@ export function CopyDictionary({
   const requestPass = useContext(PasswordPrompter)
   const settings = useContext(SettingsContext)
   const [menuOpen, setMenuOpen] = useState(false)
-  const toggleMenu = <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >setMenuOpen(!menuOpen)</span>
+  const toggleMenu = () =&gt; setMenuOpen(!menuOpen)
   return (
     &lt;&gt;
       &lt;Tooltip title="select an existing dictionary to import as a copy"&gt;
@@ -262,7 +262,7 @@ export function CopyDictionary({
         &lt;/Button&gt;
       &lt;/Tooltip&gt;
       {menuOpen &amp;&amp; (
-<span class="branch-1 cbranch-no" title="branch not covered" >        &lt;Dialog open={menuOpen} onClose={toggleMenu}&gt;</span>
+        &lt;Dialog open={menuOpen} onClose={toggleMenu}&gt;
           &lt;DialogTitle&gt;Copy Dictionary&lt;/DialogTitle&gt;
           &lt;IconButton
             aria-label="close export menu"
@@ -278,20 +278,20 @@ export function CopyDictionary({
           &lt;/IconButton&gt;
           &lt;DialogContent sx={{p: 0}}&gt;
             &lt;List sx={{p: 0, pb: 2}}&gt;
-              {settings.dictionary_names.map(<span class="fstat-no" title="function not covered" >na</span>me =&gt; (
-<span class="cstat-no" title="statement not covered" >                &lt;ListItem sx={{p: 0}} key={name}&gt;</span>
+              {settings.dictionary_names.map(name =&gt; (
+                &lt;ListItem sx={{p: 0}} key={name}&gt;
                   &lt;ListItemButton
-                    onClick={<span class="fstat-no" title="function not covered" >()</span> =&gt;
-<span class="cstat-no" title="statement not covered" >                      loadDictionary(</span>
+                    onClick={() =&gt;
+                      loadDictionary(
                         name,
-<span class="fstat-no" title="function not covered" >                        di</span>ct =&gt; {
-<span class="cstat-no" title="statement not covered" >                          setName(</span>
+                        dict =&gt; {
+                          setName(
                             settings.dictionary_names.includes(name + ' Copy')
-                              ? name + ' Copy' + ((Math.random() * 1e4) &gt;&gt; 0)
+                              ? <span class="branch-0 cbranch-no" title="branch not covered" >name + ' Copy' + ((Math.random() * 1e4) &gt;&gt; 0)</span>
                               : name + ' Copy'
                           )
-<span class="cstat-no" title="statement not covered" >                          setContent(JSON.stringify(dict, void 0, 2))</span>
-<span class="cstat-no" title="statement not covered" >                          toggleMenu()</span>
+                          setContent(JSON.stringify(dict, void 0, 2))
+                          toggleMenu()
                         },
                         requestPass,
                         !!settings.use_db
@@ -316,7 +316,7 @@ export function CopyDictionary({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2024-05-27T19:55:30.091Z
+                at 2024-06-03T19:48:29.960Z
             </div>
         <script src="../prettify.js"></script>
         <script>

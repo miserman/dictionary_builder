@@ -27,6 +27,15 @@ describe('new default dictionary', () => {
     dictionaryMenu().within(() => cy.contains('Export').click())
     cy.get('textarea').should('have.text', '%\n1\tanimal\n%\nfrog\t1\nants*\t1')
   })
+  it('copies dictionary', () => {
+    dictionaryMenu().within(() => cy.get('button').contains('New').click())
+    cy.get('.MuiDialog-paper').within(() => {
+      cy.get('button').contains('Copy').click()
+      cy.get('.MuiListItemButton-root').contains('default').click()
+      cy.get('button').contains('Add').click()
+    })
+    cy.get('.MuiDataGrid-main').should('contain.text', 'frog').should('contain.text', 'ants*')
+  })
 })
 
 describe('new named dictionary', () => {
