@@ -14,7 +14,7 @@ export function Confirm({label, message, onConfirm}: {label: string; message: st
         <Dialog open={menuOpen} onClose={toggleMenu}>
           <DialogTitle>Confirm</DialogTitle>
           <IconButton
-            aria-label="close export menu"
+            aria-label="close confirmation dialog"
             onClick={toggleMenu}
             sx={{
               position: 'absolute',

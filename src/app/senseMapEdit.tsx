@@ -95,7 +95,7 @@ export function SenseSelector({
           delete (props as unknown as any).key
           const {definition} = synsetInfo[(useNLTK ? NLTKLookup : SenseLookup)[key]]
           return (
-            <MenuItem key={key} value={key} {...props}>
+            <MenuItem {...props} value={key} key={key}>
               <Tooltip title={definition} placement="right">
                 <Typography sx={{width: '100%'}}>{key}</Typography>
               </Tooltip>

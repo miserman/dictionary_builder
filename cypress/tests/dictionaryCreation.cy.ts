@@ -39,8 +39,8 @@ describe('new default dictionary', () => {
 })
 
 describe('new named dictionary', () => {
-  beforeEach(() => cy.visit('/'))
-  it('imports and exports', () => {
+  it('imports, exports, and decrypts', () => {
+    cy.visit('/')
     dictionaryMenu().within(() => cy.contains('New').click())
     cy.get('.MuiDialog-paper').within(() => {
       cy.get('input').first().type('generic')
@@ -55,8 +55,22 @@ describe('new named dictionary', () => {
     cy.get('li').contains('generic').click()
     cy.contains('Export').click()
     cy.get('textarea').should('have.text', '%\n1\tcat\n%\nword\t1\nterm*\t1')
+    // decrypts from IndexedDB
     cy.visit('/')
-    cy.get('input[type="password"]', {timeout: 7000}).type('123')
+    cy.get('input[type="password"]', {timeout: 20000}).type('123')
     cy.get('button').contains('Decrypt').click()
+    cy.get('button[aria-label="toggle settings menu"]').click()
+    cy.get('label').contains('IndexedDB').click()
+    cy.get('button[aria-label="close settings menu"]').click()
+    cy.get('.MuiAppBar-root input').type('words{enter}')
+    // decrypts from LocalStorage
+    cy.visit('/')
+    cy.get('input[type="password"]', {timeout: 20000}).type('123')
+    cy.get('button').contains('Decrypt').click()
+    dictionaryMenu().within(() => cy.contains('Delete').click())
+    cy.get('.MuiDialog-paper').within(() => {
+      cy.get('button').contains('Delete').click()
+    })
+    cy.get('div[aria-labelledby="dictionary_select"]').should('contain', 'default')
   })
 })

@@ -160,6 +160,7 @@ export function Resources({children}: {children: ReactNode}) {
       } else {
         fetch('/dictionary_builder/data/terms.txt')
           .then(async res => {
+            if (!res.ok) throw 'failed to fetch terms: ' + res.status + ' (' + res.statusText + ')'
             const data = await res.text()
             const arr = Object.freeze(data.split(newline))
             setTerms(arr)
@@ -198,6 +199,7 @@ export function Resources({children}: {children: ReactNode}) {
       } else {
         fetch('/dictionary_builder/data/term_associations.json')
           .then(async res => {
+            if (!res.ok) throw 'failed to fetch term associations: ' + res.status + ' (' + res.statusText + ')'
             const data = await res.json()
             setTermAssociations(data)
             saveResource('term_associations', data)
@@ -216,6 +218,7 @@ export function Resources({children}: {children: ReactNode}) {
       } else {
         fetch('/dictionary_builder/data/conceptnet.json')
           .then(async res => {
+            if (!res.ok) throw 'failed to fetch ConceptNet: ' + res.status + ' (' + res.statusText + ')'
             const data = await res.json()
             setConceptNet(data)
             saveResource('conceptnet', data)
@@ -234,6 +237,7 @@ export function Resources({children}: {children: ReactNode}) {
       } else {
         fetch('/dictionary_builder/data/sense_keys.txt')
           .then(async res => {
+            if (!res.ok) throw 'failed to fetch sense keys: ' + res.status + ' (' + res.statusText + ')'
             const data = await res.text()
             const senseKeys = data.split(newline)
             setSenseKeys(Object.freeze(senseKeys))
@@ -253,6 +257,7 @@ export function Resources({children}: {children: ReactNode}) {
       } else {
         fetch('/dictionary_builder/data/synset_info.json')
           .then(async res => {
+            if (!res.ok) throw 'failed to fetch synsets: ' + res.status + ' (' + res.statusText + ')'
             const data = await res.json()
             const synsetInfo = data.map((d: Synset, i: number) => {
               d.index = i

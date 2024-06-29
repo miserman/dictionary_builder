@@ -51,3 +51,5 @@ npm run test
 ```
 
 Note: visit `http://localhost:3000/dictionary_builder` to compile before running tests.
+
+See [current coverage](https://miserman.github.io/dictionary_builder/coverage/).

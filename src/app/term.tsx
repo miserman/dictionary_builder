@@ -170,7 +170,7 @@ export function TermSenseEdit({
           const {key, synset, score} = rank
           delete (props as unknown as any).key
           return (
-            <MenuItem key={key} value={key} {...props}>
+            <MenuItem {...props} key={key} value={key}>
               <Tooltip title={synset.definition} placement="right">
                 <Typography sx={{width: '100%'}}>
                   <span className="number-annotation">{'(' + score.toFixed(2) + ') '}</span>
