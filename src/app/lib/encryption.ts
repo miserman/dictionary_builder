@@ -27,7 +27,8 @@ async function getKey(name: string, password: string, salt: Uint8Array): Promise
   return keys[name]
 }
 export async function encrypt(name: string, content: any, password?: string) {
-  const key = password ? await getKey(name, password, crypto.getRandomValues(new Uint8Array(16))) : keys[name]
+  const key =
+    password && !(name in keys) ? await getKey(name, password, crypto.getRandomValues(new Uint8Array(16))) : keys[name]
   if (key) {
     try {
       const iv = crypto.getRandomValues(new Uint8Array(12))
@@ -37,8 +38,8 @@ export async function encrypt(name: string, content: any, password?: string) {
         new Uint8Array(await (await compress(content)).arrayBuffer())
       )
       return new Blob([iv, key.salt, encrypted])
-    } catch {
-      console.error('failed to encrypt ' + name)
+    } catch (e) {
+      console.error('failed to encrypt ' + name + ': ' + e)
     }
   }
 }
@@ -60,6 +61,8 @@ export async function decrypt(name: string, content: string | Blob, password?: s
         new Uint8Array(buffer, 28)
       )
       return decompress(new Blob([decrypted]))
-    } catch {}
+    } catch (e) {
+      console.error('failed to decrypt ' + name + ': ' + e)
+    }
   }
 }

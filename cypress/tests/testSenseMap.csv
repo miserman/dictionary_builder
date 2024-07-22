@@ -1,0 +1,11 @@
+fine,coarse,note
+limit.n.01,limit,1
+limit.n.03,limit_specific,1
+limit.n.06,limit_specific,2
+terminus_ad_quem.n.01,limit_specific,2
+limit.n.04,limit_specific,3
+limit.n.05,limit_specific,3
+nomatch.n.01,limit_action,4
+specify.v.02,limit_action,4
+restrict.v.03,limit_action,5
+limit.v.02,limit_action,5

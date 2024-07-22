@@ -6,7 +6,10 @@ function dictionaryMenu() {
 }
 
 describe('new default dictionary', () => {
-  before(() => cy.clearIndexedDb('dictionary_builder_building'))
+  before(() => {
+    cy.clearIndexedDb('dictionary_builder_building')
+    cy.clearIndexedDb('dictionary_builder_coarse_sense_map')
+  })
   beforeEach(() => cy.visit('/'))
   it('adds terms', () => {
     cy.get('.MuiAppBar-root input', {timeout: 20000}).type('frog{enter}ants*{enter}')

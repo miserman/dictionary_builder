@@ -201,8 +201,7 @@ export function SettingsMenu() {
                       label="Remove"
                       message="The stored coarse sense map will be deleted."
                       onConfirm={() => {
-                        removeStorage('coarse_sense_map', '')
-                        removeStorage('coarse_sense_map', 'original_')
+                        indexedDB.deleteDatabase('dictionary_builder_coarse_sense_map')
                         senseMapSetter({}, {store: senseMapOptions.store})
                       }}
                     />

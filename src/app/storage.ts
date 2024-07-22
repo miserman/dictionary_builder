@@ -174,14 +174,16 @@ export async function loadSenseMap(
     'coarse_sense_map',
     'original_',
     rawMap => {
-      getStorage(
-        'coarse_sense_map',
-        '',
-        map => (map ? setSenseMap(map, {rawMap, store: true}) : undefined),
-        true,
-        requestPass,
-        {}
-      )
+      if (rawMap) {
+        getStorage(
+          'coarse_sense_map',
+          '',
+          map => (map ? setSenseMap(map, {rawMap, store: true}) : undefined),
+          true,
+          requestPass,
+          {}
+        )
+      }
     },
     true,
     requestPass,
