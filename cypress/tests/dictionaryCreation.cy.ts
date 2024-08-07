@@ -5,6 +5,15 @@ function dictionaryMenu() {
   return cy.get('.MuiDrawer-paper')
 }
 
+function setSelect(labelId: string, option: string) {
+  cy.get('#' + labelId)
+    .parent()
+    .click()
+  cy.get('ul[aria-labelledby="' + labelId + '"]').within(() => {
+    cy.get('li[data-value="' + option + '"]').click()
+  })
+}
+
 describe('new default dictionary', () => {
   before(() => {
     cy.clearIndexedDb('dictionary_builder_building')
@@ -58,6 +67,17 @@ describe('new named dictionary', () => {
     cy.get('li').contains('generic').click()
     cy.contains('Export').click()
     cy.get('textarea').should('have.text', '%\n1\tcat\n%\nword\t1\nterm*\t1')
+    setSelect('export_format', 'json')
+    cy.get('textarea').should('have.text', '{\n  "cat": [\n    "word",\n    "term*"\n  ]\n}')
+    setSelect('export_json_type', 'weighted')
+    cy.get('textarea').should('have.text', '{\n  "cat": {\n    "word": 1,\n    "term*": 1\n  }\n}')
+    setSelect('export_format', 'tabular')
+    cy.get('textarea').should('have.text', '"term","cat"\n"word",1\n"term*",1')
+    setSelect('export_separator', 'tsv')
+    cy.get('textarea').should('have.text', '"term"\t"cat"\n"word"\t1\n"term*"\t1')
+    setSelect('export_separator', 'dat')
+    cy.get('textarea').should('have.text', '"term"  "cat"\n"word"  1\n"term*"  1')
+
     // decrypts from IndexedDB
     cy.visit('/')
     cy.get('input[type="password"]', {timeout: 20000}).type('123')

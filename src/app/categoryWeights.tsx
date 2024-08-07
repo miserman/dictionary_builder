@@ -53,7 +53,7 @@ export function CategoryWeights({
   const [similarityBased, setSimilarityBased] = useState(true)
   const [scale, setScale] = useState(true)
   const [anyTerms, setAnyTerms] = useState(true)
-  const [value, setValue] = useState(1)
+  const [value, setValue] = useState('1')
   const [inputTerm, setInputTerm] = useState('')
   const [termSuggestions, setTermSuggestions] = useState<string[]>([])
   const [coreTerms, setCoreTerms] = useState<string[]>([])
@@ -157,6 +157,7 @@ export function CategoryWeights({
                         {...params}
                         size="small"
                         label="Core Terms"
+                        aria-label="category weight core terms"
                         value={inputTerm}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => {
                           if (!coreTerms.includes(e.target.value)) setInputTerm(e.target.value)
@@ -225,8 +226,9 @@ export function CategoryWeights({
                   fullWidth
                   size="small"
                   label="Value"
+                  id="category_weight_filler_value"
                   value={value}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setValue(+e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
                 />
               )}
               <Tooltip
@@ -302,10 +304,10 @@ export function CategoryWeights({
                   }
                 } else {
                   if (toAllTerms) {
-                    Object.keys(dict).forEach(term => (reWeighted[term] = value))
+                    Object.keys(dict).forEach(term => (reWeighted[term] = +value))
                   } else {
                     Object.keys(current).forEach(term => {
-                      if (current[term]) reWeighted[term] = value
+                      if (current[term]) reWeighted[term] = +value
                     })
                   }
                 }

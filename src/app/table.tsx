@@ -150,6 +150,7 @@ export function Table({
       pageSizeOptions={[100]}
       density="compact"
       sx={{
+        '& .MuiDataGrid-columnHeader': {overflow: 'visible'},
         '& .MuiDataGrid-columnHeaderTitleContainer': {overflow: 'visible'},
         '& .column-group': {backgroundColor: '#1f1f1f', maxHeight: '2em'},
         '& .categories-column .MuiDataGrid-columnHeaderTitleContainerContent': {pl: 2.3},

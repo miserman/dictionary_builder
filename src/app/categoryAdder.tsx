@@ -51,6 +51,7 @@ export function CategoryAdder() {
               <TextField
                 label="New Category Name"
                 size="small"
+                id="category_adder_input"
                 value={name}
                 onKeyDown={(e: KeyboardEvent) => {
                   if (e.code === 'Enter' || e.code === 'NumpadEnter') {

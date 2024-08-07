@@ -603,7 +603,9 @@ function TermFixed({processed}: {processed: FixedTerm}) {
       </Stack>
       {terms && !!processed.lemma.length && (
         <Stack>
-          <Typography>Lemmatizer</Typography>
+          <Tooltip title="Term forms produced by lemmatizing original terms with the RNNTagger, the grouping by root.">
+            <Typography>Lemmatizer</Typography>
+          </Tooltip>
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
               {processed.lemma
@@ -615,7 +617,9 @@ function TermFixed({processed}: {processed: FixedTerm}) {
       )}
       {!!processed.forms.length && (
         <Stack>
-          <Typography>Expansion</Typography>
+          <Tooltip title="Term forms produced by rule-based matches (e.g., with added or removed common affixes) to other terms.">
+            <Typography>Expansion</Typography>
+          </Tooltip>
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
               {processed.forms.map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}
@@ -625,7 +629,9 @@ function TermFixed({processed}: {processed: FixedTerm}) {
       )}
       {!!processed.related.length && (
         <Stack>
-          <Typography>Related Terms</Typography>
+          <Tooltip title="Similar terms within latent semantic spaces (embeddings); based on top 100 terms across a proportion of different spaces.">
+            <Typography>Related Terms</Typography>
+          </Tooltip>
           <Box sx={containerStyle}>
             <List disablePadding sx={{p: 0}}>
               {processed.related.map(term => termListItem(term, dict, editDictionary, updateInfoDrawerState))}
