@@ -36,6 +36,7 @@
     "babel-plugin-istanbul": "latest",
     "cypress": "latest",
     "eslint": "latest",
+    "fs": "latest",
     "typescript": "latest"
   }
 }

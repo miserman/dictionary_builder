@@ -42,7 +42,7 @@ const quote_padding = /^["\s]+|["\s]+$/g
 const dic_seps = /\s{2,}|\t+/g
 const regex_open = /[[({]/
 const regex_close = /[\])}]/
-const regex_special = /([\[\]\(\)?^$.+])/
+const regex_special = /(?:\\{1,2}\w|[\[\]\(\)?^$.+])/
 const senseSep = '@'
 function containsRegex(term: string) {
   if (!regex_special.test(term)) return false
@@ -123,11 +123,10 @@ function parseDict(raw: string, detectRegex: boolean) {
               terms.forEach((fullterm, i) => {
                 if (fullterm) {
                   const [term, sense] = fullterm.toLowerCase().split(senseSep)
-                  const id = makeId(term)
-                  if (id in parsed) {
-                    parsed[id].categories[cat] = 1
+                  if (term in parsed) {
+                    parsed[term].categories[cat] = 1
                   } else {
-                    parsed[id] = makeDictEntry(term, {[cat]: 1}, sense, lastTime + n - i, detectRegex)
+                    parsed[term] = makeDictEntry(term, {[cat]: 1}, sense, lastTime + n - i, detectRegex)
                   }
                 }
               })
@@ -136,11 +135,10 @@ function parseDict(raw: string, detectRegex: boolean) {
                 n++
                 if (fullterm) {
                   const [term, sense] = fullterm.toLowerCase().split(senseSep)
-                  const id = makeId(term)
-                  if (id in parsed) {
-                    parsed[id].categories[cat] = terms[fullterm]
+                  if (term in parsed) {
+                    parsed[term].categories[cat] = terms[fullterm]
                   } else {
-                    parsed[id] = makeDictEntry(term, {[cat]: terms[term]}, sense, lastTime + n - i, detectRegex)
+                    parsed[term] = makeDictEntry(term, {[cat]: terms[term]}, sense, lastTime + n - i, detectRegex)
                   }
                 }
               })

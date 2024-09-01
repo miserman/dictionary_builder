@@ -1,0 +1,4 @@
+{
+  "cat1": ["term1", "term\\d"],
+  "cat2": ["term2", "term\\d"]
+}

@@ -1,0 +1,7 @@
+%
+1	cat1
+2	cat2
+%
+term1	1
+term2	2
+term\d	1	2
