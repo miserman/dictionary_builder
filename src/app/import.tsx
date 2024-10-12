@@ -149,11 +149,14 @@ function parseDict(raw: string, detectRegex: boolean) {
         // assumed to be some sort of tabular format
         const lines = raw.split(newline)
         const sep = tab.test(lines[0]) ? '\t' : dat.test(lines[0]) ? '  ' : ','
-        const categories = lines
-          .splice(0, 1)[0]
-          .split(sep)
-          .map(cat => cat.replace(quote_padding, ''))
-        categories.splice(0, 1)
+        const has_categories = lines[0].split(sep).length > 1
+        const categories = has_categories
+          ? lines
+              .splice(0, 1)[0]
+              .split(sep)
+              .map(cat => cat.replace(quote_padding, ''))
+          : []
+        if (has_categories) categories.splice(0, 1)
         const has_sense = categories[0] === 'term_sense'
         const n = lines.length
         lines.forEach((l, i) => {
