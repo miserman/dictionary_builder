@@ -1,5 +1,5 @@
 import {IconButton, ListItemIcon, ListItemText, MenuItem, Stack} from '@mui/material'
-import {useContext, type KeyboardEvent, createContext, type MutableRefObject, type MouseEvent, useMemo} from 'react'
+import {useContext, type KeyboardEvent, createContext, type MouseEvent, useMemo, type RefObject} from 'react'
 import {Edit, FirstPage, ChevronLeft, ChevronRight, LastPage} from '@mui/icons-material'
 import type {FixedTerm, FuzzyTerm} from './term'
 import {
@@ -17,7 +17,7 @@ import {EditorTermSetter} from './termEditor'
 import type {GridApiCommunity} from '@mui/x-data-grid/internals'
 import {CategoryAdder} from './categoryAdder'
 
-export const TableAPIContext = createContext<MutableRefObject<GridApiCommunity> | null>(null)
+export const TableAPIContext = createContext<RefObject<GridApiCommunity> | null>(null)
 
 export type GridRow = {
   [index: string]: number | string | FixedTerm | FuzzyTerm | DictEntry
@@ -39,7 +39,7 @@ export type GridRow = {
 )
 export type GridCell = GridRow & {field: string; term_id?: string}
 
-const tableAPI: {ref: MutableRefObject<GridApiCommunity> | undefined} = {ref: undefined}
+const tableAPI: {ref: RefObject<GridApiCommunity> | undefined} = {ref: undefined}
 export function showTableTerm(term: string) {
   if (tableAPI.ref && tableAPI.ref.current) {
     const rowIndex = tableAPI.ref.current.state.sorting.sortedRows.indexOf(term)
@@ -153,10 +153,11 @@ export function Table({
         '& .MuiDataGrid-columnHeader': {overflow: 'visible'},
         '& .MuiDataGrid-columnHeaderTitleContainer': {overflow: 'visible'},
         '& .column-group': {backgroundColor: '#1f1f1f', maxHeight: '2em'},
+        '& .MuiDataGrid-columnHeader button': {mr: 1.3},
         '& .categories-column .MuiDataGrid-columnHeaderTitleContainerContent': {pl: 2.3},
       }}
       slots={{
-        toolbar: () => <GridToolbarQuickFilter sx={{width: '200px'}} />,
+        toolbar: () => <GridToolbarQuickFilter sx={{width: '200px', zIndex: 1}} />,
         columnMenu: (props: GridColumnMenuProps) => {
           const name = props.colDef.headerName || ''
           return isCategory(name) ? (
