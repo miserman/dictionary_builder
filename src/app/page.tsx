@@ -1,5 +1,4 @@
 'use client'
-import {CssBaseline, ThemeProvider, createTheme} from '@mui/material'
 import {StrictMode, useReducer, useState} from 'react'
 import {Resources} from './resources'
 import {Building} from './building'
@@ -7,10 +6,6 @@ import {type InfoDrawerActions, InfoDrawerContext, InfoDrawerSetter, InfoDrawerS
 import {EditorTerm, EditorTermSetter} from './termEditor'
 import {Content} from './content'
 import {showTableTerm} from './table'
-
-const theme = createTheme({
-  palette: {mode: 'dark', primary: {main: '#b393d3'}, success: {main: '#4986cb'}, error: {main: '#e0561c'}},
-})
 
 let resizeAnimationFrame = -1
 function dispatchResize() {
@@ -46,24 +41,21 @@ export default function Home() {
   }
   return (
     <StrictMode>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Resources>
-          <Building>
-            <InfoDrawerContext.Provider value={infoDrawerState}>
-              <InfoDrawerSetter.Provider
-                value={(action: InfoDrawerActions) => requestAnimationFrame(() => updateInfoDrawerState(action))}
-              >
-                <EditorTerm.Provider value={editorTerm}>
-                  <EditorTermSetter.Provider value={updateEditorTerm}>
-                    <Content />
-                  </EditorTermSetter.Provider>
-                </EditorTerm.Provider>
-              </InfoDrawerSetter.Provider>
-            </InfoDrawerContext.Provider>
-          </Building>
-        </Resources>
-      </ThemeProvider>
+      <Resources>
+        <Building>
+          <InfoDrawerContext.Provider value={infoDrawerState}>
+            <InfoDrawerSetter.Provider
+              value={(action: InfoDrawerActions) => requestAnimationFrame(() => updateInfoDrawerState(action))}
+            >
+              <EditorTerm.Provider value={editorTerm}>
+                <EditorTermSetter.Provider value={updateEditorTerm}>
+                  <Content />
+                </EditorTermSetter.Provider>
+              </EditorTerm.Provider>
+            </InfoDrawerSetter.Provider>
+          </InfoDrawerContext.Provider>
+        </Building>
+      </Resources>
     </StrictMode>
   )
 }

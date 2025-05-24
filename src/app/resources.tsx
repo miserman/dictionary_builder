@@ -1,6 +1,6 @@
 import {Done, Error} from '@mui/icons-material'
 import {CircularProgress, List, ListItem, ListItemIcon, Stack, Typography} from '@mui/material'
-import {type ReactNode, createContext, useEffect, useState, useMemo} from 'react'
+import {type ReactNode, createContext, useEffect, useState, useMemo, useCallback} from 'react'
 import {newline} from './lib/utils'
 import {loadResource, saveResource, setStorage} from './storage'
 import type {NumberObject} from './building'
@@ -92,9 +92,7 @@ export const ResourceContext = createContext<TermResources>({
   collapsedSenses: '',
   collapsedNLTK: '',
 })
-export const SenseMapSetter = createContext<SenseMapSetterFun>(
-  (map: CoarseSenseMap, options: {rawMap?: RawSenseMap; store: boolean}, password?: string) => {}
-)
+export const SenseMapSetter = createContext<SenseMapSetterFun>(() => {})
 
 const resources = [
   {key: 'terms', label: 'Terms'},
@@ -369,23 +367,23 @@ export function Resources({children}: {children: ReactNode}) {
     sense_keys: loadingSenseKeys,
     synsetInfo: loadingSynsetInfo,
   }
+  const editSenseMap = useCallback(
+    (map: CoarseSenseMap, options: {rawMap?: RawSenseMap; store: boolean}, password?: string) => {
+      setSenseMap(map)
+      if (options.store) {
+        setStorage('coarse_sense_map', '', map, true, password)
+      }
+      if (options.rawMap) {
+        setSenseMapOptions(options)
+        if (options.store) setStorage('coarse_sense_map', 'original_', options.rawMap, true, password)
+      }
+    },
+    [setSenseMap, setSenseMapOptions]
+  )
   return (
     <ResourceContext.Provider value={Data}>
       {lemmas && synsetInfo ? (
-        <SenseMapSetter.Provider
-          value={(map: CoarseSenseMap, options: {rawMap?: RawSenseMap; store: boolean}, password?: string) => {
-            setSenseMap(map)
-            if (options.store) {
-              setStorage('coarse_sense_map', '', map, true, password)
-            }
-            if (options.rawMap) {
-              setSenseMapOptions(options)
-              if (options.store) setStorage('coarse_sense_map', 'original_', options.rawMap, true, password)
-            }
-          }}
-        >
-          {children}
-        </SenseMapSetter.Provider>
+        <SenseMapSetter.Provider value={editSenseMap}>{children}</SenseMapSetter.Provider>
       ) : (
         <Stack sx={{margin: 'auto', marginTop: 10, maxWidth: 350}}>
           <Typography variant="h4">Loading Resources...</Typography>

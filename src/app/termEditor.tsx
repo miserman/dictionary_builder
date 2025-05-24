@@ -21,7 +21,12 @@ import type {DictEntry} from './storage'
 import type {GridCell, GridRow} from './table'
 
 export const EditorTerm = createContext('')
-export const EditorTermSetter = createContext((term: string, fromGraph?: boolean) => {})
+export const EditorTermSetter = createContext((term: string, fromGraph?: boolean) => {
+  console.warn({
+    term,
+    fromGraph,
+  })
+})
 
 export function TermEditor({
   categories,
@@ -38,9 +43,6 @@ export function TermEditor({
   const setTerm = useContext(EditorTermSetter)
   const editDictionary = useContext(BuildEditContext)
   const [showEmptyCategories, setShowEmptyCategories] = useState(false)
-  if (!id || !(id in dict)) return <></>
-  const processed = getProcessedTerm(id, data, dict)
-  const dictEntry = dict[id]
   const cols: GridColDef[] = useMemo(
     () => [
       {field: 'id', headerName: 'Name', width: 108},
@@ -50,7 +52,7 @@ export function TermEditor({
         width: 65,
         editable: true,
         hideable: false,
-        valueParser: (value: any, row: GridRow, params) => {
+        valueParser: (value: string | number, row: GridRow, params) => {
           const parsed = +value || ''
           if (params) {
             editor(parsed, {...row, field: params.field})
@@ -59,8 +61,11 @@ export function TermEditor({
         },
       },
     ],
-    []
+    [editor]
   )
+  if (!id || !(id in dict)) return <></>
+  const processed = getProcessedTerm(id, data, dict)
+  const dictEntry = dict[id]
   const weights = dictEntry.categories
   const rows: {
     id: string

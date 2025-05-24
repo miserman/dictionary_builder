@@ -236,10 +236,10 @@ export async function makeRows(dict: Dict, data: TermResources, progress?: (perc
       }
       if (i !== n_ids) {
         batch_i = 0
-        progress && progress(i / n_ids)
+        if (progress) progress(i / n_ids)
         timers.dictionary = setTimeout(runBatch, 0)
       } else {
-        progress && progress(1)
+        if (progress) progress(1)
         resolve(rows)
       }
     }

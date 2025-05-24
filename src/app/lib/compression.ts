@@ -1,4 +1,4 @@
-export async function compress(content: any) {
+export async function compress(content: object) {
   const streamReader = new Blob([JSON.stringify(content)])
     .stream()
     .pipeThrough(new CompressionStream('gzip'))

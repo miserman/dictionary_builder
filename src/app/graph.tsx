@@ -10,8 +10,6 @@ import type {PlotOptions} from './analysisMenu'
 import {EditorTermSetter} from './termEditor'
 import {InfoDrawerSetter} from './infoDrawer'
 
-use([TooltipComponent, GraphChart, GraphGLChart, CanvasRenderer, LegendComponent])
-
 type slimChartType = {_chartsViews: {_layouting: boolean; _layoutTimeout: number}[]; dispose: () => void}
 function cancelViewSteppers(chart: slimChartType | null) {
   if (chart && chart._chartsViews) {
@@ -23,11 +21,12 @@ function cancelViewSteppers(chart: slimChartType | null) {
     })
   }
 }
-export default function Graph({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; options: PlotOptions}) {
+export default function Graph({allNodes, edges, options}: {allNodes: Node[]; edges: Edge[]; options: PlotOptions}) {
   const termEditor = useContext(EditorTermSetter)
   const updateInfoDrawerState = useContext(InfoDrawerSetter)
   const container = useRef<HTMLDivElement>(null)
   useEffect(() => {
+    use([TooltipComponent, GraphChart, GraphGLChart, CanvasRenderer, LegendComponent])
     const chart = container.current ? init(container.current, 'dark', {renderer: 'canvas'}) : null
     const resize = () => chart && chart.resize()
     if (chart)
@@ -45,12 +44,13 @@ export default function Graph({nodes, edges, options}: {nodes: Node[]; edges: Ed
       }
       window.removeEventListener('resize', resize)
     }
-  }, [options.layout])
+  }, [options.layout, termEditor, updateInfoDrawerState])
   useEffect(() => {
     if (container.current) {
       const chart = getInstanceByDom(container.current)
       if (chart) {
         cancelViewSteppers(chart as unknown as slimChartType)
+        let nodes = allNodes
         if (options.hide_zeros) nodes = nodes.filter(node => !!node.value)
         nodes = nodes.map(node => {
           node.label = {show: node.value >= options.label_threshold}
@@ -163,6 +163,6 @@ export default function Graph({nodes, edges, options}: {nodes: Node[]; edges: Ed
         }
       }
     }
-  }, [nodes, edges, options])
+  }, [allNodes, edges, options, termEditor, updateInfoDrawerState])
   return <Box ref={container} sx={{width: '100%', height: '100%', minHeight: '10px'}} />
 }

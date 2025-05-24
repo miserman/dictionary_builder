@@ -15,8 +15,15 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import {DataGrid, type GridColDef, GridToolbarQuickFilter, GridRenderEditCellParams} from '@mui/x-data-grid'
-import {type KeyboardEvent, useContext, useMemo, useState, ChangeEvent} from 'react'
+import {
+  DataGrid,
+  type GridColDef,
+  type GridRenderEditCellParams,
+  type GridEditCellValueParams,
+  QuickFilter,
+  QuickFilterControl,
+} from '@mui/x-data-grid'
+import {type KeyboardEvent, useContext, useMemo, useState} from 'react'
 import {type CoarseSenseMap, ResourceContext, SenseMapSetter, type Synset, type SenseMapSetterFun} from './resources'
 import {AddSenseMapPair} from './senseMapAddPair'
 import {extractMatches} from './processTerms'
@@ -34,7 +41,7 @@ export function SenseSelector({
   setSelected: (values: string[]) => void
   multi: boolean
   useNLTK: boolean
-  editCell?: (params: any) => void
+  editCell?: (params: GridEditCellValueParams) => void
   params?: GridRenderEditCellParams
 }) {
   const {synsetInfo, SenseLookup, collapsedSenses, NLTKLookup, collapsedNLTK} = useContext(ResourceContext)
@@ -67,10 +74,10 @@ export function SenseSelector({
         setSuggested(suggestions)
       }}
       value={multi ? selected : selected[0]}
-      onChange={(e, value) => {
+      onChange={(_, value) => {
         if (value) {
           const newValue = 'string' === typeof value ? [value] : [...value]
-          editCell && params && editCell({...params, newValue})
+          if (editCell && params) editCell({...params, value: newValue})
           setSelected(newValue)
         }
       }}
@@ -85,14 +92,14 @@ export function SenseSelector({
           size="small"
           label="Fine Senses"
           value={input}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          onChange={e => {
             if (!selected.includes(e.target.value)) setInput(e.target.value)
           }}
         ></TextField>
       )}
       renderOption={(props, key) => {
         if (key in lookup) {
-          delete (props as unknown as any).key
+          delete props.key
           const {definition} = synsetInfo[(useNLTK ? NLTKLookup : SenseLookup)[key]]
           return (
             <MenuItem {...props} value={key} key={key}>
@@ -183,7 +190,11 @@ export function EditSenseMap() {
   const toggleMenu = () => setMenuOpen(!menuOpen)
 
   const {senseMap, senseMapOptions, synsetInfo, SenseLookup} = useContext(ResourceContext)
-  const mapOptions = {store: senseMapOptions.store}
+  const mapOptions = useMemo(() => {
+    return {
+      store: senseMapOptions.store,
+    }
+  }, [senseMapOptions])
   const setSenseMap = useContext(SenseMapSetter)
   const coarseLabels = useMemo(() => {
     const out: Set<string> = new Set()
@@ -268,7 +279,7 @@ export function EditSenseMap() {
         width: 210,
       },
     ]
-  }, [senseMap])
+  }, [senseMap, coarseLabels, senseMapOptions.store, setSenseMap, useNLTK, mapOptions])
   const rows = useMemo(() => {
     const out: rowSpec[] = []
     if (synsetInfo) {
@@ -289,7 +300,7 @@ export function EditSenseMap() {
       })
     }
     return out
-  }, [senseMap, synsetInfo, useNLTK])
+  }, [senseMap, synsetInfo, useNLTK, SenseLookup])
   return (
     <>
       <Button variant="outlined" aria-label="edit coarse sense map" onClick={toggleMenu}>
@@ -326,7 +337,24 @@ export function EditSenseMap() {
               pageSizeOptions={[100]}
               density="compact"
               editMode="row"
-              slots={{toolbar: () => <GridToolbarQuickFilter />}}
+              slots={{
+                toolbar: () => (
+                  <QuickFilter>
+                    <QuickFilterControl
+                      render={({ref, ...controlProps}) => (
+                        <TextField
+                          sx={{position: 'absolute', bottom: 6, left: 5, zIndex: 1, width: 150}}
+                          {...controlProps}
+                          inputRef={ref}
+                          aria-label="Search"
+                          placeholder="Filter..."
+                          size="small"
+                        />
+                      )}
+                    />
+                  </QuickFilter>
+                ),
+              }}
             />
             <AddSenseMapPair coarseLabels={coarseLabels} useNLTK={useNLTK} />
           </Stack>

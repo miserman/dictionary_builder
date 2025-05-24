@@ -1,4 +1,4 @@
-import {IconButton, ListItemIcon, ListItemText, MenuItem, Stack} from '@mui/material'
+import {IconButton, ListItemIcon, ListItemText, MenuItem, Stack, TextField} from '@mui/material'
 import {useContext, type KeyboardEvent, createContext, type MouseEvent, useMemo, type RefObject} from 'react'
 import {Edit, FirstPage, ChevronLeft, ChevronRight, LastPage} from '@mui/icons-material'
 import type {FixedTerm, FuzzyTerm} from './term'
@@ -6,11 +6,12 @@ import {
   DataGrid,
   type GridColDef,
   type GridCellParams,
-  GridToolbarQuickFilter,
   GridColumnMenu,
   useGridApiRef,
   type GridColumnGroupingModel,
   type GridColumnMenuProps,
+  QuickFilter,
+  QuickFilterControl,
 } from '@mui/x-data-grid'
 import type {DictEntry} from './storage'
 import {EditorTermSetter} from './termEditor'
@@ -98,7 +99,7 @@ export function Table({
 }) {
   const setEditorTerm = useContext(EditorTermSetter)
   const api = useGridApiRef()
-  tableAPI.ref = api
+  tableAPI.ref = api as RefObject<GridApiCommunity>
   const columnGroups: GridColumnGroupingModel = useMemo(() => {
     const categoryGroup: {field: string}[] = []
     columns.forEach(({field}) => {
@@ -147,6 +148,7 @@ export function Table({
       columnGroupingModel={columnGroups}
       showCellVerticalBorder
       disableDensitySelector
+      showToolbar
       pageSizeOptions={[100]}
       density="compact"
       sx={{
@@ -157,7 +159,22 @@ export function Table({
         '& .categories-column .MuiDataGrid-columnHeaderTitleContainerContent': {pl: 2.3},
       }}
       slots={{
-        toolbar: () => <GridToolbarQuickFilter sx={{width: '200px', zIndex: 1}} />,
+        toolbar: () => (
+          <QuickFilter>
+            <QuickFilterControl
+              render={({ref, ...controlProps}) => (
+                <TextField
+                  sx={{position: 'absolute', bottom: 6, left: 5, zIndex: 1, width: 150}}
+                  {...controlProps}
+                  inputRef={ref}
+                  aria-label="Search"
+                  placeholder="Filter..."
+                  size="small"
+                />
+              )}
+            />
+          </QuickFilter>
+        ),
         columnMenu: (props: GridColumnMenuProps) => {
           const name = props.colDef.headerName || ''
           return isCategory(name) ? (

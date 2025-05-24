@@ -88,7 +88,7 @@ export function SettingsMenu() {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const key = e.target.name
     if (key && key in setters) {
-      let value = e.target.value
+      const value = e.target.value
       window.removeEventListener('keydown', listener)
       settings[key as 'redo'] = value
       setters[key as 'redo'](value)
@@ -142,7 +142,7 @@ export function SettingsMenu() {
                     <Switch
                       checked={disableStore}
                       size="small"
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      onChange={() => {
                         settings.disable_storage = !disableStore
                         updateSettings({...settings})
                         localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))
@@ -163,7 +163,7 @@ export function SettingsMenu() {
                         <Switch
                           checked={use_db}
                           size="small"
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                          onChange={() => {
                             settings.use_db = !use_db
                             updateSettings({...settings})
                             localStorage.setItem('dictionary_builder_settings', JSON.stringify(settings))

@@ -2,13 +2,13 @@ import type {HistoryContainer, NumberObject, PasswordRequestCallback, TermTypes}
 import {IDB} from './lib/IDB'
 import {compress, decompress} from './lib/compression'
 import {decrypt, encrypt, keys, parseStoredString} from './lib/encryption'
-import type {SenseMapSetterFun} from './resources'
+import type {CoarseSenseMap, RawSenseMap, SenseMapSetterFun} from './resources'
 
 export async function loadResource(name: string) {
   const resource = await IDB.getItem(name, 'resources')
   return resource
 }
-export async function saveResource(name: string, content: any) {
+export async function saveResource(name: string, content: object) {
   IDB.setItem({name, encrypted: false, content: await compress(content)}, 'resources')
 }
 export async function removeStorage(name: string, prefix: string) {
@@ -25,7 +25,7 @@ function writeBlob(blob: Blob, encrypted: boolean): Promise<string> {
     }
   })
 }
-export async function setStorage(name: string, prefix: string, value: any, use_db: boolean, password?: string) {
+export async function setStorage(name: string, prefix: string, value: object, use_db: boolean, password?: string) {
   const encrypted = !!password || name in keys
   const content = await (encrypted ? encrypt(name, value, password) : compress(value))
   if (content) {
@@ -43,25 +43,25 @@ export async function setStorage(name: string, prefix: string, value: any, use_d
 type getStorageArgs = [
   string,
   string,
-  (content: any) => void,
+  (content?: object) => void,
   boolean,
   (name: string, resolve: PasswordRequestCallback) => void,
-  any
+  object
 ]
 const requestQueue: Map<string, getStorageArgs> = new Map()
 const requestManager = {running: ''}
 export async function getStorage(
   name: string,
   prefix: string,
-  resolve: (content: any) => void,
+  resolve: (content?: object) => void,
   use_db: boolean,
   requestPass: (name: string, resolve: PasswordRequestCallback) => void,
-  fallback: any
+  fallback?: object
 ) {
   const key = prefix + name
   if (!requestQueue.has(key)) {
-    requestQueue.set(key, [...arguments] as getStorageArgs)
-    const complete = (content?: any) => {
+    requestQueue.set(key, [name, prefix, resolve, use_db, requestPass, fallback] as getStorageArgs)
+    const complete = (content?: object) => {
       requestQueue.delete(key)
       resolve(content)
       const nextRequest = requestQueue.keys().next()
@@ -70,7 +70,7 @@ export async function getStorage(
         const args = requestQueue.get(nextRequest.value)
         if (args) {
           requestQueue.delete(nextRequest.value)
-          getStorage.apply(void 0, args)
+          getStorage(...args)
         }
       }
     }
@@ -128,7 +128,7 @@ export async function loadHistory(
       dictName,
       'dict_history_',
       history => {
-        if (history) setHistory(history)
+        if (history) setHistory(history as HistoryContainer)
       },
       use_db,
       requestPass,
@@ -156,8 +156,8 @@ export async function loadDictionary(
       'dict_',
       dict => {
         if (dict) {
-          dictionaries[name] = dict
-          setDict(dict)
+          dictionaries[name] = dict as Dict
+          setDict(dict as Dict)
         }
       },
       use_db,
@@ -178,7 +178,7 @@ export async function loadSenseMap(
         getStorage(
           'coarse_sense_map',
           '',
-          map => (map ? setSenseMap(map, {rawMap, store: true}) : undefined),
+          map => (map ? setSenseMap(map as CoarseSenseMap, {rawMap: rawMap as RawSenseMap, store: true}) : undefined),
           true,
           requestPass,
           {}
@@ -186,7 +186,6 @@ export async function loadSenseMap(
       }
     },
     true,
-    requestPass,
-    void 0
+    requestPass
   )
 }

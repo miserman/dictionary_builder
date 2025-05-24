@@ -21,7 +21,7 @@ import {EditorTermSetter} from './termEditor'
 export type InfoDrawerState = {type: 'term'; value: string} | {type: 'synset'; value: string; info: Synset}
 export type InfoDrawerActions = {type: 'add'; state: InfoDrawerState} | {type: 'back' | 'reset'}
 export const InfoDrawerContext = createContext<InfoDrawerState[]>([])
-export const InfoDrawerSetter = createContext((action: InfoDrawerActions) => {})
+export const InfoDrawerSetter = createContext<(action: InfoDrawerActions) => void>(() => {})
 
 function TermContent({term}: {term: string}) {
   const Dict = useContext(BuildContext)
@@ -72,7 +72,7 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
         })
       }
     },
-    [setHeight]
+    [height, setHeight]
   )
   const [resizing, setResizing] = useState(false)
   const startResize = useCallback(

@@ -9,16 +9,17 @@ import {Box} from '@mui/material'
 import type {PlotOptions} from './analysisMenu'
 import type {NumberObject} from './building'
 
-use([TooltipComponent, VisualMapComponent, Grid3DComponent, Bar3DChart, CanvasRenderer, LegendComponent])
-
-export function Plot({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; options: PlotOptions}) {
+export function Plot({allNodes, edges, options}: {allNodes: Node[]; edges: Edge[]; options: PlotOptions}) {
   const container = useRef<HTMLDivElement>(null)
   useEffect(() => {
+    use([TooltipComponent, VisualMapComponent, Grid3DComponent, Bar3DChart, CanvasRenderer, LegendComponent])
     const chart = container.current ? init(container.current, 'dark') : null
-    const resize = () => chart && chart.resize()
+    const resize = () => {
+      if (chart) chart.resize()
+    }
     window.addEventListener('resize', resize)
     return () => {
-      chart && chart.dispose()
+      if (chart) chart.dispose()
       window.removeEventListener('resize', resize)
     }
   }, [])
@@ -26,6 +27,7 @@ export function Plot({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; opt
     if (container.current) {
       const chart = getInstanceByDom(container.current)
       if (chart) {
+        let nodes = allNodes
         if (options.hide_zeros) nodes = nodes.filter(node => !!node.value)
         nodes = nodes.map(node => {
           node.label = {show: node.value >= options.label_threshold}
@@ -130,6 +132,6 @@ export function Plot({nodes, edges, options}: {nodes: Node[]; edges: Edge[]; opt
         }
       }
     }
-  }, [nodes, edges, options])
+  }, [allNodes, edges, options])
   return <Box ref={container} sx={{width: '100%', height: '100%', minHeight: '10px'}} />
 }

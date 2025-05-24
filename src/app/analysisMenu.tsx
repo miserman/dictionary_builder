@@ -90,9 +90,7 @@ export default function AnalyzeMenu() {
     if ('no categories' in catCounts && !out.includes('no categories')) out.push('no categories')
     return out
   }, [allCategories, catCounts])
-  useEffect(() => {
-    setSelected(selected.filter(cat => categories.includes(cat)))
-  }, [categories])
+  useEffect(() => setSelected(selected => selected.filter(cat => categories.includes(cat))), [categories])
   return (
     <Stack direction="row" sx={{height: '100%'}}>
       <Box

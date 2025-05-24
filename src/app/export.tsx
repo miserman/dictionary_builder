@@ -12,7 +12,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  SelectChangeEvent,
   Stack,
   Switch,
   TextField,
@@ -211,7 +210,7 @@ export function ExportMenu() {
                   label="Format"
                   size="small"
                   value={format as ''}
-                  onChange={(e: SelectChangeEvent<HTMLDivElement>) => {
+                  onChange={e => {
                     setFormat(e.target.value as Formats)
                   }}
                 >
@@ -228,7 +227,7 @@ export function ExportMenu() {
                     label="Type"
                     size="small"
                     value={delType as ''}
-                    onChange={(e: SelectChangeEvent<HTMLDivElement>) => {
+                    onChange={e => {
                       setDelType(e.target.value as DelTypes)
                     }}
                   >
@@ -248,7 +247,7 @@ export function ExportMenu() {
                     label="Type"
                     size="small"
                     value={jsonType as ''}
-                    onChange={(e: SelectChangeEvent<HTMLDivElement>) => {
+                    onChange={e => {
                       setJsonType(e.target.value as JSONTypes)
                     }}
                   >

@@ -198,7 +198,7 @@ export default function Results({
     const record: {[index: string]: boolean} = {}
     const edges: Edge[] = []
     processComparisons(0, terms, edges, record, catCounts, setProgress, setNetwork, options)
-  }, [dict, data, options, selectedCategories])
+  }, [dict, data, options, selectedCategories, allTerms, catCounts])
   return progress[0] < progress[1] ? (
     <Box sx={{position: 'relative', width: '100%', height: '100%'}}>
       <Box
@@ -223,7 +223,7 @@ export default function Results({
     </Box>
   ) : (
     <Box sx={{position: 'relative', width: '100%', height: '100%'}}>
-      <Graph nodes={network.nodes} edges={network.edges} options={plotOptions} />
+      <Graph allNodes={network.nodes} edges={network.edges} options={plotOptions} />
     </Box>
   )
 }

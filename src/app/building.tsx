@@ -1,4 +1,4 @@
-import {type ReactNode, createContext, useEffect, useReducer, useState, useContext} from 'react'
+import {type ReactNode, createContext, useEffect, useReducer, useState, useContext, useCallback} from 'react'
 import {type Settings, loadSettings} from './settingsMenu'
 import {moveInHistory} from './history'
 import {
@@ -73,26 +73,25 @@ export const SettingsContext = createContext<Settings>({
   term_editor_width: 200,
   use_db: true,
 })
-export const SettingEditor = createContext((settings: Settings) => {})
-export const ManageDictionaries = createContext((action: DictionaryStorageAction) => {})
+export const SettingEditor = createContext<(settings: Settings) => void>(() => {})
+export const ManageDictionaries = createContext<(action: DictionaryStorageAction) => void>(() => {})
 export const BuildContext = createContext<Dict>({})
-export const BuildEditContext = createContext((action: DictionaryActions) => {})
+export const BuildEditContext = createContext<(action: DictionaryActions) => void>(() => {})
 export const AllCategories = createContext<string[]>([])
-export const CategoryEditContext = createContext((action: CategoryActions) => {})
+export const CategoryEditContext = createContext<(action: CategoryActions) => void>(() => {})
 export const EditHistory = createContext<HistoryContainer>({edits: [], position: -1})
-export const EditHistoryEditor = createContext((action: EditHistoryAction) => {})
-export const HistoryStepper = createContext((direction: number) => {})
+export const EditHistoryEditor = createContext<(action: EditHistoryAction) => void>(() => {})
+export const HistoryStepper = createContext<(direction: number) => void>(() => {})
 export const PasswordEnterer = createContext('')
 const defaultRequester = () => async (password: string) => {
+  console.warn(password.length)
   return
 }
-export type PasswordRequestCallback = typeof defaultRequester
-export const PasswordPrompter = createContext((name: string, resolve?: PasswordRequestCallback) => {
+export type PasswordRequestCallback = () => (password: string) => Promise<void>
+export const PasswordPrompter = createContext<(name: string, resolve?: PasswordRequestCallback) => void>(() => {
   return
 })
-export const PasswordResolve = createContext(async (password: string) => {
-  return
-})
+export const PasswordResolve = createContext<(password: string) => Promise<void>>(async () => {})
 
 export function termsByCategory(categories: string[], dict: Dict) {
   const terms: {[index: string]: DictEntry} = {}
@@ -128,31 +127,37 @@ function byLowerAlphabet(a: string, b: string) {
 export function Building({children}: {children: ReactNode}) {
   const [promptPassword, setPromptPassword] = useState('')
   const [requester, setRequester] = useState(defaultRequester)
-  const passwordRequester = (name: string, resolve?: PasswordRequestCallback) => {
-    if (resolve) {
-      setPromptPassword(name)
-      setRequester(resolve)
-    } else {
-      setPromptPassword('')
-      setRequester(defaultRequester)
-    }
-  }
+  const passwordRequester = useCallback(
+    (name: string, resolve?: PasswordRequestCallback) => {
+      if (resolve) {
+        setPromptPassword(name)
+        setRequester(resolve)
+      } else {
+        setPromptPassword('')
+        setRequester(defaultRequester)
+      }
+    },
+    [setPromptPassword, setRequester]
+  )
   const senseMapSetter = useContext(SenseMapSetter)
   useEffect(() => {
     loadSenseMap(senseMapSetter, passwordRequester)
-  }, [])
+  }, [senseMapSetter, passwordRequester])
   const [settings, updateSettings] = useState(loadSettings())
   const use_db = !!settings.use_db
-  const changeDictionary = (name: string) => {
-    loadDictionary(
-      name,
-      dict => {
-        dictionaryAction({type: 'change_dict', name, dict})
-      },
-      passwordRequester,
-      use_db
-    )
-  }
+  const changeDictionary = useCallback(
+    (name: string) => {
+      loadDictionary(
+        name,
+        dict => {
+          dictionaryAction({type: 'change_dict', name, dict})
+        },
+        passwordRequester,
+        !!settings.use_db
+      )
+    },
+    [settings.use_db, passwordRequester]
+  )
   const editHistory = (action: EditHistoryAction) => {
     if (action.type === 'replace') {
       setHistory(action.history)
@@ -206,7 +211,7 @@ export function Building({children}: {children: ReactNode}) {
       const cats: Set<string> = new Set(action.reset ? [] : state)
       Object.keys(action.dictionary).forEach(id => {
         const entry = action.dictionary[id]
-        entry && entry.categories && Object.keys(entry.categories).forEach(cat => cats.add(cat))
+        if (entry && entry.categories) Object.keys(entry.categories).forEach(cat => cats.add(cat))
       })
       newState = Array.from(cats).sort(byLowerAlphabet)
     } else if (action.type === 'add') {
@@ -386,7 +391,7 @@ export function Building({children}: {children: ReactNode}) {
   useEffect(() => {
     if (!settings.dictionary_names.includes(settings.selected)) settings.selected = 'default'
     changeDictionary(settings.selected)
-  }, [])
+  }, [changeDictionary, settings])
   const historyStep = (direction: number) => {
     const to = Math.min(Math.max(-1, history.position + direction), history.edits.length - 1)
 

@@ -106,7 +106,7 @@ export default function AddedTerms({
         field: 'category_' + cat,
         headerName: cat,
         editable: true,
-        valueParser: (value: any, row: GridRow, params) => {
+        valueParser: (value: string | number, row: GridRow, params) => {
           const parsed = +value || ''
           if (params) {
             editFromEvent(parsed, {...row, field: params.field})
@@ -116,7 +116,7 @@ export default function AddedTerms({
       })
     )
     return out
-  }, [Cats, editFromEvent])
+  }, [Cats, editFromEvent, editDictionary])
   const [rows, setRows] = useState<GridRow[]>([])
   const [progress, setProgress] = useState(0)
   const processing = useMemo(() => {

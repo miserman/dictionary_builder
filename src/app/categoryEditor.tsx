@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import {DataGrid, type GridCellParams, type GridColDef, GridToolbarQuickFilter} from '@mui/x-data-grid'
+import {DataGrid, type GridCellParams, type GridColDef, QuickFilter, QuickFilterControl} from '@mui/x-data-grid'
 import {type ChangeEvent, type KeyboardEvent, useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import {AllCategories, BuildContext, BuildEditContext, CategoryEditContext, type NumberObject} from './building'
 import type {FixedTerm, FuzzyTerm} from './term'
@@ -98,7 +98,7 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
       headerName: 'Weight',
       editable: true,
       hideable: false,
-      valueParser: (value: any, row: GridRow, params) => {
+      valueParser: (value: string | number, row: GridRow, params) => {
         const parsed = +value || ''
         if (params) {
           editFromEvent(parsed, {...row, field: params.field})
@@ -163,9 +163,27 @@ export function CategoryEditor({category, onClose}: {category: string; onClose: 
               disableRowSelectionOnClick
               disableDensitySelector
               disableColumnMenu
+              showToolbar
               pageSizeOptions={[100]}
               density="compact"
-              slots={{toolbar: () => <GridToolbarQuickFilter sx={{width: '200px'}} />}}
+              slots={{
+                toolbar: () => (
+                  <QuickFilter>
+                    <QuickFilterControl
+                      render={({ref, ...controlProps}) => (
+                        <TextField
+                          sx={{position: 'absolute', bottom: 6, left: 5, zIndex: 1, width: 150}}
+                          {...controlProps}
+                          inputRef={ref}
+                          aria-label="Search"
+                          placeholder="Filter..."
+                          size="small"
+                        />
+                      )}
+                    />
+                  </QuickFilter>
+                ),
+              }}
               onCellKeyDown={(params: GridCellParams, e: KeyboardEvent) => {
                 if ((e.key === 'Delete' || e.key === 'Backspace') && params.cellMode === 'view') {
                   editFromEvent(0, {...params.row, field: params.field})

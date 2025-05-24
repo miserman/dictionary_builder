@@ -90,17 +90,20 @@ export function TermSenseEdit({
   id: string
   field: string
   label?: string
-  editCell?: (params: any) => void
+  editCell?: (params: {id: string; field: string; value: string}) => void
 }) {
   const Dict = useContext(BuildContext)
   const edit = useContext(BuildEditContext)
   const dictEntry = Dict[id || processed.term]
   const data = useContext(ResourceContext)
   const {terms, senseMap, sense_keys, synsetInfo} = data
-  const getCoarseSense = (key: string, synset: Synset) => {
-    const labels = key in senseMap ? senseMap[key] : synset.csi_labels
-    return 'string' === typeof labels ? labels : labels[0]
-  }
+  const getCoarseSense = useCallback(
+    (key: string, synset: Synset) => {
+      const labels = key in senseMap ? senseMap[key] : synset.csi_labels
+      return 'string' === typeof labels ? labels : labels[0]
+    },
+    [senseMap]
+  )
   const [open, setOpen] = useState(false)
   const [rankedSynsets, setRankedSynsets] = useState<{key: string; score: number; synset: Synset}[]>([])
   const loading = open && !rankedSynsets.length
@@ -130,7 +133,6 @@ export function TermSenseEdit({
           return {key, score, synset}
         })
         const synsetCategories = out.map(({key, synset}) => getCoarseSense(key, synset)).sort()
-        synsetCategories
         setRankedSynsets(
           out.sort((a, b) => {
             const clusterA = getCoarseSense(a.key, a.synset)
@@ -152,12 +154,31 @@ export function TermSenseEdit({
     } else {
       setRankedSynsets([])
     }
-  }, [open, terms, senseMap, sense_keys, synsetInfo, processed, Dict, data, dictEntry])
+  }, [open, terms, senseMap, sense_keys, synsetInfo, processed, Dict, data, dictEntry, getCoarseSense])
   if (terms && sense_keys && synsetInfo && processed.type === 'fixed' && processed.synsets.length) {
     return (
       <Autocomplete
         size="small"
-        componentsProps={{popper: {className: 'synset-select'}}}
+        slotProps={{
+          popper: {className: 'synset-select'},
+          listbox: {
+            style: {cursor: 'pointer'},
+            onClick: e => {
+              const target = e.target
+              if ('tagName' in target && 'innerText' in target && target.tagName === 'DIV') {
+                const newValue = target.innerText as string
+                if (editCell) editCell({id, field, value: newValue})
+                edit({
+                  type: 'update',
+                  term_id: id,
+                  term: processed.term,
+                  term_type: processed.term_type,
+                  sense: newValue,
+                })
+              }
+            },
+          },
+        }}
         options={rankedSynsets}
         loading={loading}
         open={open}
@@ -168,7 +189,7 @@ export function TermSenseEdit({
         getOptionLabel={option => ('string' === typeof option ? option : option.key)}
         renderOption={(props, rank) => {
           const {key, synset, score} = rank
-          delete (props as unknown as any).key
+          delete props.key
           return (
             <MenuItem {...props} key={key} value={key}>
               <Tooltip title={synset.definition} placement="right">
@@ -185,37 +206,22 @@ export function TermSenseEdit({
           <TextField
             label={label}
             {...params}
-            InputProps={{
-              ...params.InputProps,
-              endAdornment: (
-                <Fragment>
-                  {loading && <CircularProgress size={20} />}
-                  {params.InputProps.endAdornment}
-                </Fragment>
-              ),
+            slotProps={{
+              input: {
+                ...params.InputProps,
+                endAdornment: (
+                  <Fragment>
+                    {loading && <CircularProgress size={20} />}
+                    {params.InputProps.endAdornment}
+                  </Fragment>
+                ),
+              },
             }}
           ></TextField>
         )}
-        ListboxProps={{
-          style: {cursor: 'pointer'},
-          onClick: e => {
-            const target = e.target
-            if ('tagName' in target && 'innerText' in target && target.tagName === 'DIV') {
-              const newValue = target.innerText as string
-              editCell && editCell({id, field, value: newValue})
-              edit({
-                type: 'update',
-                term_id: id,
-                term: processed.term,
-                term_type: processed.term_type,
-                sense: newValue,
-              })
-            }
-          },
-        }}
         onChange={(_, value) => {
           const newValue = (value && 'object' === typeof value && value.key) || ''
-          editCell && editCell({id, field, value: newValue})
+          if (editCell) editCell({id, field, value: newValue})
           edit({
             type: 'update',
             term_id: id,
@@ -239,7 +245,7 @@ export function TermSenseEdit({
         size="small"
         value={dictEntry.sense}
         onChange={(e: ChangeEvent<HTMLInputElement>) => {
-          editCell && editCell({id, field, value: e.target.value})
+          if (editCell) editCell({id, field, value: e.target.value})
           edit({
             type: 'update',
             term_id: id,
@@ -530,9 +536,7 @@ function TermFixed({processed}: {processed: FixedTerm}) {
   const editDictionary = useContext(BuildEditContext)
   const updateInfoDrawerState = useContext(InfoDrawerSetter)
   const {terms, senseMap, conceptNet, termLookup, collapsedTerms, sense_keys} = useContext(ResourceContext)
-  const byIndex = useCallback(termLookup ? (a: string, b: string) => termLookup[a] - termLookup[b] : () => 0, [
-    termLookup,
-  ])
+  const byIndex = termLookup ? (a: string, b: string) => termLookup[a] - termLookup[b] : () => 0
   if (!processed.forms) {
     processed.forms = extractExpanded(processed.term, collapsedTerms ? collapsedTerms.all : '')
     processed.forms.sort(sortByLength)
@@ -659,8 +663,8 @@ function TermFixed({processed}: {processed: FixedTerm}) {
                             .sort((a, b) => {
                               return (b.count || 0) - (a.count || 0)
                             })
-                            .map(info => (
-                              <ListItem key={info.index} disablePadding>
+                            .map((info, i) => (
+                              <ListItem key={i} disablePadding>
                                 <SynsetLink senseKey={sense_keys[info.index]} info={info} />
                               </ListItem>
                             ))}

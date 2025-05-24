@@ -30,12 +30,12 @@
   "devDependencies": {
     "@cypress/code-coverage": "latest",
     "@this-dot/cypress-indexeddb": "latest",
-    "@types/echarts": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
     "babel-plugin-istanbul": "latest",
     "cypress": "latest",
     "eslint": "latest",
+    "eslint-config-next": "latest",
     "fs": "latest",
     "typescript": "latest"
   }

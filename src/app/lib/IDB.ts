@@ -20,7 +20,7 @@ export const IDB = {
     return new Promise(resolve => {
       if (db) {
         const req = db.transaction([database], 'readwrite', {durability: 'relaxed'}).objectStore(database).put(item)
-        req.onerror = e => {
+        req.onerror = () => {
           throw Error('failed to store item ' + item.name)
         }
         req.onsuccess = () => resolve(true)

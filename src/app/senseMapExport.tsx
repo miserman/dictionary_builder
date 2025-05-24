@@ -81,7 +81,7 @@ export function ExportCoarseSenseMap() {
       }
     }
     return rows.length > 1 ? rows.join('\n') : ''
-  }, [menuOpen, useNLTK, originalFormat])
+  }, [useNLTK, originalFormat, NLTKLookup, SenseLookup, senseMap, senseMapRaw, sense_keys, synsetInfo])
   return (
     <>
       <Button variant="outlined" onClick={toggleMenu}>

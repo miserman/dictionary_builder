@@ -26,7 +26,7 @@ async function getKey(name: string, password: string, salt: Uint8Array): Promise
   }
   return keys[name]
 }
-export async function encrypt(name: string, content: any, password?: string) {
+export async function encrypt(name: string, content: object, password?: string) {
   const key =
     password && !(name in keys) ? await getKey(name, password, crypto.getRandomValues(new Uint8Array(16))) : keys[name]
   if (key) {

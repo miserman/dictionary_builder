@@ -89,7 +89,7 @@ export function ImportCoarseSenseMap() {
       const isNLTK = !senseKeySep.test(fineMapped[0])
       setNLTKLabels(isNLTK)
       const lookup = isNLTK ? NLTKLookup : SenseLookup
-      const coarse: Set<String> = new Set()
+      const coarse: Set<string> = new Set()
       let nRecognized = 0
       fineMapped.forEach(key => {
         const to = map[key]
