@@ -72,7 +72,7 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
         })
       }
     },
-    [height, setHeight]
+    [setHeight]
   )
   const [resizing, setResizing] = useState(false)
   const startResize = useCallback(
