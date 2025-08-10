@@ -1,9 +1,9 @@
 import {compress, decompress} from './compression'
 
-type StoredKey = {salt: Uint8Array; key: CryptoKey}
+type StoredKey = {salt: Uint8Array<ArrayBuffer>; key: CryptoKey}
 export const keys: {[index: string]: StoredKey} = {}
 const encoder = new TextEncoder()
-async function getKey(name: string, password: string, salt: Uint8Array): Promise<StoredKey | undefined> {
+async function getKey(name: string, password: string, salt: Uint8Array<ArrayBuffer>): Promise<StoredKey | undefined> {
   if (!(name in keys)) {
     const baseKey = await crypto.subtle.importKey('raw', encoder.encode(password), {name: 'PBKDF2'}, false, [
       'deriveKey',
@@ -13,10 +13,10 @@ async function getKey(name: string, password: string, salt: Uint8Array): Promise
       key: await crypto.subtle.deriveKey(
         {
           name: 'PBKDF2',
+          hash: 'SHA-256',
           salt,
           iterations: 1e6,
-          hash: 'SHA-256',
-        },
+        } as Pbkdf2Params,
         baseKey,
         {name: 'AES-GCM', length: 256},
         false,

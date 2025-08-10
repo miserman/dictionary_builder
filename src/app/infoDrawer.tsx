@@ -54,6 +54,7 @@ function SynsetContent({info}: {info: Synset}) {
 }
 
 let resizeAnimationFrame = -1
+const heightTracker = {value: 0}
 export function InfoDrawer({height, setHeight}: {height: number; setHeight: (height: number) => void}) {
   const dict = useContext(BuildContext)
   const edit = useContext(InfoDrawerSetter)
@@ -61,10 +62,11 @@ export function InfoDrawer({height, setHeight}: {height: number; setHeight: (hei
   const updateSettings = useContext(SettingEditor)
   const setEditorTerm = useContext(EditorTermSetter)
   const state = useContext(InfoDrawerContext)
+  heightTracker.value = height
   const resize = useCallback(
     (e: MouseEvent) => {
       const value = Math.max(18, Math.min(Math.ceil((1 - e.y / window.innerHeight) * 100), 87))
-      if (value !== height) {
+      if (value !== heightTracker.value) {
         cancelAnimationFrame(resizeAnimationFrame)
         resizeAnimationFrame = requestAnimationFrame(() => {
           setHeight(value)

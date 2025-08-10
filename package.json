@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "sh utils/use_swc.sh && next dev",
+    "dev": "sh utils/use_swc.sh && next dev --turbopack",
     "build": "sh utils/use_swc.sh && next build && touch ./docs/.nojekyll",
     "lint": "next lint",
     "cypress:open": "cypress open",

@@ -1,23 +1,21 @@
 1:"$Sreact.fragment"
-2:I[92068,["568","static/chunks/568-126fed66f5728fbd.js","993","static/chunks/993-161218e9aa061282.js","177","static/chunks/app/layout-b4afa51919dcc99a.js"],"default"]
+2:I[92068,["818","static/chunks/818-3b7c7d92412105ea.js","87","static/chunks/87-a9fe2f22b5cd384b.js","177","static/chunks/app/layout-e34fa128d37392ba.js"],"default"]
 3:I[87555,[],""]
 4:I[31295,[],""]
 5:I[90894,[],"ClientPageRoot"]
-6:I[26946,["568","static/chunks/568-126fed66f5728fbd.js","464","static/chunks/464-6dc0f2758815f268.js","974","static/chunks/app/page-65f0d39b570d78b6.js"],"default"]
-9:I[59665,[],"MetadataBoundary"]
-b:I[59665,[],"OutletBoundary"]
-e:I[74911,[],"AsyncMetadataOutlet"]
-10:I[59665,[],"ViewportBoundary"]
-12:I[26614,[],""]
+6:I[26946,["818","static/chunks/818-3b7c7d92412105ea.js","725","static/chunks/725-7ad1fc6263201255.js","974","static/chunks/app/page-7d17346306192a4b.js"],"default"]
+9:I[59665,[],"OutletBoundary"]
+b:I[74911,[],"AsyncMetadataOutlet"]
+d:I[59665,[],"ViewportBoundary"]
+f:I[59665,[],"MetadataBoundary"]
+10:"$Sreact.suspense"
+12:I[28393,[],""]
 :HL["/dictionary_builder/_next/static/css/d3083dcee8517a99.css","style"]
-0:{"P":null,"b":"CKJ_UzQhERGyF2_h3X81c","p":"/dictionary_builder","c":["",""],"i":false,"f":[[["",{"children":["__PAGE__",{}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/dictionary_builder/_next/static/css/d3083dcee8517a99.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"style":{"overflow":"hidden"},"children":["$","$L2",null,{"children":["$","$L3",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L4",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]}]}]]}],{"children":["__PAGE__",["$","$1","c",{"children":[["$","$L5",null,{"Component":"$6","searchParams":{},"params":{},"promises":["$@7","$@8"]}],["$","$L9",null,{"children":"$La"}],null,["$","$Lb",null,{"children":["$Lc","$Ld",["$","$Le",null,{"promise":"$@f"}]]}]]}],{},null,false]},null,false],["$","$1","h",{"children":[null,["$","$1","ojQlZHKlmGqF9eS7QU0AH",{"children":[["$","$L10",null,{"children":"$L11"}],null]}],null]}],false]],"m":"$undefined","G":["$12","$undefined"],"s":false,"S":true}
-13:"$Sreact.suspense"
-14:I[74911,[],"AsyncMetadata"]
+0:{"P":null,"b":"Eef2Aj0CddB2H5PsVWZvR","p":"/dictionary_builder","c":["",""],"i":false,"f":[[["",{"children":["__PAGE__",{}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/dictionary_builder/_next/static/css/d3083dcee8517a99.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"style":{"overflow":"hidden"},"children":["$","$L2",null,{"children":["$","$L3",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L4",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]}]}]]}],{"children":["__PAGE__",["$","$1","c",{"children":[["$","$L5",null,{"Component":"$6","searchParams":{},"params":{},"promises":["$@7","$@8"]}],null,["$","$L9",null,{"children":["$La",["$","$Lb",null,{"promise":"$@c"}]]}]]}],{},null,false]},null,false],["$","$1","h",{"children":[null,[["$","$Ld",null,{"children":"$Le"}],null],["$","$Lf",null,{"children":["$","div",null,{"hidden":true,"children":["$","$10",null,{"fallback":null,"children":"$L11"}]}]}]]}],false]],"m":"$undefined","G":["$12",[]],"s":false,"S":true}
 7:{}
-8:{}
-a:["$","$13",null,{"fallback":null,"children":["$","$L14",null,{"promise":"$@15"}]}]
-d:null
-11:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
-c:null
-15:{"metadata":[["$","title","0",{"children":"Dictionary Builder"}],["$","meta","1",{"name":"description","content":"Make and edit dictionaries with term analysis."}],["$","link","2",{"rel":"icon","href":"/dictionary_builder/icon.svg?46723c1be442003c","type":"image/svg+xml","sizes":"any"}]],"error":null,"digest":"$undefined"}
-f:{"metadata":"$15:metadata","error":null,"digest":"$undefined"}
+8:"$0:f:0:1:2:children:1:props:children:0:props:params"
+e:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+a:null
+13:I[38175,[],"IconMark"]
+c:{"metadata":[["$","title","0",{"children":"Dictionary Builder"}],["$","meta","1",{"name":"description","content":"Make and edit dictionaries with term analysis."}],["$","link","2",{"rel":"icon","href":"/dictionary_builder/icon.svg?1fccf46fa0fd47e4","type":"image/svg+xml","sizes":"any"}],["$","$L13","3",{}]],"error":null,"digest":"$undefined"}
+11:"$c:metadata"
